@@ -160,13 +160,6 @@ class Maspik {
           require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/bricks.php';
         }
       }
-        
-      // Disable Comments
-      if( maspik_get_settings("disable_comments", '', 'old') == "yes"  ) { 
-          require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/disable-comments.php';
-      }
-
-	  
       
       // If agree to shere Non sensitive information 
       if( maspik_get_settings("shere_data", '', 'old') == "yes"  ) { 

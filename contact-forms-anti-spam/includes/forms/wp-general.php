@@ -23,7 +23,7 @@ function maspik_comments_checker(array $data) {
     $reason = '';
 
     // Country IP + HP Check
-    $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST,"wp-general");
+    $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST,$comment_type);
     $spam = $GeneralCheck['spam'] ?? false;
     $reason = $GeneralCheck['reason'] ?? '';
     $message = $GeneralCheck['message'] ?? '';
@@ -104,7 +104,7 @@ function maspik_check_wp_registration_form($errors) {
 
     // Country IP Check
     if (!$spam) {
-        $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST);
+        $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST,"wp_registration");
         $spam = $GeneralCheck['spam'] ?? false;
         $reason = $GeneralCheck['reason'] ?? '';
         $message = $GeneralCheck['message'] ?? '';
@@ -152,7 +152,7 @@ function maspik_register_form_honeypot_check_in_woocommerce_registration($errors
     $reason = "";
 
     // Country IP Check
-    $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST);
+    $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST,"woocommerce_registration");
     $spam = $GeneralCheck['spam'] ?? false;
     $reason = $GeneralCheck['reason'] ?? '';
     $message = $GeneralCheck['message'] ?? '';

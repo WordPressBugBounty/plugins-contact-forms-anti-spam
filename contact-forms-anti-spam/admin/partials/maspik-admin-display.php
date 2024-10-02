@@ -568,13 +568,6 @@ $spamcounter = maspik_spam_count();
             
             <form method="POST" action="" class="maspik-form">
 
-                <?php /*<div class="maspik-section-head">
-                    <h2 class='maspik-title maspik-bl-title'><?php esc_html_e('Main Options', 'contact-forms-anti-spam'); 
-                    ?></h2>
-                </div>
-                */ ?>
-
-
             <!--  Main check -->
             <div class="main-spam-check togglewrap maspik-main-check--wrap maspik-accordion-content-wrap">
             <h3 class="maspik-header maspik-accordion-subtitle"><?php esc_html_e('Main Options', 'contact-forms-anti-spam'); ?></h3>
@@ -582,9 +575,39 @@ $spamcounter = maspik_spam_count();
                 <div class="maspik-txt-custom-msg-head togglewrap maspik-db-check--wrap">
                     <?php echo maspik_toggle_button('maspikDbCheck', 'maspikDbCheck', 'maspikDbCheck', 'maspik-DbCheck togglebutton',"",""); ?>
                     <div>
-                        <h4> <?php esc_html_e('IP Verification', 'contact-forms-anti-spam'); ?></h4>
-                        <span><?php esc_html_e("Verify if the sender's IP address is flagged as spam in the Maspik blacklist database.", 'contact-forms-anti-spam'); ?><br>
-                        <?php esc_html_e('Making an API request, max 100 requests/day', 'contact-forms-anti-spam'); ?></span>
+                        <h4> <?php esc_html_e('IP Verification', 'contact-forms-anti-spam'); ?></h4> 
+                        <?php maspik_popup("", "",  "See details" , "visibility"); ?>
+
+                        <span style="display:block;"><?php esc_html_e("Check if the sender's IP address is flagged as spam in the Maspik database.", 'contact-forms-anti-spam'); ?><br>
+                            <?php
+                            $api_data = get_option('maspik_api_requests', array('months' => array()));
+                            $current_month = date('Ym');
+                            $actual_calls_current_month = 0;
+                            if (isset($api_data['months'][$current_month])) {
+                                $actual_calls_current_month = intval($api_data['months'][$current_month]['actual_calls']);
+                            }
+                            
+                            $max_checks = cfes_is_supporting() ? 1000 : 100;
+                            
+                            $over_max_checks = $actual_calls_current_month > $max_checks;
+                            echo $over_max_checks ? '<span class="text-caution">' : '';
+                            printf(
+                                /* translators: %1$d is the number of checks used, %2$d is the total number of checks allowed */
+                                esc_html__('You have used %1$d out of %2$d checks this month', 'contact-forms-anti-spam'),
+                                $actual_calls_current_month,
+                                $max_checks
+                            );
+                            echo $over_max_checks ? '.</span>' : '';
+
+                            if (!cfes_is_supporting()) {
+                                echo ' ';
+                                esc_html_e('Upgrade to Pro for 1,000 checks/month', 'contact-forms-anti-spam');
+                            }else{
+                                echo ' ';
+                                esc_html_e(', thanks to your Pro subscription.', 'contact-forms-anti-spam');
+                            }
+                            ?>
+                        </span>
                     </div><!-- end of maspik-db-check--wrap -->
                 </div>    
                 <div class="maspik-txt-custom-msg-head togglewrap maspik-honeypot-wrap">
@@ -592,7 +615,7 @@ $spamcounter = maspik_spam_count();
                     <div>
                         <h4> <?php esc_html_e('Honeypot Trap', 'contact-forms-anti-spam'); ?>
                         </h4>
-                        <span><?php esc_html_e('Add honeypot field', 'contact-forms-anti-spam'); ?></span>
+                        <span><?php esc_html_e('Adds an invisible field to your form. Humans can\'t see it, but bots often fill it. If this hidden field has data, the submission is blocked as spam. This traps bots without affecting real users.', 'contact-forms-anti-spam'); ?></span>
                     </div>  
                 </div><!-- end of maspik-honeypot-wrap -->
 
@@ -631,7 +654,7 @@ $spamcounter = maspik_spam_count();
                         <div class="maspik-accordion-subtitle-wrap">
                             <h3 class="maspik-accordion-subtitle"><?php esc_html_e('Language Required', 'contact-forms-anti-spam'); ?></h3>
                             <?php 
-                                maspik_tooltip("If you use this field, it will ONLY accept form submissions that contain at least one character of the chosen language. Leave blank if you prefer to forbid certain languages.");
+                                maspik_tooltip("ONLY accepts form submissions containing at least one character in one of your selected languages.");
                             ?>
                         </div> <!--end of maspik-accordion-subtitle-wrap-->
                                 
@@ -686,8 +709,14 @@ $spamcounter = maspik_spam_count();
                             ?>      
 
                         </div> <!-- end of maspik-main-list-wrap -->
-                        <span class="maspik-subtext"><?php esc_html_e('Note that when blocking Latin languages in an individual (such as: Dutch, French), the chack is in the punctuation letters (But they are not always in use). Its to prevent false positive.', 'contact-forms-anti-spam'); ?><br>
-                        <?php esc_html_e('Even one character in the text field from any of these languages will be caught by MASPIK, tagged as spam, and blocked. ', 'contact-forms-anti-spam'); ?>
+                        <span class="maspik-subtext"><?php 
+                                        esc_html_e('If there is even one character from one of these languages in the text fields, it will be marked as spam and blocked.', 'contact-forms-anti-spam'); 
+                                        echo "<br>";
+                                        echo "<span class='text-caution'>";
+                                        esc_html_e('Caution:', 'contact-forms-anti-spam');
+                                        echo " </span>";
+                                        esc_html_e('When blocking Latin languages in an individual (such as: Dutch, French), the chack is in the punctuation letters (But they are not always in use). Its to prevent false positive.', 'contact-forms-anti-spam'); ?>
+                                        
                         </span>
                                     
                         <div class="maspik-custom-msg-wrap">
@@ -1117,7 +1146,7 @@ $spamcounter = maspik_spam_count();
                                 echo '<span class="help-text">'.esc_html__("Only the following phone formats will be allowed.", 'contact-forms-anti-spam');
                                 echo "<br>".esc_html__("leave empty to disable this option.", 'contact-forms-anti-spam');
                                 echo "</span>";  
-                                maspik_popup("???-???-????|{+*-*,???-???-????}|+[1-9]-*|{+*-*,???-???-????}|[0-9][0-9][0-9]-*|/[0-9]{3}-[0-9]{3}-[0-9]{4}/|0*|+*", "Phone field", "See examples" ,"visibility");
+                                maspik_popup("???-???-????|+*|+[1-9]-*|{+*-*,???-???-????}|[0-9][0-9][0-9]-*|/[0-9]{3}-[0-9]{3}-[0-9]{4}/|0*", "Phone field", "See examples" ,"visibility");
                             ?>
                         </div> <!--end of maspik-setting-info-->
                                 
@@ -1130,10 +1159,12 @@ $spamcounter = maspik_spam_count();
                             ?>   
 
                         </div> <!-- end of maspik-main-list-wrap -->
-                        <span class="maspik-subtext"><?php esc_html_e('Wildcard patterns are accepted. asterisk * Or question mark ? symbol are necessary for the recognition of the wildcard.', 'contact-forms-anti-spam'); ?><br>
-                        <?php esc_html_e(' You can get more ideas', 'contact-forms-anti-spam'); ?>
-                        <a href="https://wpmaspik.com/documentation/phone-field/" target="_blank">
-                        <?php esc_html_e('HERE', 'contact-forms-anti-spam'); ?></a>    
+                        <span class="maspik-subtext">
+                        <?php esc_html_e('? represents any single digit.', 'contact-forms-anti-spam'); ?><br>
+                        <?php esc_html_e('* represents any sequence of digits.', 'contact-forms-anti-spam'); ?><br>
+                            <?php esc_html_e(' You can get more information', 'contact-forms-anti-spam'); ?>
+                            <a href="https://wpmaspik.com/documentation/phone-field/" target="_blank">
+                            <?php esc_html_e('HERE', 'contact-forms-anti-spam'); ?></a>    
                         </span>
 
                         <div class="maspik-custom-msg-wrap">
@@ -1213,9 +1244,6 @@ $spamcounter = maspik_spam_count();
                 <div class="maspik-accordion-header">
                     <div class="mpk-acc-header-texts">
                         <h4 class="maspik-header maspik-accordion-header-text"><?php esc_html_e('Ongoing Experiments', 'contact-forms-anti-spam'); ?></h4>
-                        <span class="maspik-accordion-subheader">
-                            <?php esc_html_e('(Give it a try)', 'contact-forms-anti-spam');?></span>
-
                     </div>
                     <div class = "maspik-pro-button-wrap">
                         <span class="maspik-acc-arrow"><span class="dashicons dashicons-arrow-right"></span></span>
@@ -1229,7 +1257,7 @@ $spamcounter = maspik_spam_count();
                                 <div>
                                     <h4> <?php esc_html_e('Time Trap', 'contact-forms-anti-spam'); ?>
                                     </h4>
-                                    <span><?php esc_html_e('Check time from visiting the site until form submit', 'contact-forms-anti-spam'); ?></span>
+                                    <span><?php esc_html_e('This feature checks the time elapsed between a user first visiting the site and submitting the form. If the submission happens too quickly (within 4 seconds), it\'s likely automated and will be blocked. This helps prevent rapid-fire spam submissions from bots.', 'contact-forms-anti-spam'); ?></span>
                             </div>  
                         </div><!-- end of maspik-maspikTimeCheck -->
                         <div class="maspik-txt-custom-msg-head togglewrap maspik-honeypot-wrap">
@@ -1237,7 +1265,7 @@ $spamcounter = maspik_spam_count();
                                 <div>
                                     <h4> <?php esc_html_e('JavaScript check', 'contact-forms-anti-spam'); ?> 
                                     </h4>
-                                    <span><?php esc_html_e('Verify user JavaScript functionality', 'contact-forms-anti-spam'); ?></span>
+                                    <span><?php esc_html_e('JavaScript check - This feature adds a hidden field that is automatically filled with the current year using JavaScript. If the submitted year does not match the server\'s current year, it likely means JavaScript is disabled or the form was submitted by a bot. In either case, the submission will be blocked as a security measure.', 'contact-forms-anti-spam'); ?></span>
                             </div>  
                         </div><!-- end of maspik-maspikYearCheck -->
 
@@ -1523,7 +1551,7 @@ $spamcounter = maspik_spam_count();
 
                         <div class="maspik-limit-char-box togglebox">
                             <?php 
-                                echo create_maspik_numbox("spam_log_limit", "spam_log_limit", "spam_log_limit" , "Entry limit", "2000");
+                                echo create_maspik_numbox("spam_log_limit", "spam_log_limit", "spam_log_limit" , "Entry limit", "2000", "","");
                             ?>
                         </div> <!-- end of spam log toggle box -->
                              <?php 
@@ -1639,7 +1667,7 @@ $spamcounter = maspik_spam_count();
 
     <div id="pop-up-example" class="maspik-popup-wrap">
         <h3 class="maspik-popup-title-wrap"><?php esc_html_e('Example for', 'contact-forms-anti-spam'); ?> <span class="maspik-popup-title"><?php esc_html_e('Text field', 'contact-forms-anti-spam'); ?></span></h3>
-        <p class="pop-up-subtext"><?php esc_html_e('Here you can see an Example words for the', 'contact-forms-anti-spam'); ?>  <span class="maspik-popup-title"><?php esc_html_e('text field', 'contact-forms-anti-spam'); ?></span> <?php esc_html_e('blocklist', 'contact-forms-anti-spam'); ?></p>
+        <p class="pop-up-subtext"><?php esc_html_e('Here you can see an example options for the', 'contact-forms-anti-spam'); ?>  <span class="maspik-popup-title"><?php esc_html_e('text field', 'contact-forms-anti-spam'); ?></span></p>
         <button class="close-popup"><span class="dashicons dashicons-no-alt"></span></button>
             <div class="data-array-wrap"><div class="data-array-here maspik-custom-scroll">
                 <ul>
@@ -1654,7 +1682,6 @@ $spamcounter = maspik_spam_count();
 
     </div>
 
-
     <div id="pop-up-shortcode" class="maspik-popup-wrap">
         <h3 class="maspik-popup-title-wrap"><span class="maspik-popup-title"><?php esc_html_e('Shortcode List', 'contact-forms-anti-spam'); ?></span></h3>
         <p class="pop-up-subtext"><?php esc_html_e('You can also use the following shortcodes:', 'contact-forms-anti-spam'); ?></p>
@@ -1665,6 +1692,11 @@ $spamcounter = maspik_spam_count();
                 </ul>
             </div>
         </div>
+    </div>
+
+    <div id="pop-up-ip-verification" class="maspik-popup-wrap" style="width: 700px; max-width: 90%; overflow: scroll; max-height: 60vh;">
+        <button class="close-popup"><span class="dashicons dashicons-no-alt"></span></button>
+        <?php echo IP_Verification_popup_content(); ?>
     </div>
 
 <?php
@@ -1907,8 +1939,8 @@ wp_enqueue_script('select2-js', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0
 </div>
 <?php
 
-wp_enqueue_script('custom-ajax-script', plugin_dir_url(__DIR__). 'maspik-ajax-script.js', array('jquery'), '1.10', true);
-wp_localize_script('custom-ajax-script', 'ajax_object', array('ajax_url' => admin_url('admin-ajax.php')));
+    wp_enqueue_script('custom-ajax-script', plugin_dir_url(__DIR__). 'maspik-ajax-script.js', array('jquery'), MASPIK_VERSION, true);
+    wp_localize_script('custom-ajax-script', 'ajax_object', array('ajax_url' => admin_url('admin-ajax.php')));
 
 
 ?>

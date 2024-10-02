@@ -8,35 +8,28 @@ if (!defined('ABSPATH')) exit;
 */
 
 
-//Spam log delete functions -- START
+function maspik_var_value_convert($var) {
+    $value_map = [
+        "text_blacklist" => "Text Field",
+        "MinCharactersInTextField" => "Text Field Min Character",
+        "MaxCharactersInTextField" => "Text Field Max Character",
+        "emails_blacklist" => "Email Field",
+        "textarea_blacklist" => "Textarea Field",
+        "MinCharactersInTextAreaField" => "Textarea Field Min Character",
+        "MaxCharactersInTextAreaField" => "Textarea Field Max Character",
+        "tel_formats" => "Phone Format Field",
+        "MinCharactersInPhoneField" => "Phone Field Min Character",
+        "MaxCharactersInPhoneField" => "Phone Field Max Character",
+        "lang_needed" => "Language Required",
+        "lang_forbidden" => "Language Forbidden",
+        "country_blacklist" => "Countries",
+        "ip_blacklist" => "IP",
+        "maspikHoneypot" => "Honeypot",
+        "maspikTimeCheck" => "Time Check",
+        "maspikYearCheck" => "Year Check"
+    ];
 
-
-//enqueue js file
-function maspik_enqueue_admin_scripts() {
-    wp_enqueue_script('maspik-admin-js', plugin_dir_url(__FILE__) . '../admin/js/maspik-spamlog.js', array('jquery'), null, true);
-  }
-  add_action('admin_enqueue_scripts', 'maspik_enqueue_admin_scripts');
-
-function maspik_var_value_convert($var){
-    $value = "";
-    if($var == "text_blacklist") $value = "Text Field";
-    elseif($var == "MinCharactersInTextField") $value = "Text Field Min Character";
-    elseif($var == "MaxCharactersInTextField") $value = "Text Field Max Character";
-    elseif($var == "emails_blacklist") $value = "Email Field";
-    elseif($var == "textarea_blacklist") $value = "Textarea Field";
-    elseif($var == "MinCharactersInTextAreaField") $value = "Textarea Field Min Character";
-    elseif($var == "MaxCharactersInTextAreaField") $value = "Textarea Field Max Character";
-    elseif($var == "tel_formats") $value = "Phone Format Field";
-    elseif($var == "MinCharactersInPhoneField") $value = "Phone Field Min Character";
-    elseif($var == "MaxCharactersInPhoneField") $value = "Phone Field Max Character";
-    elseif($var == "lang_needed") $value = "Language Required";
-    elseif($var == "lang_forbidden") $value = "Language Forbidden";
-    elseif($var == "country_blacklist") $value = "Countries";
-    elseif($var == "ip_blacklist") $value = "IP";
-    else $value == $var;
-
-    return $value;
-
+    return isset($value_map[$var]) ? $value_map[$var] : $var;
 }
 
 
@@ -67,7 +60,8 @@ function maspik_delete_filter() {
         $update_data = array('spam_tag' => 'not spam');
         $where = array('id' => $row_id);
 
-        if($spam_label == "textarea_field") $spam_label = "textarea_blacklist";
+        // Convert textarea_field to textarea_blacklist for consistency
+        $spam_label = ($spam_label === "textarea_field") ? "textarea_blacklist" : $spam_label;
 
         if($spam_label == "text_blacklist" || $spam_label == "textarea_blacklist" || $spam_label == "emails_blacklist" || $spam_label == "ip_blacklist"){
             
@@ -114,12 +108,12 @@ function maspik_delete_filter() {
                     } else {
                         wp_send_json_error('Failed to save empty settings.');
                     }
-                } else { // This `else` was missing
+                } else { 
                     wp_send_json_error('No settings found.');
-                } // Added closing brace for this `else`
+                } 
             }
 
-        } else { // This `else` was missing
+        } else { 
             if(maspik_get_settings($spam_label)!=""){
                 // If it's not an array, save an empty string
                 if (maspik_save_settings($spam_label, "")) {
@@ -128,10 +122,10 @@ function maspik_delete_filter() {
                 } else {
                     wp_send_json_error('Failed to save empty settings.');
                 }
-            } else { // This `else` was missing
+            } else { 
                 wp_send_json_error('No settings found.');
-            } // Added closing brace for this `else`
-        } // Added closing brace for this `else`
+            } 
+        } 
     } // Added closing brace for the outer `if ($spam_label)`
 
 } // Closing brace for the function
@@ -618,6 +612,8 @@ function maspik_get_settings($data_name, $type = '', $table_var = 'new'){
                 'MaspikHoneypot' => '1',
                 'maspik_support_jetforms' => '1',
                 'maspik_support_everestforms' => '1',
+                'maspik_support_jetforms' => '1',
+                'maspik_support_everestforms' => '1',
                 'maspikDbCheck' => '1'
             );
             transfer_data_to_table($data);
@@ -700,68 +696,63 @@ function efas_get_browser_name($user_agent){
 }
 
 
-//Spam log limiter
-    function maspik_log_limiter(){
-        
-        global $wpdb;
+function maspik_limit_log_size() {
+    global $wpdb;
 
-        $max_logs = maspik_get_settings('spam_log_limit') == "" ? 2000 : maspik_get_settings('spam_log_limit');
-        $current_count = maspik_spam_count();
-        $table = $wpdb->prefix . 'maspik_spam_logs';
-
-        
-
-    
-        if ($current_count > $max_logs) {
-            // Calculate the number of entries to delete
-            $entries_to_delete = $current_count - $max_logs;
-
-            // Get the IDs of the oldest entries to delete
-            $oldest_entries = $wpdb->get_results("
-                SELECT id FROM $table
-                ORDER BY id ASC 
-                LIMIT $entries_to_delete
-            ");
-
-            // Delete the oldest entries using $wpdb->delete
-            if (!empty($oldest_entries)) {
-                foreach ($oldest_entries as $entry) {
-                    $wpdb->delete($table, array('id' => $entry->id), array('%d'));
-                }
-
-            }
-        }
+    $max_logs = maspik_get_settings('spam_log_limit');
+    if (empty($max_logs)) {
+        $max_logs = 2000; // Default value if not set
     }
 
-//Spam log limiter - END
+    $table = maspik_get_logtable();
 
+    // Count the current number of records
+    $current_count = $wpdb->get_var("SELECT COUNT(*) FROM $table");
+
+    if ($current_count > $max_logs) {
+        // Calculate the number of records to delete
+        $entries_to_delete = $current_count - $max_logs;
+
+        // Delete the oldest records
+        $wpdb->query("
+            DELETE FROM $table
+            ORDER BY id ASC
+            LIMIT $entries_to_delete
+        ");
+    }
+}
 
 //Save Error logs to table
 function efas_add_to_log($type = '', $input = '', $post = null, $source = "Elementor forms", $spamsrc_name = "", $spamsrc_val = "") {
-    $spamcounter = get_option('spamcounter') ? get_option('spamcounter') : 0;
-    update_option('spamcounter', ++$spamcounter);
+    $spamcounter = get_option('spamcounter', 0);
+    $spamcounter++;
+    update_option('spamcounter', $spamcounter);
 
     // Sanitize and escape user inputs
     if (maspik_get_settings("maspik_Store_log") == 'yes') {
-        $text = wp_kses_data(print_r($post, true)); 
+        $sanitized_data = array_map('sanitize_text_field', $post); 
+        $serialize_data = serialize($sanitized_data);
+
         $ip = efas_getRealIpAddr();
         $countryName = "Other (Unknown)";
         
-        set_error_handler(function() {}, E_WARNING); // Suppress warnings
-        $xml = @simplexml_load_file("http://www.geoplugin.net/xml.gp?ip=" . $ip);
-        restore_error_handler(); // Restore error handler
-        
-        if ($xml) {
-            $countryName = $xml->geoplugin_countryName && $xml->geoplugin_countryName != "" ? (string) $xml->geoplugin_countryName : $countryName;
+        $response = wp_remote_get("http://www.geoplugin.net/json.gp?ip=" . $ip );
+        if ( !is_wp_error($response) && wp_remote_retrieve_response_code($response) == 200 ) {
+            $body = wp_remote_retrieve_body($response);
+            $geoData = json_decode($body, true);
+            if ( isset($geoData['geoplugin_countryName']) && !empty($geoData['geoplugin_countryName']) ) {
+                $countryName = sanitize_text_field($geoData['geoplugin_countryName']);
+            }
         }
+        
         $spamsrc_val = substr(wp_slash(sanitize_textarea_field($spamsrc_val)), 0, 190);
         $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
         $browser_name = efas_get_browser_name($user_agent);
-        $date = wp_date("d-m-Y H:i:s", null, wp_timezone());
+        $date = current_time('mysql'); // timestamp
         $result = maspik_save_log(
             substr(wp_slash(sanitize_text_field($type)), 0, 190),
             substr(wp_slash(sanitize_text_field($input)), 0, 190),
-            sanitize_textarea_field($text),
+            $serialize_data,
             sanitize_text_field($ip),
             sanitize_text_field($countryName),
             sanitize_text_field($browser_name),
@@ -776,7 +767,6 @@ function efas_add_to_log($type = '', $input = '', $post = null, $source = "Eleme
             error_log("Failed to save spam log: " . $result);
         }
 
-        echo maspik_log_limiter();
     }
 }
 
@@ -806,6 +796,7 @@ function maspik_save_log($type, $value, $detail, $ip, $country, $agent, $date, $
         $result = $wpdb->insert($table, $data, $format);
    
         if ($result) {
+            maspik_limit_log_size();
             return "success";
         } else {
             return $wpdb->last_error;
@@ -958,12 +949,14 @@ function maspik_detect_language_in_string($langs, $string) {
         return '';
     }
 
+    // fix for old versions added in version 2.2.3
+    $langs = maybe_unserialize($langs);
+
     foreach ($langs as $lang) {
         if (preg_match("/$lang/u", $string)) {
             return $lang;
         }
     }
-
     return '';
 }
 
@@ -1031,7 +1024,7 @@ function efas_array_of_lang_needed(){
             '[А-Яа-яЁё]' => esc_html__('Russian (А-Яа-яЁ)', 'contact-forms-anti-spam' ),
             '\p{Unknown}' => esc_html__('Unknown language', 'contact-forms-anti-spam' ),
             '[A-Za-zÀ-ÖØ-öø-ÿ]' => esc_html__('Dutch (A-Za-zÀ-ÖØ-öø-ÿ)', 'contact-forms-anti-spam'),
-            '[A-Za-zÇçĞğİıÖöŞşÜü]' => esc_html__('Turkish (A-Za-zÇçĞğİıÖöŞşÜü)', 'contact-forms-anti-spam'),
+            '[A-Za-zÇçĞ��İıÖöŞşÜü]' => esc_html__('Turkish (A-Za-zÇçĞğİıÖöŞşÜü)', 'contact-forms-anti-spam'),
             '[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż]' => esc_html__('Polish (A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż)', 'contact-forms-anti-spam'),
             '[A-Za-zĂăÂâÎîȘșȚț]' => esc_html__('Romanian (A-Za-zĂăÂâÎîȘșȚț)', 'contact-forms-anti-spam'),
             '[A-Za-zÁáČčĎďÉéÍíĹĺĽľŇňÓóŔŕŠšŤťÚúÝýŽž]' => esc_html__('Czech (A-Za-zÁáČčĎďÉéÍíĹĺĽľŇňÓóŔŕŠšŤťÚúÝýŽž)', 'contact-forms-anti-spam'),
@@ -1047,8 +1040,13 @@ function efas_array_of_lang_needed(){
 } 
 function efas_array_of_countries(){
   return Array(
-		'AF' => 'Afghanistan',
-		'AL' => 'Albania',
+        'Continent:AS' => 'Continent: Asia',
+        'Continent:AF' => 'Continent: Africa', 
+        'Continent:AN' => 'Continent: Antarctica',
+        'Continent:EU' => 'Continent: Europe',
+        'Continent:NA' => 'Continent: North America',
+        'Continent:OC' => 'Continent: Oceania',
+        'AL' => 'Albania',
 		'DZ' => 'Algeria',
 		'AS' => 'American Samoa',
 		'AD' => 'Andorra',
@@ -1438,28 +1436,22 @@ function mergePerKey($array1, $array2) {
 // See http://codex.wordpress.org/Plugin_API/Filter_Reference/cron_schedules
 add_filter( 'cron_schedules', 'contact_forms_anti_spam_add_weekly' );
 function contact_forms_anti_spam_add_weekly( $schedules ) {
-    // add a 'weekly' schedule to the existing set
-  if(!isset($schedules["daily"])){
-      $schedules[ 'daily' ] = array( 
-          'interval' => 60 * 60 * 24,
-          'display' => esc_html__( 'daily' )
-      );
-    }
-  	if(!isset($schedules["weekly"])){
-      $schedules[ 'weekly' ] = array( 
-          'interval' => 60 * 60 * 24 * 7,
-          'display' => esc_html__( 'Weekly' )
+  	if(!isset($schedules["twiceweekly"])){
+      $schedules[ 'twiceweekly' ] = array( 
+          'interval' => 60 * 60 * 24 * 3,
+          'display' => esc_html__( 'Twice weekly' )
       );
     }
 
     return $schedules;
 }
+
 // Schedule an action if it's not already scheduled
-if ( ! wp_next_scheduled( 'contact_forms_anti_spam_add_weekly' ) ) {
-    wp_schedule_event( time(), 'weekly', 'contact_forms_anti_spam_add_weekly' );
+if ( ! wp_next_scheduled( 'cfas_daily_api_refresh' ) ) {
+ wp_schedule_event( time(), 'daily', 'cfas_daily_api_refresh' );
 }
-// Hook into that action that'll fire every five minutes
-add_action( 'contact_forms_anti_spam_add_weekly', 'cfas_refresh_api' );
+// Hook into that action that'll fire daily
+add_action( 'cfas_daily_api_refresh', 'cfas_refresh_api' );
 
 
 function cfes_is_supporting() {
@@ -1870,7 +1862,7 @@ function Maspik_export_settings() {
     $maspik_settings['theme_name'] = wp_get_theme()->get('Name');
     $maspik_settings['spamcounter'] = get_option('spamcounter');
     $maspik_settings['shere_data'] = get_option('shere_data');
-    
+    $maspik_settings['maspik_api_requests'] = get_option('maspik_api_requests');
    
     // Get domain name of the site
     $domain_name = get_site_url();
@@ -2069,6 +2061,12 @@ function Maspik_spamlog_download_csv() {
     fputcsv($output, array_keys($results[0]));
 
     foreach ($results as $row) {
+
+        if (isset($row['spam_detail'])) {
+            $spam_detail = @maybe_unserialize($row['spam_detail']);
+            $row['spam_detail'] = is_array($spam_detail) ? json_encode($spam_detail, JSON_UNESCAPED_UNICODE) : $row['spam_detail'];
+        }
+        
         fputcsv($output, $row);
     }
 
@@ -2076,31 +2074,88 @@ function Maspik_spamlog_download_csv() {
     exit();
 }
 
+function maspik_is_reach_limit_and_increment_api_requests() {
+
+    $max_requests = cfes_is_supporting() ? 1000 : 100;
+    
+    $api_data = get_option("maspik_api_requests", array(
+        'months' => array()
+    ));
+
+    $current_month = date('Ym');
+
+    // Check if the current month already exists in the array
+    if (!isset($api_data['months'][$current_month])) {
+        // If not, add it
+        $api_data['months'][$current_month] = array(
+            'attempts' => 0,
+            'actual_calls' => 0,
+            'blocks' => 0
+        );
+    }
+
+    // Increase the number of attempts
+    $api_data['months'][$current_month]['attempts']++;
+
+    // Check if we reached the maximum number of requests
+    if ($api_data['months'][$current_month]['actual_calls'] < $max_requests) {
+        $api_data['months'][$current_month]['actual_calls']++;
+        // we didnt reach the limit
+        $result = false;
+    } else {
+        // we reached the limit
+        $result = true;
+    }
+
+    // Save only the last 6 months
+    $api_data['months'] = array_slice($api_data['months'], -6, 6, true);
+
+    update_option("maspik_api_requests", $api_data);
+    return $result;
+}
+
 // Check if the IP exists in the API
 function check_ip_in_api($ip, $form) {
-    $option_key = 'maspik_recent_ip_checks';
 
     try {
         // Get the existing array or create a new one if it doesn't exist
-        $recent_checks = get_option($option_key, array());
+        $recent_checks = get_option( "maspik_recent_ip_checks", array());
+
+        // Check if $recent_checks is an array, and if not, initialize it as an empty array
+        if (!is_array($recent_checks)) {
+            $recent_checks = array();
+        }
 
         // Check if the IP already exists in the array
         foreach ($recent_checks as $check) {
             if (isset($check['ip']) && $check['ip'] === $ip) {
+                // If the IP already exists and is blocked, increase the number of blocks
+                if (isset($check['result']) && $check['result'] === true) {
+                    maspik_increment_blocks();
+                }
                 return isset($check['result']) ? $check['result'] : false;
             }
         }
 
-        // If we get here, the IP is not in the array - perform a new check
+        // Check if we can make an API call
+        if (maspik_is_reach_limit_and_increment_api_requests()) {
+            //error_log("Maspik: Monthly API request limit reached");
+            return false; // return request when we reach the limit
+        }
+
+        $site_url = get_site_url();
+        $api_key = MASPIK_API_KEY;
+    
+        // Perform the API call
         $url = add_query_arg(array(
             'ip' => $ip,
             'form' => $form,
-            'referer' => get_site_url()
+            'referer' => $site_url
         ), 'https://api.wpmaspik.com/check_ip');
 
         $args = array(
             'headers' => array(
-                'x-api-key' => MASPIK_API_KEY 
+                'x-api-key' => $api_key 
             ),
             'timeout' => 5  // Set timeout for the request
         );
@@ -2128,17 +2183,40 @@ function check_ip_in_api($ip, $form) {
             'result' => $exists
         ));
 
-        // Save only the last 10 checksha
+        // Save only the last 10 checks
         $recent_checks = array_slice($recent_checks, 0, 10);
 
         // Update the option
-        update_option($option_key, $recent_checks);
+        update_option("maspik_recent_ip_checks", $recent_checks);
+
+        // If the IP is blocked, increase the number of blocks
+        if ($exists) {
+            maspik_increment_blocks();
+        }
 
         return $exists;
     } catch (Exception $e) {
         error_log('Maspik IP Check Error: ' . $e->getMessage());
         return false;
     }
+}
+
+function maspik_increment_blocks() {
+    $api_data = get_option("maspik_api_requests", array('months' => array()));
+    
+    $current_month = date('Ym');
+    
+    if (!isset($api_data['months'][$current_month])) {
+        $api_data['months'][$current_month] = array(
+            'attempts' => 0,
+            'actual_calls' => 0,
+            'blocks' => 0
+        );
+    }
+    
+    $api_data['months'][$current_month]['blocks']++;
+    
+    update_option("maspik_api_requests", $api_data);
 }
 
 // Set default values for various settings
@@ -2166,16 +2244,6 @@ function maspik_make_default_values() {
 }
 
 function maspik_pointer_scripts() {
-    $screen = get_current_screen();
-
-    // Debug: Print the screen ID
-    // error_log('Current screen ID: ' . $screen->id);
-
-    // Only load on the plugin's settings page
-    if ( $screen->id !== 'toplevel_page_maspik' ) {
-       // return;
-    }
-
     // Check if the user has already dismissed the pointer
     $dismissed = get_user_meta( get_current_user_id(), 'maspik_pointer_dismissed', true );
     if ( $dismissed ) {
@@ -2240,3 +2308,78 @@ function maspik_dismiss_pointer() {
     wp_die();
 }
 add_action( 'wp_ajax_maspik_dismiss_pointer', 'maspik_dismiss_pointer' );
+
+// IP Verification popup content
+function IP_Verification_popup_content() {
+    // Start output buffering
+    ob_start();
+    ?>
+    <div class="maspik-popup-content">
+        <h2><?php esc_html_e('What is IP Verification?', 'contact-forms-anti-spam'); ?></h2>
+
+        <p><?php esc_html_e('IP Verification checks if the sender\'s IP address is flagged as spam in the Maspik database.', 'contact-forms-anti-spam'); ?></p>
+
+        <h4><?php esc_html_e('Your IP Verification Activity', 'contact-forms-anti-spam'); ?></h4>
+        <table class="maspik-stats-table">
+            <thead>
+                <tr>
+                    <th><?php esc_html_e('Month', 'contact-forms-anti-spam'); ?></th>
+                    <th><?php esc_html_e('IP Checks Attempted', 'contact-forms-anti-spam'); ?></th>
+                    <th><?php esc_html_e('API Calls Made', 'contact-forms-anti-spam'); ?></th>
+                    <th><?php esc_html_e('IPs Blocked', 'contact-forms-anti-spam'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $api_data = get_option('maspik_api_requests', array('months' => array()));
+                if (!isset($api_data['months']) || empty($api_data['months'])) {
+                    echo '<tr><td colspan="4">' . esc_html__('No data available. Please wait for some submissions.', 'contact-forms-anti-spam') . '</td></tr>';
+                } else {
+                    // Sort the months in descending order
+                    krsort($api_data['months']);
+                    $months_displayed = 0;
+                    $max_requests = cfes_is_supporting() ? 1000 : 100;
+                    foreach ($api_data['months'] as $month => $data) {
+                        if ($months_displayed >= 6) break; // Limit to last 12 months
+                        // Convert $month from 'YYYYMM' to a readable format
+                        $dateObj = DateTime::createFromFormat('Ym', $month);
+                        if ($dateObj) {
+                            $monthName = $dateObj->format('F Y');
+                        } else {
+                            $monthName = esc_html($month);
+                        }
+                        $actual_calls = intval($data['actual_calls']);
+                        if ( $actual_calls > $max_requests ) {
+                            $max_requests = $max_requests . ' ' . esc_html__('(Reached Limit)', 'contact-forms-anti-spam');
+                        }
+                        echo '<tr>';
+                        echo '<td>' . esc_html($monthName) . '</td>';
+                        echo '<td>' . intval($data['attempts']) . '</td>';
+                        echo "<td> $actual_calls/$max_requests </td>";
+                        echo '<td>' . intval($data['blocks']) . '</td>';
+                        echo '</tr>';
+                        $months_displayed++;
+                    }
+                }
+                ?>
+            </tbody>
+        </table>
+
+        <h4><?php esc_html_e('Understanding the Data', 'contact-forms-anti-spam'); ?></h4>
+        <ul>
+            <li><strong><?php esc_html_e('IP Checks Attempted', 'contact-forms-anti-spam'); ?></strong>: <?php esc_html_e('The total number of times your site tried to verify an IP address.', 'contact-forms-anti-spam'); ?></li>
+            <li><strong><?php esc_html_e('API Calls Made', 'contact-forms-anti-spam'); ?></strong>: <?php esc_html_e('The number of IP checks sent to Maspik\'s servers (counts toward your monthly limit).', 'contact-forms-anti-spam'); ?></li>
+            <li><strong><?php esc_html_e('IPs Blocked', 'contact-forms-anti-spam'); ?></strong>: <?php esc_html_e('The number of IP addresses identified and blocked as spam.', 'contact-forms-anti-spam'); ?></li>
+        </ul>
+        <p><em><?php esc_html_e('Note: The number of IPs Blocked can be higher than API Calls Made because Maspik caches the results of the last 10 IP verifications. If an IP was recently checked and is in the cache, it doesn\'t count against your API limit but still helps in blocking spam.', 'contact-forms-anti-spam'); ?></em></p>
+        <?php if ( !cfes_is_supporting() ) { ?>
+            <hr>
+            <h4><?php esc_html_e('Need More API Requests?', 'contact-forms-anti-spam'); ?></h4>
+            <p><?php esc_html_e('Upgrade to Maspik Pro to get up to 1,000 API requests per month and improve your site\'s spam protection!', 'contact-forms-anti-spam'); ?></p>
+            <?php maspik_get_pro(); ?>
+        <?php } ?>
+    </div>
+    <?php
+    // Output the content
+    echo ob_get_clean();
+}

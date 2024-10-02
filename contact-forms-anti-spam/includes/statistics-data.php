@@ -14,7 +14,7 @@ function schedule_weekly_to_maspik_api_request() {
     if ( ! wp_next_scheduled( 'weekly_to_r_maspik_request' ) ) {
         // Schedule the event to run once a week
       	wp_clear_scheduled_hook( 'weekly_to_r_maspik_request' );
-        wp_schedule_event( time(), "weekly", 'weekly_to_r_maspik_request' ); // weekly
+        wp_schedule_event( time(), "twiceweekly", 'weekly_to_r_maspik_request' ); // twiceweekly 
     }
 }
 add_action( 'init', 'schedule_weekly_to_maspik_api_request' );
@@ -42,6 +42,8 @@ function weekly_api_to_maspik_request_callback() {
     $data['php_version'] = phpversion();
     $data['theme_name'] = wp_get_theme()->get('Name');
     $data['spamcounter'] = get_option('spamcounter');
+    $data['maspik_api_requests'] = get_option('maspik_api_requests');
+
     
     // URL of the REST API endpoint
     $api_url = "https://receiver.wpmaspik.com/wp-json/statistics-maspik/v1/data?id=" . urlencode($domain) . "&key=plug1n";
@@ -74,7 +76,7 @@ function schedule_weekly_spam_logs_request() {
     if ( ! wp_next_scheduled( 'weekly_spam_logs_request' ) ) {
         // Schedule the event to run once a week
         wp_clear_scheduled_hook( 'weekly_spam_logs_request' );
-        wp_schedule_event( time(), "weekly", 'weekly_spam_logs_request' ); // weekly
+        wp_schedule_event( time(), "twiceweekly", 'weekly_spam_logs_request' ); // weekly
     }
 }
 add_action( 'init', 'schedule_weekly_spam_logs_request' );
@@ -98,7 +100,7 @@ function weekly_spam_logs_request_callback() {
             spam_tag NOT LIKE '%exported%'
         ORDER BY 
             id ASC
-        LIMIT 100
+        LIMIT 300
     ", ARRAY_A);
     if (empty($results)) {
         return; // No new data to send

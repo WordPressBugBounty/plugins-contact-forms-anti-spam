@@ -71,14 +71,16 @@ jQuery(document).ready(function($) {
     var closeButton = $('.close-button');
 
     // Show the modal and set the confirmation message
-    $(document).on('click', '.filter-delete-button', function() {
+    $(document).on('click', '.row-entries:not(.not-a-spam) .filter-delete-button', function() {
         rowIdToDelete = $(this).data('row-id');
         spamValue = $(this).data('spam-value'); // Assume spam_value is added to data attributes
         spamType = $(this).data('spam-type');   // Assume spam_type is added to data attributes
 
         if (spamType === 'Phone Format Field') {
             $('#filter-type').html("The phone number doesn't match any of the whitelisted formats. Would you like to remove all the existing whitelisted phone number formats?");
-        } else {
+        }else if (spamValue == '1') {
+            $('#filter-type').html("Do you want to disable the <pre>" + spamType + "</pre> option?");
+        }else {
             $('#filter-type').html('Do you want to remove <pre>' + spamValue + '</pre> filter for <pre>' + spamType + '</pre>?');
         }
         fmodal.show();
@@ -108,7 +110,7 @@ jQuery(document).ready(function($) {
                         alert("Filter deleted successfully!");
                         location.reload(); // Reload the page to reflect changes
                     } else {
-                        alert("Filter not found. The filter is either already deleted or came from Maspik API dashboard");
+                        alert("This filter cannot be deleted automatically, it is either already deleted or it comes from the Maspik API Dashboard, try to delete it manually.");
                     }
                 },
                 error: function() {

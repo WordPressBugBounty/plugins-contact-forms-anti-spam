@@ -9,14 +9,11 @@
 
 
  .notice {
-  display: none;
+  display: none !important;
 }
 
 tr.hide {
     display: none !important;
-}
-.maspik-settings .notice {
-  display: none !important;
 }
 .limit-api-label{
   font-size:12px;
@@ -205,6 +202,8 @@ tr.hide {
 
 .maspik-log-table .maspik-accordion-content{
   width:100%;
+  padding: 0;
+  transition: all 0.3s ease;
 }
 
 .column-value .maspik-accordion-header{
@@ -227,9 +226,18 @@ tr.hide {
 }
 
 .column-value .maspik-accordion-item .maspik-accordion-content pre{
-  padding: 0 30px;
+  margin: 0;
   max-width:50vw;
   text-wrap: wrap;
+  padding: 10px;
+
+}
+
+.maspik-accordion-item.expanded .log-detail.maspik-accordion-content {
+  box-sizing: border-box;
+  overflow: auto;
+  direction: ltr;
+  text-align: left;
 }
 
 .maspik-log-table{
@@ -304,7 +312,16 @@ tr.hide {
   text-align: center;
 }
 
+.log-detail th,.log-detail td {
+  padding: 5px;
+  border: 0;
+}
 
+.log-detail.maspik-accordion-content table {
+  background: #dddddd;
+  border: 0;
+  width: 100%;
+}
 
 /**--SPAM LOG TABLE - END --**/
 /**--GENERAL STYLE - START --**/
@@ -865,6 +882,14 @@ h3.maspik-protag.maspik-not-pro{
 
 .maspik-tooltip:hover{
   cursor:pointer;
+}
+.rtl .maspik-setting-header-wrap {
+  flex-direction: row-reverse;
+}
+
+.rtl .maspik-setting-header {
+  align-self: end;
+  padding-bottom: 0;
 }
 
 /** Affected forms **/
@@ -1492,7 +1517,27 @@ td.column-value.column-entries {
   padding: 10px 10px;
 }
 
-
+table.maspik-stats-table {
+  border-collapse: collapse;
+  border: 1px solid black;
+  width: 100%;
+}
+table.maspik-stats-table th{color: white;background-color: #F48722;}
+table.maspik-stats-table td{
+background-color: white;
+}
+table.maspik-stats-table td, table.maspik-stats-table th {
+  border: 1px solid black;
+    text-align:start;
+    padding:3px;
+}
+.maspik-db-check--wrap .maspik-small-btn.btns {
+  display: inline-block;
+  margin: 0;
+}
+.maspik-db-check--wrap h4 {
+  display: inline-block;
+}
 .maspik-btn.copy{
   margin-top: 15px;
   min-height:30px;

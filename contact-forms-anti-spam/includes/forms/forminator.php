@@ -13,29 +13,6 @@ function maspik_validate_forminator_general($submit_errors, $form_id, $field_dat
     $ip =  efas_getRealIpAddr();
 
 
-    // Country IP Check 
-    $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"forminator");
-    $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
-    $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
-    $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
-    $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
-    
-    // find the last field ID to assigned the error message 
-    $lastNonHiddenName = null;
-    // Iterate through the array in reverse order
-    for ($i = count($field_data_array) - 1; $i >= 0; $i--) {
-        if ($field_data_array[$i]['field_type'] !== 'hidden') {
-            // If the current element is not hidden, store its name and break the loop
-            $lastNonHiddenName = $field_data_array[$i]['name'];
-            break;
-        }
-    }
-
-    if ($spam) {
-        $submit_errors[][$lastNonHiddenName] = cfas_get_error_text($message);
-        efas_add_to_log($type = "Country/IP",$reason, $_POST, "Forminator", $message,  $spam_val );
-        return $submit_errors;
-    }
     
     foreach( $field_data_array as $current ) {
         $field_id = $current['name'];
@@ -54,6 +31,7 @@ function maspik_validate_forminator_general($submit_errors, $form_id, $field_dat
                 $submit_errors[][$field_id] = cfas_get_error_text($message);
                 return $submit_errors;
             }
+            continue;
         }
         
         //Email
@@ -62,9 +40,10 @@ function maspik_validate_forminator_general($submit_errors, $form_id, $field_dat
             $spam_val = $field_value;
             if($spam) {
                 efas_add_to_log($type = "email","Email $field_value is block $spam" , $_POST, "Forminator", "emails_blacklist", $spam_val);
-                $submit_errors[][$field_id] = $error_message;
+                $submit_errors[][$field_id] = cfas_get_error_text();
                 return $submit_errors;
             }
+            continue;
         }
         //
         if ( $current['field_type'] === "phone" && ! empty($field_value) ) {
@@ -81,6 +60,7 @@ function maspik_validate_forminator_general($submit_errors, $form_id, $field_dat
                 $submit_errors[][$field_id] = cfas_get_error_text($message);
                 return $submit_errors;
             }
+            continue;
         }
         
         // Textarea
@@ -96,10 +76,28 @@ function maspik_validate_forminator_general($submit_errors, $form_id, $field_dat
                 $submit_errors[][$field_id] = cfas_get_error_text($message);
                 return $submit_errors;
             }
+            continue;
         }
         
     // end foreach   
     }
+
+    // Country IP Check 
+    $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"forminator");
+    $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
+    $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
+    $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
+    $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
+    $field_id = $field_id ? $field_id : 0 ;
+    
+
+    if ($spam) {
+        $submit_errors[][$field_id] = cfas_get_error_text($message);
+        efas_add_to_log($type = "Country/IP",$reason, $_POST, "Forminator", $message,  $spam_val );
+        return $submit_errors;
+    }
+
+        
 
 	return $submit_errors;
 }

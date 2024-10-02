@@ -19,19 +19,20 @@ function maspik_make_extra_spam_check($post) {
     if (maspik_get_settings('maspikHoneypot') && isset($post['full-name-maspik-hp']) && !empty($post['full-name-maspik-hp'])) {
         return [
             'spam' => true,
-            'reason' => "Honeypot Triggered",
-            'message' => cfas_get_error_text()
+            'reason' => "Honeypot field is not empty",
+            'message' => "maspikHoneypot"
         ];
     }
 
     // Year check
     if (maspik_get_settings('maspikYearCheck')) {
         $serverYear = intval(date('Y'));
+        $submittedYear = sanitize_text_field($post['Maspik-currentYear']);
         if ($post['Maspik-currentYear'] != $serverYear) {
             return [
                 'spam' => true,
-                'reason' => "Maspik JavaScript check - Server year and local year did not match (Turn off from settings page if this is false positive)",
-                'message' => cfas_get_error_text()
+                'reason' => "JavaScript check failed - The year submitted by JavaScript($submittedYear) does not match the current server year($serverYear)",
+                'message' => "maspikYearCheck"
             ];
         }
     }
@@ -46,7 +47,7 @@ function maspik_make_extra_spam_check($post) {
             return [
                 'spam' => true,
                 'reason' => "Maspik Spam Trap - Submitted too fast, Only $timeDifference seconds (" . $currentTime . " - $inputTime)",
-                'message' => cfas_get_error_text()
+                'message' => "maspikTimeCheck"
             ];
         }
     }
@@ -60,7 +61,7 @@ function maspik_make_extra_spam_check($post) {
 }
 
 function maspik_submit_buffer(){
-    return 5;
+    return 4;
 }
 
 
@@ -78,7 +79,7 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
         if($is_spam){
             $reason = isset($extra_spam_check['reason']) ? $extra_spam_check['reason'] : $reason ;
             $message = $extra_spam_check['message'] ? $extra_spam_check['message'] : 0 ;
-            return array('spam' => true, 'reason' => $reason, 'message' => $message, 'value' => $reason);
+            return array('spam' => true, 'reason' => $reason, 'message' => $message, 'value' => 1);
         }
     }
     
@@ -115,22 +116,40 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
 
     // Check country blacklist only if is pro user
     if( cfes_is_supporting() && !empty($country_blacklist) ){ 
-    $xml_data = @file_get_contents("http://www.geoplugin.net/xml.gp?ip=" . $ip);
+        $ip = "2803:9810:5423:d810:8597:c949:6ad:7481";
+        $xml_data = @file_get_contents("http://www.geoplugin.net/xml.gp?ip=" . $ip);
         if ($xml_data) {
             $xml = simplexml_load_string($xml_data);
             $countryCode = $xml && $xml->geoplugin_countryCode && $xml->geoplugin_countryCode != "" ? (string) $xml->geoplugin_countryCode : "Unknown";
-
-            if ($countryCode && in_array($countryCode, $country_blacklist) && $AllowedOrBlockCountries === 'block' ) {
-                $spam = true;
-                $message = "country_blacklist";
-                $reason = "Country code $countryCode is blacklisted ($AllowedOrBlockCountries)";
-                return array('spam' => $spam, 'reason' => $reason, 'message' => $message, 'value' => $countryCode);
+            $continentCode = $xml && $xml->geoplugin_continentCode && $xml->geoplugin_continentCode != "" ? (string) $xml->geoplugin_continentCode : "Unknown";
+            
+            $selected_country_codes = array();
+            $selected_continent_codes = array();
+        
+            foreach ($country_blacklist as $item) {
+                if (strpos($item, 'Continent:') === 0) {
+                    $selected_continent_codes[] = substr($item, strlen('Continent:'));
+                } else {
+                    $selected_country_codes[] = $item;
+                }
             }
-            if ($AllowedOrBlockCountries === 'allow' && !in_array($countryCode, $country_blacklist) ) {
-                $spam = true;
-                $message = "country_blacklist";
-                $reason = "Country $countryCode is not in the whitelist ($AllowedOrBlockCountries)";
-                return array('spam' => $spam, 'reason' => $reason, 'message' => $message, 'value' => $countryCode);
+        
+            if ($AllowedOrBlockCountries === 'block') {
+                if (in_array($countryCode, $selected_country_codes) || in_array($continentCode, $selected_continent_codes)) {
+                    // חסימת המשתמש
+                    $spam = true;
+                    $message = "country_blacklist";
+                    $reason = "Country code $countryCode or continent $continentCode is blacklisted (block)";
+                    return array('spam' => $spam, 'reason' => $reason, 'message' => $message, 'value' => $countryCode);
+                }
+            } elseif ($AllowedOrBlockCountries === 'allow') {
+                if (!in_array($countryCode, $selected_country_codes) && !in_array($continentCode, $selected_continent_codes)) {
+                    // חסימת המשתמש
+                    $spam = true;
+                    $message = "country_blacklist";
+                    $reason = "Country code $countryCode or continent $continentCode is not in the whitelist (allow)";
+                    return array('spam' => $spam, 'reason' => $reason, 'message' => $message, 'value' => $countryCode);
+                }
             }
         }
     }
@@ -483,7 +502,7 @@ function checkTextareaForSpam($field_value) {
 
             if ($lang_needed && empty($missing_lang)) {
                 $listofNeededlanguage = implode(", ",$lang_needed);
-                return array('spam' => "Needed language is missing ($listofNeededlanguage)", 'message' => "lang_needed");
+                return array('spam' => "Needed language is missing ($listofNeededlanguage)", 'message' => "lang_needed", 'option_value' => $listofNeededlanguage, 'label' => "lang_needed");
             }
         }
 
@@ -511,7 +530,7 @@ function checkTextareaForSpam($field_value) {
             $detected_forbidden_lang = maspik_detect_language_in_string($lang_forbidden, $field_value);
 
             if (!empty($detected_forbidden_lang)) {
-                return array('spam' => "Forbidden language '$detected_forbidden_lang' exists", 'message' => "lang_forbidden");
+                return array('spam' => "Forbidden language '$detected_forbidden_lang' exists", 'message' => "lang_forbidden", 'option_value' => $detected_forbidden_lang, 'label' => "lang_forbidden");
             }
         }
             
