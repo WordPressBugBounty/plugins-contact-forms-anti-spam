@@ -1042,11 +1042,6 @@ $spamcounter = maspik_spam_count();
                                 maspik_tooltip("If the Textarea value CONTAINS one of the given values, it will be marked as spam and blocked.");
                                     
                                 echo "<div class = 'maspik-small-btn-wrap'>";
-                                    maspik_popup("
-                                    [name] - Title of the website- Maspik Testing |
-                                    [url] - URL of the website- https://maspik.com|
-                                    [description] - Description of the web site- Desc", "Shortcode List",  "Shortcode List" ,"shortcode");
-
                                     maspik_popup("submit your website|seo|ranking|currency|click here", "Textarea field",  "See examples" ,"visibility");
                                 echo "</div>";
                             ?>

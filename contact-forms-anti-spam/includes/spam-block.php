@@ -116,7 +116,6 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
 
     // Check country blacklist only if is pro user
     if( cfes_is_supporting() && !empty($country_blacklist) ){ 
-        $ip = "2803:9810:5423:d810:8597:c949:6ad:7481";
         $xml_data = @file_get_contents("http://www.geoplugin.net/xml.gp?ip=" . $ip);
         if ($xml_data) {
             $xml = simplexml_load_string($xml_data);
@@ -136,7 +135,6 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
         
             if ($AllowedOrBlockCountries === 'block') {
                 if (in_array($countryCode, $selected_country_codes) || in_array($continentCode, $selected_continent_codes)) {
-                    // חסימת המשתמש
                     $spam = true;
                     $message = "country_blacklist";
                     $reason = "Country code $countryCode or continent $continentCode is blacklisted (block)";
@@ -144,7 +142,6 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
                 }
             } elseif ($AllowedOrBlockCountries === 'allow') {
                 if (!in_array($countryCode, $selected_country_codes) && !in_array($continentCode, $selected_continent_codes)) {
-                    // חסימת המשתמש
                     $spam = true;
                     $message = "country_blacklist";
                     $reason = "Country code $countryCode or continent $continentCode is not in the whitelist (allow)";
@@ -462,13 +459,6 @@ function checkTextareaForSpam($field_value) {
     }
     
     foreach ($textarea_blacklist as $bad_string) {
-        
-        if (!empty($field_value) && $bad_string[0] === "[") {
-            // Handle special cases for shortcodes
-            $search = array('[', ']');
-            $bad_string = str_replace($search, "", $bad_string);
-            $bad_string = "url" || "name" || "description" ? get_bloginfo($bad_string) : "Error - Shortcode not exist";
-        }
         if ( maspik_is_field_value_exist_in_string($bad_string, $field_value) ) {
             return array('spam' => "field value includes <u>$bad_string</u>", 'message' => "textarea_field" , 'option_value' => $field_value, 'label' => "textarea_blacklist"  );
         }
