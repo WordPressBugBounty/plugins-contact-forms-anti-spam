@@ -103,7 +103,6 @@ function maspik_validate_cf7_process( $result, $tags ) {
                 }
                 break;
 
-            // ניתן להוסיף שדות נוספים לפי הצורך
         }
     }
 
@@ -127,7 +126,6 @@ function maspik_validate_cf7_process( $result, $tags ) {
     return $result;
 }
 
-// הוספת שדות Honey-pot לטופס CF7
 function maspik_honeypot_to_cf7_form( $form_content ) {
     if ( maspik_get_settings( 'maspikHoneypot' ) || maspik_get_settings( 'maspikTimeCheck' ) || maspik_get_settings( 'maspikYearCheck' ) ) {
         $custom_html = '';

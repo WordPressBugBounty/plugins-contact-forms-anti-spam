@@ -17,6 +17,11 @@ function maspik_comments_checker(array $data) {
     if (!$run) {
         return $data;
     }
+    if ( current_user_can( 'edit_posts' ) ) {
+        // If user can edit posts
+        // skip spam check
+        return $data;
+    }
 
     $spam = false;
     $ip = efas_getRealIpAddr();

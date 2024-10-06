@@ -79,12 +79,18 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
 
             case 'tel':
                 // Tel Field Validation
-                $valid = checkTelForSpam($field_value);
+                $checkTelForSpam = checkTelForSpam($field_value);
+                $valid = isset($checkTelForSpam['valid']) ? $checkTelForSpam['valid'] : true;
                 $spam_val = $field_value;
 
                 if(!$valid){
-                  $error_message = cfas_get_error_text("tel_blacklist");
-                  efas_add_to_log($type = "tel", "Tel $field_value is block $valid", $form_data,"Elementor forms", "tel_blacklist", $spam_val);
+                  $reason = isset($checkTelForSpam['reason']) ? $checkTelForSpam['reason'] : false;
+                  $spam_lbl = isset($checkTelForSpam['label']) ? $checkTelForSpam['label'] : 0 ;
+                  $spam_val = isset($checkTelForSpam['option_value']) ? $checkTelForSpam['option_value'] : 0 ;
+                  $message = isset($checkTelForSpam['message']) ? $checkTelForSpam['message'] : "tel_formats" ;
+      
+                  $error_message = cfas_get_error_text($message);
+                  efas_add_to_log($type = "tel", $reason, $form_data,"Elementor forms", $spam_lbl, $spam_val);
                   $ajax_handler->add_error($field_id, $error_message);
                   return;
                 }

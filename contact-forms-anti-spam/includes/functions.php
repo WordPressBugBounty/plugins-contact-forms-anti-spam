@@ -1604,6 +1604,7 @@ function cfas_get_error_text($field = "error_message") {
 
     return sanitize_text_field($text);
 }
+
 function get_maspik_footer(){
     ?> 
     <footer class="maspik-footer">

@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.6
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.2.4
+Stable tag: 2.2.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,9 +145,13 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 
 == Changelog ==
 
+= 2.2.5 - 06/10/2024 =
+* Improvement - Editor can publish comments without validation check.
+* Bug fix - Fix phone number limit digit check on Elementor form.
+
 = 2.2.4 - 04/10/2024 =
-* Bug fix - Fix error in Country check for some cases
-* Bug fix - Fix error in AbuseAPI check for some cases
+* Bug fix - Fix error in Country check for some cases.
+* Bug fix - Fix error in AbuseAPI check for some cases.
 * Remove - shortcode option in text-area field, because can be confuseding.
 
 
