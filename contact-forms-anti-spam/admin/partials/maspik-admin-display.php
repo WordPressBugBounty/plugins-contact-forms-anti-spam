@@ -420,15 +420,11 @@ $spamcounter = maspik_spam_count();
                     $error_message .= $result_check . " ";
                 } //spam log entity limit
 
-                if( !update_option( 'add_country_to_emails' , sanitize_text_field(isset( $_POST['add_country_to_emails'] )) ? 'yes' : 'no')){ 
-                    $error_message .= $result_check . " ";
-                } //add country toggle
-
-                if( !update_option( 'disable_comments' , sanitize_text_field(isset( $_POST['disable_comments'] )) ? 'yes' : 'no')){ 
+                if( update_option( 'shere_data' , sanitize_text_field(isset( $_POST['shere_data'] )) ? 1 : 0)){ 
                     $error_message .= $result_check . " ";
                 } //disable comment toggle
 
-                if( !update_option( 'shere_data' , sanitize_text_field(isset( $_POST['shere_data'] )) ? 'yes' : 'no')){ 
+                if( maspik_save_settings( 'shere_data' , sanitize_text_field(isset( $_POST['shere_data'] )) ? 1 : 0)){ 
                     $error_message .= $result_check . " ";
                 } //disable comment toggle
 
@@ -1273,7 +1269,7 @@ $spamcounter = maspik_spam_count();
 
             <!-- Accordion Item - Other Options Field - Custom -->
             <div class="maspik-accordion-item maspik-accordion-other-option-field" >
-                <div class="maspik-accordion-header" id="form-option-accordion">
+                <div class="maspik-accordion-header" id="ip-blacklist-accordion">
                     <div class="mpk-acc-header-texts">
                         <h4 class="maspik-header maspik-accordion-header-text"><?php esc_html_e('IP Blacklist and 3rd Party APIs', 'contact-forms-anti-spam'); ?></h4><!--Accordion Title-->
                     </div>
@@ -1502,7 +1498,7 @@ $spamcounter = maspik_spam_count();
 
             <!-- Accordion Item - Other Options Field - Custom -->
             <div class="maspik-accordion-item maspik-accordion-other-option-field" >
-                <div class="maspik-accordion-header" id="form-option-accordion">
+                <div class="maspik-accordion-header" id="spam-log-accordion">
                     <div class="mpk-acc-header-texts">
                         <h4 class="maspik-header maspik-accordion-header-text"><?php esc_html_e('Spam Log and Validation message', 'contact-forms-anti-spam'); ?></h4><!--Accordion Title-->
                     </div>

@@ -81,8 +81,6 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
                 // Tel Field Validation
                 $checkTelForSpam = checkTelForSpam($field_value);
                 $valid = isset($checkTelForSpam['valid']) ? $checkTelForSpam['valid'] : true;
-                $spam_val = $field_value;
-
                 if(!$valid){
                   $reason = isset($checkTelForSpam['reason']) ? $checkTelForSpam['reason'] : false;
                   $spam_lbl = isset($checkTelForSpam['label']) ? $checkTelForSpam['label'] : 0 ;

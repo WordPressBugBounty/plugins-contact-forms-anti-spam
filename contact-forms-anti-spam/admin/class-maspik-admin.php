@@ -121,7 +121,7 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
         $checked = maspik_get_settings($dbrow_name) == 'yes' ? 'checked': "";
 
     } elseif($type == "other_options"){
-        $checked = maspik_get_settings($dbrow_name, '', 'old') == 'yes' ? 'checked': "";
+        $checked = maspik_get_settings($dbrow_name, '', 'old') ? 'checked': "";
     } else {
         $checked = maspik_get_settings($dbrow_name, 'toggle');
         $checked = maspik_is_contain_api($api_array) ? 'checked' : $checked ;

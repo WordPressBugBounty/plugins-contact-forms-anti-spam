@@ -14,7 +14,7 @@ function schedule_weekly_to_maspik_api_request() {
     if ( ! wp_next_scheduled( 'weekly_to_r_maspik_request' ) ) {
         // Schedule the event to run once a week
       	wp_clear_scheduled_hook( 'weekly_to_r_maspik_request' );
-        wp_schedule_event( time(), "twiceweekly", 'weekly_to_r_maspik_request' ); // twiceweekly 
+        wp_schedule_event( time(), "weekly", 'weekly_to_r_maspik_request' ); // weekly 
     }
 }
 add_action( 'init', 'schedule_weekly_to_maspik_api_request' );
@@ -64,7 +64,8 @@ function weekly_api_to_maspik_request_callback() {
         //echo '<pre>'; print_r($data); echo '</pre>';
     }
 }
-add_action( 'weekly_to_r_maspik_request', 'weekly_api_to_maspik_request_callback' );
+add_action( 'weekly_to_r_maspik_request', 'weekly_api_to_maspik_request_callback' );//add_action( 'weekly_to_r_maspik_request', 'weekly_api_to_maspik_request_callback' );
+
 
 
 
@@ -76,7 +77,7 @@ function schedule_weekly_spam_logs_request() {
     if ( ! wp_next_scheduled( 'weekly_spam_logs_request' ) ) {
         // Schedule the event to run once a week
         wp_clear_scheduled_hook( 'weekly_spam_logs_request' );
-        wp_schedule_event( time(), "twiceweekly", 'weekly_spam_logs_request' ); // weekly
+        wp_schedule_event( time(), "weekly", 'weekly_spam_logs_request' ); // weekly
     }
 }
 add_action( 'init', 'schedule_weekly_spam_logs_request' );

@@ -162,7 +162,7 @@ class Maspik {
       }
       
       // If agree to shere Non sensitive information 
-      if( maspik_get_settings("shere_data", '', 'old') == "yes"  ) { 
+      if( maspik_get_settings("shere_data", '', 'old') == 1 ){ 
           require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/statistics-data.php';
       }
 

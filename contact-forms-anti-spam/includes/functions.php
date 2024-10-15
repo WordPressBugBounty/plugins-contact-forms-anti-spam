@@ -1408,13 +1408,23 @@ function efas_if_plugin_is_active($plugin){
 
 //Display admin notices 
 function contact_forms_anti_spam_plugin_admin_notice(){
-    $screen = get_current_screen();
-    if ( $screen->id !== 'toplevel_page_contact-forms-anti-spam') return; 
-            ?><div class="notice notice-warning is-dismissible">
-                <p><?php esc_html_e('Use this plugin with caution and only if you understand the risk, blacklisting some words can lead to the termination of valid leads.', 'contact-forms-anti-spam') ?></p>
-            </div><?php
+    $screen = get_current_screen()->id;
+    if ( strpos($screen, 'maspik') !== false ){
+        ?><div class="notice notice-warning is-dismissible">
+        <p><?php esc_html_e('Use this plugin with caution and only if you understand the risk, blacklisting some words can lead to the termination of valid leads.', 'contact-forms-anti-spam') ?></p>
+        </div><?php  
+        // Change the footer text
+        add_filter('admin_footer_text', 'maspik_change_footer_admin');
+     }
+   
 }
 add_action( 'admin_notices', 'contact_forms_anti_spam_plugin_admin_notice' );
+
+function maspik_change_footer_admin () {
+    echo '<p id="footer-left" class="alignleft">
+		Enjoyed <strong>Maspik</strong>? Please leave us a <a href="https://wordpress.org/support/plugin/contact-forms-anti-spam/reviews/#new-post" target="_blank">★★★★★</a> rating. We really appreciate your support!</p>';
+}
+
 
 function mergePerKey($array1, $array2) {
     $result = array();
@@ -1431,19 +1441,6 @@ function mergePerKey($array1, $array2) {
     }
 
     return $result;
-}
-
-// See http://codex.wordpress.org/Plugin_API/Filter_Reference/cron_schedules
-add_filter( 'cron_schedules', 'contact_forms_anti_spam_add_weekly' );
-function contact_forms_anti_spam_add_weekly( $schedules ) {
-  	if(!isset($schedules["twiceweekly"])){
-      $schedules[ 'twiceweekly' ] = array( 
-          'interval' => 60 * 60 * 24 * 3,
-          'display' => esc_html__( 'Twice weekly' )
-      );
-    }
-
-    return $schedules;
 }
 
 // Schedule an action if it's not already scheduled
@@ -1566,7 +1563,9 @@ function maspik_toggle_match($data){
         return "phone_limit_custom_message_toggle";
     }elseif($data == "custom_error_message_tel_formats"){
         return "phone_custom_message_toggle";
-
+    }elseif($data == "tel_formats"){
+        return "phone_custom_message_toggle";
+    
     //Language
     }elseif($data == "lang_needed"){
         return "lang_need_custom_message_toggle";
@@ -1608,7 +1607,7 @@ function cfas_get_error_text($field = "error_message") {
 function get_maspik_footer(){
     ?> 
     <footer class="maspik-footer">
-        <h3><?php esc_html_e('Did We Block Spam?', 'contact-forms-anti-spam'); ?></h3>
+        <h3><?php esc_html_e('Enjoyed Maspik?', 'contact-forms-anti-spam'); ?></h3>
         <p><?php echo esc_html__('We would be incredibly grateful if you could ', 'contact-forms-anti-spam') . '<a href="https://wordpress.org/support/plugin/contact-forms-anti-spam/reviews/#new-post" target="_blank">' . esc_html__('leave us a 5-star review', 'contact-forms-anti-spam') . '</a>. ' . esc_html__('Your feedback not only helps others discover our plugin but also fuels our passion to keep enhancing it. It helps us grow and continue improving. Thank you for your support!', 'contact-forms-anti-spam'); ?></p>
         <h4><?php esc_html_e('Join Our Facebook Community!', 'contact-forms-anti-spam'); ?></h4>
         <p><?php echo esc_html__('Ask questions, share spam examples, get ideas on how to block them, share feedback, and suggest new features. Join us at ', 'contact-forms-anti-spam') . '<a href="https://www.facebook.com/groups/maspik" target="_blank">' . esc_html__('WP Maspik Community - Stopping Spam Together', 'contact-forms-anti-spam') . '</a>.'; ?></p>
@@ -1792,7 +1791,7 @@ function Maspik_allow_sharing_callback() {
 
     // Update option
     //update_option('shere_data', 1);
-    maspik_save_settings('shere_data', '1');
+    maspik_save_settings('shere_data', 1);
     
 
     wp_die(); // Always use wp_die() at the end of an AJAX callback
@@ -2384,3 +2383,4 @@ function IP_Verification_popup_content() {
     // Output the content
     echo ob_get_clean();
 }
+
