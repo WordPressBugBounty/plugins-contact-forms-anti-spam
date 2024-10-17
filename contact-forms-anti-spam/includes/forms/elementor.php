@@ -40,7 +40,7 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
     // Loop through all fields
     foreach ( $form_fields as $field_id => $field ) {
         $field_id = $field['id']; // Custom ID of the field
-        $field_value = isset( $field['value'] ) ? strtolower( sanitize_text_field( $field['value'] ) ) : '';
+        $field_value = isset( $field['value'] ) && !is_array( $field['value'] ) ? sanitize_text_field( $field['value'] ) : '';
         $field_type = $field['type'];
 
         if ( empty( $field_value ) ) {

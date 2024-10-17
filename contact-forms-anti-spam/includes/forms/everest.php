@@ -27,7 +27,7 @@ function maspik_validate_everest_forms($errors, $form_data) {
 
     // Perform spam validation for each form field
     foreach ($fields as $field_id => $field) {
-        $field_value = sanitize_text_field($entry[$field_id]);
+        $field_value = is_array($entry[$field_id]) ? $entry[$field_id] : sanitize_text_field($entry[$field_id]);
         $field_type = $field['type'];
 
 

@@ -22,7 +22,7 @@ function maspik_validate_cf7_process( $result, $tags ) {
             continue;
         }
 
-        $field_value = strtolower( $_POST[ $name ] );
+        $field_value =  is_array( $_POST[ $name ] ) ? $_POST[ $name ] : sanitize_text_field( $_POST[ $name ] );
 
         if ( empty( $field_value ) ) {
             continue;

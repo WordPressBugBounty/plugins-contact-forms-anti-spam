@@ -17,7 +17,7 @@ msgstr ""
 
 #: admin/partials/maspik-admin-display.php:1703
 msgid " "
-msgstr ""
+msgstr " "
 
 #: admin/partials/maspik-admin-display.php:1170
 msgid " You can get more information"

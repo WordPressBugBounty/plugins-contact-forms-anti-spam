@@ -450,7 +450,8 @@ function checkTelForSpam($field_value) {
 * Textarea field check 
 **/
 function checkTextareaForSpam($field_value) {
-    
+    $field_value = is_array($field_value) ? $field_value : strtolower($field_value);
+
     // Get the blacklist from options and merge with API data if available
     $textarea_blacklist = maspik_get_settings('textarea_blacklist') ? efas_makeArray(maspik_get_settings('textarea_blacklist')) : array();
     if (efas_get_spam_api('textarea_field')) {
