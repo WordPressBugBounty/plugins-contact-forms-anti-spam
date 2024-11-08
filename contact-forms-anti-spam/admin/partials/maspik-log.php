@@ -99,6 +99,19 @@ function cfes_build_table() {
         $unserialize_array = @unserialize($form_data_raw);
         $form_data = "<pre>".esc_html($form_data_raw)."</pre>";
 
+        $spam_source = $row['spam_source'];
+        if (strpos($spam_source, '|||') !== false) {
+          list($source, $url) = explode('|||', $spam_source);
+
+          $url = htmlspecialchars($url);
+          $back_id = url_to_postid($url);
+          $title = $back_id > 0 ? get_the_title( $back_id ) : "Page";
+          $spam_source = esc_html($source) . ' <br> <a target="_blank" href="' . esc_url($url) . '">' . esc_html($title) . '</a>';
+          
+      } else {
+          $spam_source = esc_html($spam_source);
+      }
+
         if($row['spamsrc_label'] != ""){
           $spam_alt_text = "Entry has been blocked. Reason: " . $spam_val_intext . " = '" . $spam_value . "'";
         }else{
@@ -135,7 +148,7 @@ function cfes_build_table() {
                   <td class='column-country column-entries'>".esc_html($row['spam_country'])."</td>
                   <td class='column-agent column-entries'>".esc_html($row['spam_agent'])."</td>
                   <td class='column-date column-entries'>$spam_date</td>
-                  <td class='column-source column-entries'>".esc_html($row['spam_source'])."</td>
+                  <td class='column-source column-entries'>".$spam_source."</td>
                   <td class='maspik-log-column column-button'>
                 
                   </td>
@@ -253,6 +266,9 @@ function cfes_build_table() {
 
 <?php
   wp_enqueue_script('maspik-spamlog', plugin_dir_url(__FILE__) . '../js/maspik-spamlog.js', array('jquery'), MASPIK_VERSION, true);
+  wp_localize_script('maspik-spamlog', 'maspikAdmin', array(
+      'nonce' => wp_create_nonce('maspik_delete_action')
+  ));
 ?>
 
 //Accordion Script - START

@@ -34,8 +34,8 @@ if ( ! defined( 'WPINC' ) ) {
     add_action( 'admin_init', 'maspik_check_if_need_to_run_once' , 20);
 
      //Check for PRO -addclass- 
-        function maspik_add_pro_class(){
-            if(cfes_is_supporting()){
+        function maspik_add_pro_class($type = ""){
+            if(cfes_is_supporting($type)){
                 return "maspik-pro";
             }
             else{
@@ -401,6 +401,22 @@ class Maspik_Admin {
         add_submenu_page($this->plugin_name, 'Spam Log', 'Spam Log ' . $numlogspam, 'edit_pages', $this->plugin_name . '-log.php', array($this, 'displayPluginAdminSettings'));
 
         add_submenu_page($this->plugin_name, 'Import/Export Settings', 'Import/Export Settings', 'administrator', $this->plugin_name . '-import-export.php', array($this, 'Maspik_import_export_settings_page'));
+
+        if ( cfes_is_supporting()) {
+            $first_maspik_api_id = get_option("maspik_api_id") ? explode(',', get_option("maspik_api_id"))[0] : 0;
+            $dashboard_url = 'https://wpmaspik.com/?page_id=' . esc_attr($first_maspik_api_id . '&ref=plugin-menue&my-account=1');
+            $url = $first_maspik_api_id ? $dashboard_url : 'https://wpmaspik.com/my-account?ref=plugin-menue';
+            add_submenu_page(
+                $this->plugin_name,
+                'Maspik dashboard',
+                'Maspik dashboard',
+                'edit_pages',
+                $url,
+                '',
+                null
+            );
+        }
+
     }
 
     public function displayPluginAdminDashboard() {
@@ -442,6 +458,7 @@ class Maspik_Admin {
         }
         require_once 'partials/' . $this->plugin_name . '-import-export.php';
     }
+
 
     public function settingsPageSettingsMessages($error_message) {
         switch ($error_message) {

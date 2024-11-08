@@ -2,14 +2,14 @@
 Contributors: yonifre
 Donate link: paypal.me/yonifre
 Tags: spam, blacklist, anti spam, Honeypot, antispam 
-Tested up to: 6.6
+Tested up to: 6.7
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.2.7
+Stable tag: 2.2.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Block spam in several ways, blacklist words/ honeypot / IP verification and more, integrate with almost any contact form plugin and comments. 
+Block spam in any form, blacklist words/ honeypot / IP verification and more, integrate with almost any contact form plugin and comments. 
 
 == Description ==
 
@@ -144,6 +144,14 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 
 
 == Changelog ==
+
+= 2.2.8 - 08/11/2024 =
+* New Feature - Add support in BuddyPress forms.
+* Improvement - Improve layout of Playground form.
+* Improvement - add page link in spam log.
+* Improvement - improve time block check to reduce false positive.
+* Improvement - Add spanish translation.
+
 
 = 2.2.7 - 16/10/2024 =
 * Bug fix - Fix error in Contact Form 7 with checkbox field in some cases.

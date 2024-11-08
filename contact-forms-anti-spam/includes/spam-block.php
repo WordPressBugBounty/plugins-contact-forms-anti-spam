@@ -41,12 +41,25 @@ function maspik_make_extra_spam_check($post) {
     if (maspik_get_settings('maspikTimeCheck') && isset($post['Maspik-exactTime']) && is_numeric($post['Maspik-exactTime'])) {
         $inputTime = (int)$post['Maspik-exactTime'];
         $currentTime = time();
-        $timeDifference = $currentTime - $inputTime;
+        $timeDifference = abs($currentTime - $inputTime);
+
+        if ($inputTime > $currentTime) {
+            // for prevent false positive
+                return [
+                    'spam' => false,
+                    'reason' => false,
+                    'message' => false
+            
+                // 'spam' => true,
+                //'reason' => "Invalid submission time - future timestamp detected",
+                // 'message' => "maspikTimeCheck"
+            ];
+        }
 
         if ($timeDifference < maspik_submit_buffer()) {
             return [
                 'spam' => true,
-                'reason' => "Maspik Spam Trap - Submitted too fast, Only $timeDifference seconds (" . $currentTime . " - $inputTime)",
+                'reason' => "Maspik Spam Trap - Submitted too fast, Only {$timeDifference} seconds",
                 'message' => "maspikTimeCheck"
             ];
         }
@@ -115,7 +128,7 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
     
 
     // Check country blacklist only if is pro user
-    if( cfes_is_supporting() && !empty($country_blacklist) ){ 
+    if( cfes_is_supporting("country_location") && !empty($country_blacklist) ){ 
         $xml_data = @file_get_contents("http://www.geoplugin.net/xml.gp?ip=" . $ip);
         if ($xml_data) {
             $xml = simplexml_load_string($xml_data);
@@ -466,7 +479,7 @@ function checkTextareaForSpam($field_value) {
     }
 
     // only if pro user
-    if ( cfes_is_supporting() ) {
+    if ( cfes_is_supporting("country_location") ) {
         // Check for required language
         $opt_value = maspik_get_dbvalue();
         $lang_need_array = maspik_get_settings('lang_needed','select' );

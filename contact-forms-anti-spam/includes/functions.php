@@ -34,11 +34,17 @@ function maspik_var_value_convert($var) {
 
 
 function maspik_delete_filter() {
-
     global $wpdb;
 
-    if ( ! current_user_can( 'manage_options' ) ) {
+    // Add nonce verification
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'maspik_delete_action')) {
+        wp_send_json_error('Invalid security token.');
+        return;
+    }
+
+    if (!current_user_can('manage_options')) {
         wp_send_json_error('You do not have permission to perform this action.');
+        return;
     }
 
     $row_id = intval($_POST['row_id']);
@@ -136,8 +142,15 @@ function maspik_delete_filter() {
     function maspik_delete_row() {
         global $wpdb;
     
+        // Add nonce verification
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'maspik_delete_action')) {
+            wp_send_json_error('Invalid security token.');
+            return;
+        }
+    
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error('You do not have permission to perform this action.');
+            return;
         }
     
         $row_id = intval($_POST['row_id']);
@@ -179,10 +192,11 @@ function maspik_insert_to_table() {
     // Rows to be inserted if they don't exist
     $rows = [
         //Add rows here
-        [$setting_label => 'MaspikHoneypot', $setting_value => ''], //Honeypot ver 2.1.2
-        [$setting_label => 'maspik_support_jetforms', $setting_value => 'yes'], //Honeypot ver 2.1.2
-        [$setting_label => 'maspik_support_everestforms', $setting_value => 'yes'], //Honeypot ver 2.1.2
-        [$setting_label => 'maspikDbCheck', $setting_value => ''], //maspikDbCheck ver 2.1.6
+        [$setting_label => 'MaspikHoneypot', $setting_value => 1], //Honeypot ver 2.1.2
+        [$setting_label => 'maspik_support_jetforms', $setting_value => 'yes'], //jetforms ver 2.1.2
+        [$setting_label => 'maspik_support_everestforms', $setting_value => 'yes'], //everestforms ver 2.1.2
+        [$setting_label => 'maspikDbCheck', $setting_value => 1], //maspikDbCheck ver 2.1.6
+        [$setting_label => 'maspik_support_buddypress_forms', $setting_value => 'yes'] //buddypress ver 2.2.7
 
     ];
 
@@ -293,7 +307,7 @@ add_action('init', 'maspik_insert_to_table');
                     $setting_label => $col_name,
                     $setting_value => $new_value
                 ),
-                array('%s', is_numeric($new_value) ? '%d' : '%s')
+                array(is_numeric($new_value) ? '%d' : '%s')
             );
         }
             
@@ -594,21 +608,22 @@ function maspik_get_settings($data_name, $type = '', $table_var = 'new'){
                 'maspik_support_ninjaforms' => 'yes',
                 'maspik_support_registration' => 'yes',
                 'maspik_support_wp_comment' => 'yes',
+                'maspik_support_buddypress_forms' => 'yes',
                 //extra
                 'maspik_Store_log' => 'yes',
                 'spam_log_limit' => '2000',
                 //toggles
                 'text_limit_toggle' => '',
-                'text_custom_message_toggle' => '',
-                'textarea_limit_toggle' => '',
-                'textarea_link_limit_toggle' => '',
-                'textarea_custom_message_toggle' => '',
-                'tel_limit_toggle' => '',
-                'phone_limit_custom_message_toggle' => '',
-                'phone_custom_message_toggle' => '',
-                'lang_need_custom_message_toggle' => '',
-                'lang_forbidden_custom_message_toggle' => '',
-                'country_custom_message_toggle' => '',
+                'text_custom_message_toggle',
+                'textarea_limit_toggle',
+                'textarea_link_limit_toggle',
+                'textarea_custom_message_toggle',
+                'tel_limit_toggle',
+                'phone_limit_custom_message_toggle',
+                'phone_custom_message_toggle',
+                'lang_need_custom_message_toggle',
+                'lang_forbidden_custom_message_toggle',
+                'country_custom_message_toggle',
                 'MaspikHoneypot' => '1',
                 'maspik_support_jetforms' => '1',
                 'maspik_support_everestforms' => '1',
@@ -764,7 +779,7 @@ function efas_add_to_log($type = '', $input = '', $post = null, $source = "Eleme
 
         if ($result !== "success") {
             // Handle the error
-            error_log("Failed to save spam log: " . $result);
+            //error_log("Failed to save spam log: " . $result);
         }
 
     }
@@ -773,9 +788,14 @@ function efas_add_to_log($type = '', $input = '', $post = null, $source = "Eleme
 // Save Error logs to table
 function maspik_save_log($type, $value, $detail, $ip, $country, $agent, $date, $source, $spamsrc_name, $spamsrc_val) {
     global $wpdb;
+    global $wp;
 
     if (maspik_logtable_exists()) {
+
         $table = maspik_get_logtable();
+        $url = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
+
+        $spam_source = $url ? "$source|||$url" : $source;
 
         $data = array(
             'spam_type'    => $type,
@@ -785,7 +805,7 @@ function maspik_save_log($type, $value, $detail, $ip, $country, $agent, $date, $
             'spam_country' => $country,
             'spam_agent'   => $agent,
             'spam_date'    => $date,
-            'spam_source'  => $source,
+            'spam_source'  => $spam_source,
             'spamsrc_label' => $spamsrc_name, 
             'spamsrc_val'  => $spamsrc_val, 
         );
@@ -840,7 +860,7 @@ function maspik_save_log($type, $value, $detail, $ip, $country, $agent, $date, $
 
 
 function maspik_Download_log_btn(){
-        ?><form method="post" class="downloadform" action="<?php echo admin_url('admin-post.php'); ?>">
+        ?><form method="post" class="downloadform" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
         <input type="hidden" name="action" value="Maspik_spamlog_download_csv">
         <input type="submit" value="Download CSV" class="maspik-btn">
     </form><?php
@@ -899,9 +919,9 @@ function maspik_is_field_value_equal_to_string($string, $field_value) {
 }
 
 function efas_get_spam_api($field = "text_field",$type = "array") {
-    $spamapi_option = get_option('spamapi');
+    $spamapi_option = get_option('spamapi'); 
    
-    if (!is_array($spamapi_option) || !cfes_is_supporting() || !isset($spamapi_option[$field])) {
+    if (!maspik_get_settings('private_file_id') || !is_array($spamapi_option) || !cfes_is_supporting("api") || !isset($spamapi_option[$field])) {
         return false;
     }
 
@@ -932,7 +952,7 @@ function efas_get_spam_api($field = "text_field",$type = "array") {
 
 function maspik_is_contain_api($array) {
     $spamapi_option = get_option('spamapi');
-    if ( !is_array($spamapi_option) ||  !cfes_is_supporting() || !is_array($array) ) {
+    if ( !is_array($spamapi_option) ||  !cfes_is_supporting("api") || !is_array($array) ) {
         return false;
     }
     // Check if any of the fields in the array are set in the spam API option
@@ -985,7 +1005,7 @@ function efas_array_of_lang_forbidden(){
             '[А-Яа-яЁё]' => esc_html__('Russian (А-Яа-яЁ)', 'contact-forms-anti-spam' ),
             '\p{Unknown}' => esc_html__('Unknown language', 'contact-forms-anti-spam' ),
             '[À-ÖØ-öø-ÿ]' => esc_html__('Dutch (À-ÖØ-öø-ÿ)', 'contact-forms-anti-spam'),
-            '[ÇçĞğİıÖöŞşÜü]' => esc_html__('Turkish (ÇçĞğİıÖöŞşÜü)', 'contact-forms-anti-spam'),
+            '[ÇçĞğÖöŞşÜü]' => esc_html__('Turkish (ÇçĞğİıÖöŞşÜü)', 'contact-forms-anti-spam'),
             '[ĄąĆćĘęŁłŃńÓóŚśŹźŻż]' => esc_html__('Polish (ĄąĆćĘęŁłŃńÓóŚśŹźŻż)', 'contact-forms-anti-spam'),
             '[ĂăÂâÎîȘșȚț]' => esc_html__('Romanian (ĂăÂâÎîȘșȚț)', 'contact-forms-anti-spam'),
             '[ÁáČčĎďÉéÍíĹĺĽľŇňÓóŔŕŠšŤťÚúÝýŽž]' => esc_html__('Czech (ÁáČčĎďÉéÍíĹĺĽľŇňÓóŔŕŠšŤťÚúÝýŽž)', 'contact-forms-anti-spam'),
@@ -995,7 +1015,7 @@ function efas_array_of_lang_forbidden(){
             '[ÆæØøÅå]' => esc_html__('Danish (ÆæØøÅå)', 'contact-forms-anti-spam'),
             '[ÆæØøÅå]' => esc_html__('Norwegian (ÆæØøÅå)', 'contact-forms-anti-spam'),
             '[ÁáÄäČčĎďÉéÍíĹĺĽľŇňÓóÔôŔŕŠšŤťÚúÝýŽž]' => esc_html__('Slovak (ÁáÄäČčĎďÉéÍíĹĺĽľŇňÓóÔôŔŕŠšŤťÚúÝýŽž)', 'contact-forms-anti-spam'),
-            '[А-Яа-яЋћĆć]' => esc_html__('Serbian (А-Яа-яЋћĆć)', 'contact-forms-anti-spam'),
+            '[A-Za-zА-Яа-яЋћĆć]' => esc_html__('Serbian (А-Яа-яЋћĆć)', 'contact-forms-anti-spam'),
 
      );
 } 
@@ -1024,7 +1044,7 @@ function efas_array_of_lang_needed(){
             '[А-Яа-яЁё]' => esc_html__('Russian (А-Яа-яЁ)', 'contact-forms-anti-spam' ),
             '\p{Unknown}' => esc_html__('Unknown language', 'contact-forms-anti-spam' ),
             '[A-Za-zÀ-ÖØ-öø-ÿ]' => esc_html__('Dutch (A-Za-zÀ-ÖØ-öø-ÿ)', 'contact-forms-anti-spam'),
-            '[A-Za-zÇçĞ��İıÖöŞşÜü]' => esc_html__('Turkish (A-Za-zÇçĞğİıÖöŞşÜü)', 'contact-forms-anti-spam'),
+            '[A-Za-zÇçĞİıÖöŞşÜü]' => esc_html__('Turkish (A-Za-zÇçĞğİıÖŞşÜü)', 'contact-forms-anti-spam'),
             '[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż]' => esc_html__('Polish (A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż)', 'contact-forms-anti-spam'),
             '[A-Za-zĂăÂâÎîȘșȚț]' => esc_html__('Romanian (A-Za-zĂăÂâÎîȘșȚț)', 'contact-forms-anti-spam'),
             '[A-Za-zÁáČčĎďÉéÍíĹĺĽľŇňÓóŔŕŠšŤťÚúÝýŽž]' => esc_html__('Czech (A-Za-zÁáČčĎďÉéÍíĹĺĽľŇňÓóŔŕŠšŤťÚúÝýŽž)', 'contact-forms-anti-spam'),
@@ -1261,7 +1281,7 @@ function maspik_is_plugin_active( $plugin ) {
 }
 
 function efas_array_supports_plugin(){
-  $info = cfes_is_supporting() ? "" : "Pro"; 
+  $info = cfes_is_supporting("plugin") ? "" : "Pro"; 
   return array(
     'Contact form 7' => 0,
     'Elementor pro' => 0,
@@ -1274,6 +1294,7 @@ function efas_array_supports_plugin(){
     'Ninjaforms'=> 0,
     'Jetforms'=> 0,
     'Everestforms'=> 0,
+    'Buddypress' => 0,
     'Woocommerce Review' => $info,
     'Woocommerce Registration' => $info,
     'Wpforms' => $info,
@@ -1302,6 +1323,8 @@ function maspik_if_plugin_is_active($plugin){
 
 	if($plugin == 'Elementor pro'){
       return efas_if_plugin_is_active('elementor-pro') ;
+    }else if($plugin == 'Buddypress'){
+      return efas_if_plugin_is_active('buddypress');
     }else if($plugin == 'Contact form 7'){
       return  efas_if_plugin_is_active('contact-form-7');
     }else if($plugin == 'Woocommerce Review'){
@@ -1343,14 +1366,16 @@ function efas_if_plugin_is_affective($plugin , $status = "no"){
       return efas_if_plugin_is_active('elementor-pro') && maspik_get_settings( "maspik_support_Elementor_forms", 'form-toggle' ) != $status ;
     }else if($plugin == 'Contact form 7'){
       return  efas_if_plugin_is_active('contact-form-7') && maspik_get_settings( "maspik_support_cf7", 'form-toggle' ) != $status ;
+    }else if($plugin == 'Buddypress'){
+      return efas_if_plugin_is_active('buddypress') && maspik_get_settings( "maspik_support_buddypress_forms", 'form-toggle' ) != $status ;
     }else if($plugin == 'Woocommerce Review'){
-      return efas_if_plugin_is_active('woocommerce') && cfes_is_supporting() && maspik_get_settings( "maspik_support_woocommerce_review", 'form-toggle' ) != $status ;
+      return efas_if_plugin_is_active('woocommerce') && cfes_is_supporting("plugin") && maspik_get_settings( "maspik_support_woocommerce_review", 'form-toggle' ) != $status ;
     }else if($plugin == 'Woocommerce Registration'){
-      return efas_if_plugin_is_active('woocommerce') && cfes_is_supporting() && maspik_get_settings( "maspik_support_Woocommerce_registration", 'form-toggle' ) != $status;
+      return efas_if_plugin_is_active('woocommerce') && cfes_is_supporting("plugin") && maspik_get_settings( "maspik_support_Woocommerce_registration", 'form-toggle' ) != $status;
     }else if($plugin == 'Wpforms'){
-	  return  efas_if_plugin_is_active('wpforms') && cfes_is_supporting() && maspik_get_settings( "maspik_support_Wpforms", 'form-toggle' ) != $status  ;
+      return  efas_if_plugin_is_active('wpforms') && cfes_is_supporting("plugin") && maspik_get_settings( "maspik_support_Wpforms", 'form-toggle' ) != $status  ;
     }else if($plugin == 'Gravityforms'){
-      return efas_if_plugin_is_active('gravityforms') && cfes_is_supporting() && maspik_get_settings( "maspik_support_gravity_forms", 'form-toggle' ) != $status ;
+      return efas_if_plugin_is_active('gravityforms') && cfes_is_supporting("plugin") && maspik_get_settings( "maspik_support_gravity_forms", 'form-toggle' ) != $status ;
     }else if($plugin == 'Formidable'){
       return efas_if_plugin_is_active('formidable')  && maspik_get_settings( "maspik_support_formidable_forms", 'form-toggle' ) != $status ;
     }else if($plugin == 'Fluentforms'){
@@ -1381,6 +1406,8 @@ function efas_if_plugin_is_active($plugin){
       return maspik_is_plugin_active( 'contact-form-7/wp-contact-form-7.php' );
     }else if($plugin == 'woocommerce'){
       return maspik_is_plugin_active( 'woocommerce/woocommerce.php');
+    }else if($plugin == 'buddypress'){
+      return maspik_is_plugin_active( 'buddypress/bp-loader.php');
     }else if($plugin == 'wpforms'){
 	  return ( maspik_is_plugin_active('wpforms-lite/wpforms.php') || maspik_is_plugin_active('wpforms/wpforms.php') );
     }else if($plugin == 'gravityforms'){
@@ -1415,6 +1442,21 @@ function contact_forms_anti_spam_plugin_admin_notice(){
         </div><?php  
         // Change the footer text
         add_filter('admin_footer_text', 'maspik_change_footer_admin');
+        // Add script to footer admin to open external links in new tab
+        add_action('admin_footer', function() {
+            ?>
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var links = document.querySelectorAll('#toplevel_page_maspik li a');
+                for (var i = 0; i < links.length; i++) {
+                    if (links[i].href.startsWith('https://') && !links[i].href.includes(window.location.hostname)) {
+                        links[i].target = '_blank';
+                    }
+                }
+            });
+            </script>
+            <?php
+        });
      }
    
 }
@@ -1451,7 +1493,7 @@ if ( ! wp_next_scheduled( 'cfas_daily_api_refresh' ) ) {
 add_action( 'cfas_daily_api_refresh', 'cfas_refresh_api' );
 
 
-function cfes_is_supporting() {
+function cfes_is_supporting($type = "") {
 
 	if ( function_exists( 'maspik_license_checker' ) ) {
 		try {
@@ -1459,7 +1501,7 @@ function cfes_is_supporting() {
 				return 1;
 			}
 		} catch ( \Exception $e ) {
-			error_log( 'Error happened: ' . $e->getMessage() );
+			//error_log( 'Error happened: ' . $e->getMessage() );
 		}
 	}
 
@@ -1467,14 +1509,13 @@ function cfes_is_supporting() {
 }
 add_action('after_setup_theme', 'cfes_is_supporting');
 
-
-function cfas_refresh_api() {
-    if (!cfes_is_supporting()) {
+function cfas_refresh_api($type = 'regular') {
+    if (!cfes_is_supporting("api")) {
         return;
     }
 
     $private_file_id = maspik_get_settings('private_file_id');
-    $domain = $_SERVER['SERVER_NAME'];
+    $domain = isset($_SERVER['SERVER_NAME']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_NAME'])) : '';
 
     // Initialize $file as an empty array
     $file = array();
@@ -1482,9 +1523,11 @@ function cfas_refresh_api() {
     // Check if the first API is available and fetch data
     if (!empty($private_file_id)) {
         $Api_file = "https://wpmaspik.com/wp-json/acf/v3/apis/$private_file_id";
-        $fileContent = file_get_contents("$Api_file?num=2367816&site=$domain");
-        if ($fileContent !== false) {
-            $file = json_decode($fileContent, true);
+        
+        $response = wp_remote_get($Api_file);
+        if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+            $content = wp_remote_retrieve_body($response);
+            $file = json_decode($content, true);
             $file = $file['acf'] ?? array();
         }
     }
@@ -1496,8 +1539,10 @@ function cfas_refresh_api() {
     $popular_spam = maspik_get_settings("popular_spam"); 
     if ($popular_spam) {
         $Api_popular_spam_file = "https://wpmaspik.com/wp-json/acf/v3/options/public_api?num=234442&site=$domain";
-        $popularSpamContent = file_get_contents($Api_popular_spam_file);
-        if ($popularSpamContent !== false) {
+        
+        $response = wp_remote_get($Api_popular_spam_file);
+        if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+            $popularSpamContent = wp_remote_retrieve_body($response);
             $popularSpamFile = json_decode($popularSpamContent, true);
             $popularSpamFile = $popularSpamFile['acf'] ?? array();
 
@@ -1534,10 +1579,14 @@ function cfas_refresh_api() {
     $newAPI = $combinedAPI;
     
     if ($newAPI == $previousAPI) {
-        echo "<script>alert('You have the most new version already.');</script>";
+        if ($type == 'regular') {
+            echo "<script>alert('You have the most new version already.');</script>";
+        }
     } else {
-        update_option('spamapi' , $newAPI); 
-        echo "<script>alert('New version applied successfully.');</script>";
+        update_option('spamapi', $newAPI); 
+        if ($type == 'regular') {
+            echo "<script>alert('New version applied successfully.');</script>";
+        }
     }
 }
 
@@ -1623,7 +1672,7 @@ add_filter( 'admin_body_class', 'cfas_admin_classes' );
 function cfas_admin_classes( $classes ) {
       $screen = get_current_screen()->id;
     if ( strpos($screen, 'maspik') !== false ){
-        $classes .=  cfes_is_supporting() ? "maspik-pro" : false;
+        $classes .=  cfes_is_supporting() ? " maspik-pro " : false;
     }
     return $classes;
 }
@@ -1786,7 +1835,7 @@ function Maspik_allow_sharing_callback() {
 
     // Check user capabilities
     if (!current_user_can('manage_options')) {
-        wp_die(__('Permission error', 'contact-forms-anti-spam'));
+        wp_die(esc_html__('Permission error', 'contact-forms-anti-spam'));
     }
 
     // Update option
@@ -1871,7 +1920,7 @@ function Maspik_export_settings() {
     $custom_string = "OnlyYouKnowWhatIsGoodForYou";
 
     // Convert settings array to JSON
-    $json_data = json_encode($maspik_settings);
+    $json_data = wp_json_encode($maspik_settings);
 
     $exported_data = $custom_string . "\n\n" . $domain_name . "\n\n" . $json_data;
 
@@ -2076,7 +2125,7 @@ function Maspik_spamlog_download_csv() {
 
 function maspik_is_reach_limit_and_increment_api_requests() {
 
-    $max_requests = cfes_is_supporting() ? 1000 : 100;
+    $max_requests = cfes_is_supporting("ip_verification") ? 1000 : 100;
     
     $api_data = get_option("maspik_api_requests", array(
         'months' => array()
@@ -2163,7 +2212,7 @@ function check_ip_in_api($ip, $form) {
         $response = wp_remote_get($url, $args);
 
         if (is_wp_error($response)) {
-            error_log('Maspik IP Check API Error: ' . $response->get_error_message());
+            //error_log('Maspik IP Check API Error: ' . $response->get_error_message());
             return false;
         }
 
@@ -2171,7 +2220,7 @@ function check_ip_in_api($ip, $form) {
         $result = json_decode($body, true);
 
         if (empty($body) || !is_array($result)) {
-            error_log('Maspik IP Check API Error: Invalid response');
+            //error_log('Maspik IP Check API Error: Invalid response');
             return false;
         }
 
@@ -2196,7 +2245,7 @@ function check_ip_in_api($ip, $form) {
 
         return $exists;
     } catch (Exception $e) {
-        error_log('Maspik IP Check Error: ' . $e->getMessage());
+        //error_log('Maspik IP Check Error: ' . $e->getMessage());
         return false;
     }
 }
@@ -2262,9 +2311,9 @@ function maspik_pointer_footer_script() {
     ?>
     <script type="text/javascript">
     jQuery(document).ready(function($) {
-        var content = '<h3>' + <?php echo json_encode(__('Welcome to Maspik Advanced Spam Protection', 'contact-forms-anti-spam')); ?> + '</h3>';
-        content += "<p>" + <?php echo json_encode(__("Maspik offers a wide range of options to protect your website from getting spam. In the settings page, you'll find easy-to-use tools for setting the desired level of protection.", 'contact-forms-anti-spam')); ?> + "</p>";
-        content += '<p><a class="button button-primary maspik-settings-button" href="<?php echo admin_url('admin.php?page=maspik'); ?>">' + <?php echo json_encode(__('Go to Settings', 'contact-forms-anti-spam')); ?> + '</a></p>';
+        var content = '<h3>' + <?php echo wp_json_encode(__('Welcome to Maspik Advanced Spam Protection', 'contact-forms-anti-spam')); ?> + '</h3>';
+        content += "<p>" + <?php echo wp_json_encode(__("Maspik offers a wide range of options to protect your website from getting spam. In the settings page, you'll find easy-to-use tools for setting the desired level of protection.", 'contact-forms-anti-spam')); ?> + "</p>";
+        content += '<p><a class="button button-primary maspik-settings-button" href="<?php echo admin_url('admin.php?page=maspik'); ?>">' + <?php echo wp_json_encode(__('Go to Settings', 'contact-forms-anti-spam')); ?> + '</a></p>';
 
         // Use a more general selector
         var element = $('#toplevel_page_maspik').first();
@@ -2338,7 +2387,7 @@ function IP_Verification_popup_content() {
                     // Sort the months in descending order
                     krsort($api_data['months']);
                     $months_displayed = 0;
-                    $max_requests = cfes_is_supporting() ? 1000 : 100;
+                    $max_requests = cfes_is_supporting("ip_verification") ? 1000 : 100;
                     foreach ($api_data['months'] as $month => $data) {
                         if ($months_displayed >= 6) break; // Limit to last 12 months
                         // Convert $month from 'YYYYMM' to a readable format
@@ -2355,7 +2404,7 @@ function IP_Verification_popup_content() {
                         echo '<tr>';
                         echo '<td>' . esc_html($monthName) . '</td>';
                         echo '<td>' . intval($data['attempts']) . '</td>';
-                        echo "<td> $actual_calls/$max_requests </td>";
+                        echo "<td> " . esc_html("$actual_calls/$max_requests") . " </td>";
                         echo '<td>' . intval($data['blocks']) . '</td>';
                         echo '</tr>';
                         $months_displayed++;
@@ -2372,7 +2421,7 @@ function IP_Verification_popup_content() {
             <li><strong><?php esc_html_e('IPs Blocked', 'contact-forms-anti-spam'); ?></strong>: <?php esc_html_e('The number of IP addresses identified and blocked as spam.', 'contact-forms-anti-spam'); ?></li>
         </ul>
         <p><em><?php esc_html_e('Note: The number of IPs Blocked can be higher than API Calls Made because Maspik caches the results of the last 10 IP verifications. If an IP was recently checked and is in the cache, it doesn\'t count against your API limit but still helps in blocking spam.', 'contact-forms-anti-spam'); ?></em></p>
-        <?php if ( !cfes_is_supporting() ) { ?>
+        <?php if ( !cfes_is_supporting("ip_verification") ) { ?>
             <hr>
             <h4><?php esc_html_e('Need More API Requests?', 'contact-forms-anti-spam'); ?></h4>
             <p><?php esc_html_e('Upgrade to Maspik Pro to get up to 1,000 API requests per month and improve your site\'s spam protection!', 'contact-forms-anti-spam'); ?></p>
@@ -2383,4 +2432,268 @@ function IP_Verification_popup_content() {
     // Output the content
     echo ob_get_clean();
 }
+
+
+function maspik_handle_activation_popup() {
+
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    $page = isset($_GET['page']) ? sanitize_text_field($_GET['page']) : '';
+    $status = isset($_GET['status']) ? sanitize_text_field($_GET['status']) : '';
+    $popup = isset($_GET['popup']) ? absint($_GET['popup']) : 0;
+    
+    $maspik_api_id = get_option("maspik_api_id");
+    if (empty($maspik_api_id)) {
+        return;
+    }
+
+    if ($page !== 'maspik_activator' || 
+        $status !== 'success' || 
+        $popup !== 1) {
+        return;
+    }
+
+    $api_ids = array_map('trim', explode(',', $maspik_api_id));
+    $first_maspik_api_id = $api_ids[0];
+    
+    if (!is_numeric($first_maspik_api_id)) {
+        return;
+    }
+
+    $dashboard_url = esc_url('https://wpmaspik.com/?page_id=' . absint($first_maspik_api_id));
+
+    $nonce = wp_create_nonce('maspik_activation_popup_nonce');
+    
+    $select_options = '';
+    foreach ($api_ids as $id) {
+        if (is_numeric(trim($id))) {
+            $id = absint(trim($id));
+            $select_options .= sprintf(
+                '<option value="%1$d">%1$d</option>',
+                $id
+            );
+        }
+    }
+    
+    ?>
+    <script type="text/javascript">
+    jQuery(document).ready(function($) {
+        var popup_content = '<h2><?php echo esc_js(__("License Activated Successfully!", "contact-forms-anti-spam")); ?></h2>' +
+                            '<p><?php echo esc_js(__("We found a control panel ID associated with this license, would you like us to automatically assign it to this site?", "contact-forms-anti-spam")); ?></p>' +
+                            '<div class="warp">' +
+                            '<div class="select-wrapper">' +
+                            '<label for="dashboard_id_select"><?php echo esc_js(__("Select Dashboard ID:", "contact-forms-anti-spam")); ?></label>' +
+                            '<select id="dashboard_id_select" class="dashboard-select"><?php echo $select_options; ?></select>' +
+                            '</div>' +
+                            '<div class="buttons-wrapper">' +
+                            '<button id="add_dashboard_id" class="button button-primary" data-nonce="<?php echo esc_attr($nonce); ?>"><?php echo esc_js(__("Add Dashboard ID", "contact-forms-anti-spam")); ?></button>' +
+                            '<a target="_blank" href="<?php echo esc_js($dashboard_url); ?>" class="button button-secondary"><?php echo esc_js(__("Open Dashboard", "contact-forms-anti-spam")); ?></a>' +
+                            '</div>' +
+                            '</div>' +
+                            '<button class="close-popup">&times;</button>';
+
+        var $popup = $('<div id="maspik_activation_popup">').html(popup_content).appendTo('body').css({
+            'position': 'fixed',
+            'top': '50%',
+            'left': '50%',
+            'transform': 'translate(-50%, -50%)',
+            'background': 'white',
+            'padding': '20px',
+            'border': '1px solid #ccc',
+            'box-shadow': '0 0 10px rgba(0,0,0,0.1)',
+            'z-index': '9999',
+            'width': '400px'
+        });
+
+        // Add overlay
+        var $overlay = $('<div id="maspik_popup_overlay">').appendTo('body').css({
+            'position': 'fixed',
+            'top': 0,
+            'left': 0,
+            'right': 0,
+            'bottom': 0,
+            'background': 'rgba(0,0,0,0.5)',
+            'z-index': 9998
+        });
+
+        // Close popup function
+        function closePopup() {
+            $popup.remove();
+            $overlay.remove();
+        }
+
+        // Close button click handler
+        $('.close-popup').on('click', closePopup);
+
+        // Close on overlay click
+        $overlay.on('click', closePopup);
+
+        // Close on ESC key
+        $(document).on('keydown', function(e) {
+            if (e.keyCode === 27) { // ESC key
+                closePopup();
+            }
+        });
+
+        // Update dashboard URL when select changes
+        $(document).on('change', '#dashboard_id_select', function() {
+            var selectedId = $(this).val();
+            var newUrl = 'https://wpmaspik.com/?page_id=' + selectedId;
+            $('.button-secondary').attr('href', newUrl);
+        });
+
+        // Update AJAX call to use selected ID
+        $('#add_dashboard_id').on('click', function() {
+            var selectedId = $('#dashboard_id_select').val();
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'maspik_add_dashboard_id',
+                    nonce: $(this).data('nonce'),
+                    dashboard_id: selectedId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('<?php echo esc_js(__("Dashboard ID added successfully!", "contact-forms-anti-spam")); ?>');
+                        closePopup();
+                    } else {
+                        alert('<?php echo esc_js(__("Error adding Dashboard ID. Please try again.", "contact-forms-anti-spam")); ?>');
+                    }
+                },
+                error: function() {
+                    alert('<?php echo esc_js(__("Connection error. Please try again.", "contact-forms-anti-spam")); ?>');
+                }
+            });
+        });
+    });
+    </script>
+    <style>
+    #maspik_activation_popup {
+        position: relative;
+    }
+    #maspik_activation_popup .warp {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    #maspik_activation_popup .select-wrapper {
+        margin-bottom: 15px;
+    }
+    #maspik_activation_popup .dashboard-select {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+    }
+    #maspik_activation_popup .buttons-wrapper {
+        display: flex;
+        justify-content: space-between;
+    }
+    #maspik_activation_popup .buttons-wrapper > * {
+        width: 48%;
+        text-align: center;
+    }
+    #maspik_activation_popup .close-popup {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 24px;
+        color: #666;
+        cursor: pointer;
+        background: none;
+        border: none;
+    }
+    #maspik_activation_popup .close-popup:hover {
+        color: #000;
+    }
+    </style>
+    <?php
+}
+
+add_action('admin_footer', 'maspik_handle_activation_popup');
+
+function maspik_add_dashboard_id_callback() {
+    // Enable error logging
+    //error_log('Maspik: Starting dashboard ID update process');
+
+    // Check user permissions
+    if (!current_user_can('manage_options')) {
+        //error_log('Maspik: User does not have sufficient permissions');
+        wp_send_json_error(array(
+            'message' => 'Unauthorized access',
+            'code' => 'no_permissions'
+        ));
+        return;
+    }
+
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'maspik_activation_popup_nonce')) {
+        //error_log('Maspik: Invalid nonce');
+        wp_send_json_error(array(
+            'message' => 'Security check failed',
+            'code' => 'invalid_nonce'
+        ));
+        return;
+    }
+
+    // Validate dashboard_id
+    if (!isset($_POST['dashboard_id'])) {
+        //error_log('Maspik: No dashboard ID provided');
+        wp_send_json_error(array(
+            'message' => 'No dashboard ID provided',
+            'code' => 'no_id'
+        ));
+        return;
+    }
+
+    $dashboard_id = absint($_POST['dashboard_id']);
+    if ($dashboard_id === 0) {
+        //error_log('Maspik: Invalid dashboard ID format');
+        wp_send_json_error(array(
+            'message' => 'Invalid dashboard ID format',
+            'code' => 'invalid_id_format'
+        ));
+        return;
+    }
+
+    // Validate against allowed IDs
+    $maspik_api_id = get_option("maspik_api_id");
+    $valid_ids = array_map('absint', array_map('trim', explode(',', $maspik_api_id)));
+    
+    //error_log('Maspik: Checking ID ' . $dashboard_id . ' against valid IDs: ' . implode(',', $valid_ids));
+    
+    if (!in_array($dashboard_id, $valid_ids)) {
+        //error_log('Maspik: Dashboard ID not in allowed list');
+        wp_send_json_error(array(
+            'message' => 'Invalid dashboard ID',
+            'code' => 'id_not_allowed'
+        ));
+        return;
+    }
+
+    // Update the option
+    $result = maspik_save_settings('private_file_id', $dashboard_id);
+    
+    if ($result) {
+        //error_log('Maspik: Successfully updated dashboard ID to ' . $dashboard_id);
+        if (function_exists('cfas_refresh_api')) {
+            cfas_refresh_api('add_dashboard_id');
+        }
+        wp_send_json_success(array(
+            'message' => 'Dashboard ID updated successfully',
+            'dashboard_id' => $dashboard_id
+        ));
+    } else {
+        //error_log('Maspik: Failed to update dashboard ID');
+        wp_send_json_error(array(
+            'message' => 'Failed to update dashboard ID',
+            'code' => 'update_failed'
+        ));
+    }
+}
+add_action('wp_ajax_maspik_add_dashboard_id', 'maspik_add_dashboard_id_callback');
+
+
 

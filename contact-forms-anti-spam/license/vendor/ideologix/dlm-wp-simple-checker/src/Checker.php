@@ -91,7 +91,8 @@ class Checker extends AbstractChecker {
 				'token'          => $tokenObj['token'],
 				'checked_at'     => gmdate( 'Y-m-d H:i:s' ),
 				'deactivated_at' => is_null( $tokenObj['deactivated_at'] ) ? null : $tokenObj['deactivated_at'],
-			];
+				'user_first_api_post_id' => is_null( $tokenObj['user_first_api_post_id'] ) ? "Cheker.php_L_94" : $tokenObj['user_first_api_post_id'],
+						];
 			$licenseAPI->updateData( $tokenData );
 			// prefix_dlm_license_check_token_data
 			do_action( sprintf( '%s_%s', $this->getHookName(), 'token_data_success' ), $tokenData );

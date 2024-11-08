@@ -1680,11 +1680,36 @@ body.rtl span.maspik-tooltiptxt {
 
 /**--- TEST FORM - START ---**/
 
+.maspik-test-form-buttons button {
+  transition: 0.3s;
+  padding: 10px 25px;
+  letter-spacing: 1px;
+  line-height: 1em;
+  color: #fff;
+  background-color: #014921;
+  cursor: pointer;
+  border: none;
+  border-radius: 10px 10px 0 0;
+  font-size: 15px;
+}
+.maspik-test-form-buttons {
+  margin-top: -85px;
+  padding-bottom: 30px;
+  margin-left: -40px;
+}
+.rtl .maspik-test-form-buttons {
+  margin-left: 0;
+  margin-right: -40px;
+}
 .maspik-test-form{
     width:40%;
     min-width: 350px!important;
     gap:22px;
+    margin-top: 35px;
 
+}
+.maspik-test-form-buttons button:hover, .maspik-test-form-buttons .active {
+  background: #f48623;
 }
 
 .maspik-test-form-sub, .maspik-test-form>form{
@@ -1695,9 +1720,12 @@ body.rtl span.maspik-tooltiptxt {
     padding: 50px 40px!important; 
     background-color:#014921;
     position:sticky;
-    border-radius:10px;
-    top:50px;
+    border-radius:0 10px 10px 10px ;
+    top:80px;
     color:white;
+}
+.rtl .maspik-test-form>form{
+  border-radius:10px 0px 10px 10px;
 }
 
 h3.maspik-test-form-head.maspik-header {

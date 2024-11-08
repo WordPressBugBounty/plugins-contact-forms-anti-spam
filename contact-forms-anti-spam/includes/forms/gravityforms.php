@@ -17,21 +17,18 @@ add_filter( 'gform_field_validation', function ( $result, $value, $form, $field 
     if ( !$result['is_valid'] ) {
       return $result;
     }
-
     // ip
     $ip = efas_getRealIpAddr();
-    
-  	// Country IP Check 
     $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"gravityforms");
     $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
     $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
     $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
-    $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
+    $spam_val = isset($GeneralCheck['value']) ? $GeneralCheck['value'] : false ;
 
-      //If country or ip is in blacklist
+    //If country or ip is in blacklist
     if ( $spam ) {
       efas_add_to_log($type = "General",$reason, $_POST ,'gravityforms', $message,  $spam_val);
-      GFCommon::log_debug( __METHOD__ . '(): '.$reason.': ' . $reason );
+      GFCommon::log_debug( __METHOD__ . '(): '.$reason );
       $result['is_valid'] = false;
       $result['message'] = cfas_get_error_text($message);
     }
@@ -99,17 +96,17 @@ add_filter( 'gform_field_validation', function ( $result, $value, $form, $field 
 add_filter( 'gform_field_validation', function ( $result, $value, $form, $field ) {
     GFCommon::log_debug( __METHOD__ . '(): Running...' );
     // Only for Single phone.
-  if ( $field->type == 'phone' && $field->phoneFormat != 'standard' ) {
+  if ( $field->type == 'phone' ) {
       if ( !$result['is_valid'] || empty( $value ) ) {
         return $result;
       }
-      $field_value = strtolower($value); 
-        $checkTelForSpam = checkTelForSpam($field_value);
-        $reason = isset($checkTelForSpam['reason']) ? $checkTelForSpam['reason'] : 0 ;      
-        $valid = isset($checkTelForSpam['valid']) ? $checkTelForSpam['valid'] : "yes" ;   
-        $message = isset($checkTelForSpam['message']) ? $checkTelForSpam['message'] : 0 ;  
-        $spam_lbl = isset($checkTelForSpam['label']) ? $checkTelForSpam['label'] : 0 ;
-        $spam_val = isset($checkTelForSpam['option_value']) ? $checkTelForSpam['option_value'] : 0 ;
+      $field_value = $value; 
+      $checkTelForSpam = checkTelForSpam($field_value);
+      $reason = isset($checkTelForSpam['reason']) ? $checkTelForSpam['reason'] : 0 ;      
+      $valid = isset($checkTelForSpam['valid']) ? $checkTelForSpam['valid'] : "yes" ;   
+      $message = isset($checkTelForSpam['message']) ? $checkTelForSpam['message'] : 0 ;  
+      $spam_lbl = isset($checkTelForSpam['label']) ? $checkTelForSpam['label'] : 0 ;
+      $spam_val = isset($checkTelForSpam['option_value']) ? $checkTelForSpam['option_value'] : 0 ;
 
       if(!$valid){
         $error_message = cfas_get_error_text($message); 
