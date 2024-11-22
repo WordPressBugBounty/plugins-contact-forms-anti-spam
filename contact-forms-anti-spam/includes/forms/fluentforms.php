@@ -162,21 +162,21 @@ add_filter('fluentform/rendering_form', function($form){
             if (maspik_get_settings('maspikHoneypot')) {
                 $custom_html .= '<div class="ff-el-group maspik-field">
                     <label for="full-name-maspik-hp" class="ff-el-input--label">Leave this field empty</label>
-                    <input size="1" type="text" autocomplete="off" autofill="off" aria-hidden="true" tabindex="-1" name="full-name-maspik-hp" id="full-name-maspik-hp" class="ff-el-form-control" placeholder="Leave this field empty">
+                    <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="full-name-maspik-hp" id="full-name-maspik-hp" class="ff-el-form-control" placeholder="Leave this field empty">
                 </div>';
             }
 
             if (maspik_get_settings('maspikYearCheck')) {
                 $custom_html .= '<div class="ff-el-group maspik-field">
                     <label for="Maspik-currentYear" class="ff-el-input--label">Leave this field empty</label>
-                    <input size="1" type="text" autocomplete="off" autofill="off" aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="ff-el-form-control" placeholder="">
+                    <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="ff-el-form-control" placeholder="">
                 </div>';
             }
 
             if (maspik_get_settings('maspikTimeCheck')) {
                 $custom_html .= '<div class="ff-el-group maspik-field">
                     <label for="Maspik-exactTime" class="ff-el-input--label">Leave this field empty</label>
-                    <input size="1" type="text" autocomplete="off" autofill="off" aria-hidden="true" tabindex="-1" name="Maspik-exactTime" id="Maspik-exactTime" class="ff-el-form-control" placeholder="">
+                    <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="Maspik-exactTime" id="Maspik-exactTime" class="ff-el-form-control" placeholder="">
                 </div>';
             }
          return   $html . $custom_html;

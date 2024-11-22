@@ -133,21 +133,21 @@ function maspik_honeypot_to_cf7_form( $form_content ) {
         if ( maspik_get_settings( 'maspikHoneypot' ) ) {
             $custom_html .= '<div class="wpcf7-form-control-wrap maspik-field">
                 <label for="full-name-maspik-hp" class="wpcf7-form-control-label">Leave this field empty</label>
-                <input size="1" type="text" autocomplete="off" autofill="off" aria-hidden="true" tabindex="-1" name="full-name-maspik-hp" id="full-name-maspik-hp" class="wpcf7-form-control wpcf7-text" placeholder="Leave this field empty">
+                <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" name="full-name-maspik-hp" id="full-name-maspik-hp" class="wpcf7-form-control wpcf7-text" placeholder="Leave this field empty">
             </div>';
         }
 
         if ( maspik_get_settings( 'maspikYearCheck' ) ) {
             $custom_html .= '<div class="wpcf7-form-control-wrap maspik-field">
                 <label for="Maspik-currentYear" class="wpcf7-form-control-label"></label>
-                <input size="1" type="text" autocomplete="off" autofill="off" aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="wpcf7-form-control wpcf7-text" placeholder="">
+                <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="wpcf7-form-control wpcf7-text" placeholder="">
             </div>';
         }
 
         if ( maspik_get_settings( 'maspikTimeCheck' ) ) {
             $custom_html .= '<div class="wpcf7-form-control-wrap maspik-field">
                 <label for="Maspik-exactTime" class="wpcf7-form-control-label"></label>
-                <input size="1" type="text" autocomplete="off" autofill="off" aria-hidden="true" tabindex="-1" name="Maspik-exactTime" id="Maspik-exactTime" class="wpcf7-form-control wpcf7-text" placeholder="">
+                <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" name="Maspik-exactTime" id="Maspik-exactTime" class="wpcf7-form-control wpcf7-text" placeholder="">
             </div>';
         }
 

@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.7
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.2.8
+Stable tag: 2.2.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -144,6 +144,10 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 
 
 == Changelog ==
+
+= 2.2.9 - 22/11/2024 =
+* Fixed: Removed autofill attribute from honeypot fields to improve compatibility with AMP pages
+* Improvement - Spam log default save entries max number is now 1000 (was 2000)
 
 = 2.2.8 - 08/11/2024 =
 * New Feature - Add support in BuddyPress forms.

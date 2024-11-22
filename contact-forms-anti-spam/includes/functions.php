@@ -548,7 +548,7 @@ function maspik_get_settings($data_name, $type = '', $table_var = 'new'){
 
             if( ($log_active == "yes") && ($limit_value == '') ){
 
-                maspik_save_settings('spam_log_limit', 2000);
+                maspik_save_settings('spam_log_limit', 1000);
 
             }
 
@@ -611,7 +611,7 @@ function maspik_get_settings($data_name, $type = '', $table_var = 'new'){
                 'maspik_support_buddypress_forms' => 'yes',
                 //extra
                 'maspik_Store_log' => 'yes',
-                'spam_log_limit' => '2000',
+                'spam_log_limit' => '1000',
                 //toggles
                 'text_limit_toggle' => '',
                 'text_custom_message_toggle',
@@ -716,7 +716,7 @@ function maspik_limit_log_size() {
 
     $max_logs = maspik_get_settings('spam_log_limit');
     if (empty($max_logs)) {
-        $max_logs = 2000; // Default value if not set
+        $max_logs = 1000; // Default value if not set
     }
 
     $table = maspik_get_logtable();

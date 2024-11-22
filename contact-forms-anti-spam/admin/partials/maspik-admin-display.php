@@ -1520,7 +1520,7 @@ $spamcounter = maspik_spam_count();
 
                         <div class="maspik-limit-char-box togglebox">
                             <?php 
-                                echo create_maspik_numbox("spam_log_limit", "spam_log_limit", "spam_log_limit" , "Entry limit", "2000", "","");
+                                echo create_maspik_numbox("spam_log_limit", "spam_log_limit", "spam_log_limit" , "Entry limit", "1000", "","");
                             ?>
                         </div> <!-- end of spam log toggle box -->
                              <?php 

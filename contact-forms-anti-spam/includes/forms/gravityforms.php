@@ -162,21 +162,21 @@ function add_maspikhp_html_to_gform($button, $form) {
         $honeypot_name = maspik_HP_name();
         $addhtml .= '<div class="gfield gfield--type-text maspik-field">
             <label for="' . $honeypot_name . '" class="ginput_container_text">Leave this field empty</label>
-            <input size="1" type="text" autocomplete="off" autofill="off" aria-hidden="true" tabindex="-1" name="' . $honeypot_name . '" id="' . $honeypot_name . '" class="ginput_text" placeholder="Leave this field empty">
+            <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="' . $honeypot_name . '" id="' . $honeypot_name . '" class="ginput_text" placeholder="Leave this field empty">
         </div>';
     }
 
     if (maspik_get_settings('maspikYearCheck')) {
         $addhtml .= '<div class="gfield gfield--type-text maspik-field">
             <label for="Maspik-currentYear" class="ginput_container_text">Leave this field empty</label>
-            <input size="1" type="text" autocomplete="off" autofill="off" aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="ginput_text" placeholder="">
+            <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="ginput_text" placeholder="">
         </div>';
     }
 
     if (maspik_get_settings('maspikTimeCheck')) {
         $addhtml .= '<div class="gfield gfield--type-text maspik-field">
             <label for="Maspik-exactTime" class="ginput_container_text">Leave this field empty</label>
-            <input size="1" type="text" autocomplete="off" autofill="off" aria-hidden="true" tabindex="-1" name="Maspik-exactTime" id="Maspik-exactTime" class="ginput_text" placeholder="">
+            <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="Maspik-exactTime" id="Maspik-exactTime" class="ginput_text" placeholder="">
         </div>';
     }
 

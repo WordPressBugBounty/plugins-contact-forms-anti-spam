@@ -45,6 +45,7 @@ function weekly_api_to_maspik_request_callback() {
     $data['is_supporting'] = cfes_is_supporting();
     $data['maspik_api_requests'] = get_option('maspik_api_requests');
 
+
     
     // URL of the REST API endpoint
     $api_url = "https://receiver.wpmaspik.com/wp-json/statistics-maspik/v1/data?id=" . urlencode($domain) . "&key=plug1n";

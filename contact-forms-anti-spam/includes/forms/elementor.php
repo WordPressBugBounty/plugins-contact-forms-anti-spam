@@ -17,7 +17,8 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
     $NeedPageurl = maspik_get_settings( 'NeedPageurl' );   
     // Get all form fields
     $form_fields = $record->get( 'fields' );
-    $lastKeyId = end(array_keys($form_fields));
+    $keys = array_keys($form_fields);
+    $lastKeyId = end($keys);
     
     if ( efas_get_spam_api( 'NeedPageurl' ) ) {
         $NeedPageurl = $NeedPageurl ? $NeedPageurl : efas_get_spam_api( 'NeedPageurl', 'bool' );
