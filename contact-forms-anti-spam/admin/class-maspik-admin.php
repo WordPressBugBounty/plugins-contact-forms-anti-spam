@@ -403,7 +403,7 @@ class Maspik_Admin {
         add_submenu_page($this->plugin_name, 'Import/Export Settings', 'Import/Export Settings', 'administrator', $this->plugin_name . '-import-export.php', array($this, 'Maspik_import_export_settings_page'));
 
         if ( cfes_is_supporting()) {
-            $first_maspik_api_id = get_option("maspik_api_id") ? explode(',', get_option("maspik_api_id"))[0] : 0;
+            $first_maspik_api_id = maspik_get_settings('private_file_id');
             $dashboard_url = 'https://wpmaspik.com/?page_id=' . esc_attr($first_maspik_api_id . '&ref=plugin-menue&my-account=1');
             $url = $first_maspik_api_id ? $dashboard_url : 'https://wpmaspik.com/my-account?ref=plugin-menue';
             add_submenu_page(

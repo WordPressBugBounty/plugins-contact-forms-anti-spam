@@ -2290,6 +2290,7 @@ function maspik_make_default_values() {
     maspik_save_settings("maspik_support_Wpforms", "yes");
     maspik_save_settings("maspik_support_woocommerce_review", "yes");
     maspik_save_settings("maspik_support_Woocommerce_registration", "yes");
+    maspik_save_settings("maspik_support_buddypress_forms", "yes");
 }
 
 function maspik_pointer_scripts() {
@@ -2547,26 +2548,19 @@ function maspik_handle_activation_popup() {
         // Update AJAX call to use selected ID
         $('#add_dashboard_id').on('click', function() {
             var selectedId = $('#dashboard_id_select').val();
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'maspik_add_dashboard_id',
-                    nonce: $(this).data('nonce'),
-                    dashboard_id: selectedId
-                },
-                success: function(response) {
-                    if (response.success) {
-                        alert('<?php echo esc_js(__("Dashboard ID added successfully!", "contact-forms-anti-spam")); ?>');
-                        closePopup();
-                    } else {
-                        alert('<?php echo esc_js(__("Error adding Dashboard ID. Please try again.", "contact-forms-anti-spam")); ?>');
-                    }
-                },
-                error: function() {
-                    alert('<?php echo esc_js(__("Connection error. Please try again.", "contact-forms-anti-spam")); ?>');
-                }
-            });
+            
+            // Get WordPress admin URL from PHP
+            var adminUrl = '<?php echo admin_url("admin.php"); ?>';
+            
+            // Create URL object
+            var url = new URL(adminUrl);
+            
+            // Add parameters
+            url.searchParams.set('page', 'maspik');
+            url.searchParams.set('private_file_id', selectedId);
+            
+            // Redirect
+            window.location.href = url.toString();
         });
     });
     </script>
@@ -2693,7 +2687,7 @@ function maspik_add_dashboard_id_callback() {
         ));
     }
 }
-add_action('wp_ajax_maspik_add_dashboard_id', 'maspik_add_dashboard_id_callback');
+//add_action('wp_ajax_maspik_add_dashboard_id', 'maspik_add_dashboard_id_callback');
 
 
 

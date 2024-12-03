@@ -604,10 +604,13 @@ $spamcounter = maspik_spam_count();
 
             <!-- Accordion Item - End main check -->
             <!-- Accordion Item - Language Field - Custom -->
+
+            <?php $text_pro = "(Available in Maspik Pro)"; 
+            $span_pro = !cfes_is_supporting("language_restrictions") ? ' <span style="color: #f48623;font-size: 14px;text-transform: none;">' . $text_pro . '</span>' : ''; ?>
             <div class="maspik-accordion-item maspik-accordion-lang-field <?php echo maspik_add_pro_class("country_location") ?> ">
                 <div class="maspik-accordion-header">
                     <div class="mpk-acc-header-texts">
-                        <h4 class="maspik-header maspik-accordion-header-text"><span class="dashicons dashicons-star-filled"></span><?php esc_html_e('Language restrictions', 'contact-forms-anti-spam'); ?></h4><!--Accordion Title-->
+                        <h4 class="maspik-header maspik-accordion-header-text"><span class="dashicons dashicons-star-filled"></span><?php esc_html_e('Language restrictions', 'contact-forms-anti-spam'); echo $span_pro; ?></h4><!--Accordion Title-->
                         <span class="maspik-accordion-subheader"></span>
                     </div>
                     <div class = "maspik-pro-button-wrap">
@@ -711,7 +714,7 @@ $spamcounter = maspik_spam_count();
                     <div class="mpk-acc-header-texts">
                         <h4 class="maspik-header maspik-accordion-header-text">
                             <span class="dashicons dashicons-star-filled"></span>
-                            <?php esc_html_e('Geolocation restrictions', 'contact-forms-anti-spam'); ?>
+                            <?php esc_html_e('Geolocation restrictions', 'contact-forms-anti-spam'); echo $span_pro; ?>
                         </h4><!--Accordion Title-->
                         <?php 
                                 maspik_tooltip("Choose either to allow or to block and enter the countries in the next field.
@@ -779,7 +782,7 @@ $spamcounter = maspik_spam_count();
                     <div class="mpk-acc-header-texts">
                         <h4 class="maspik-header maspik-accordion-header-text">
                             <span class="dashicons dashicons-star-filled"></span>
-                            <?php esc_html_e('MASPIK Dashboard', 'contact-forms-anti-spam'); ?>
+                            <?php esc_html_e('MASPIK Dashboard', 'contact-forms-anti-spam'); echo $span_pro; ?>
                         </h4><!--Accordion Title-->
                         <?php 
                                 maspik_tooltip("Every day, the API file downloads new data from the API server.
@@ -1133,7 +1136,7 @@ $spamcounter = maspik_spam_count();
                             <div class="maspik-txt-custom-msg-head togglewrap">
                                 <?php echo maspik_toggle_button('phone_custom_message_toggle', 'phone_custom_message_toggle', 'phone_custom_message_toggle', 'maspik-toggle-custom-message togglebutton',"","",['custom_error_message_tel_formats']); ?>
                                     
-                                <h4> Custom validation error message </h4>
+                                <h4><?php esc_html_e('Custom validation error message', 'contact-forms-anti-spam'); ?></h4>
                             </div>
 
                             <div class="maspik-custom-msg-box togglebox">
@@ -1427,11 +1430,13 @@ $spamcounter = maspik_spam_count();
                                 </div>  
                         </div><!-- end of maspik-wp-jetform-switch-wrap-->
 
-                        <div class="pro-btn-wrapper <?php echo maspik_add_pro_class() ?>"><?php maspik_get_pro() ?></div>
                         <div class="forms-pro-block <?php echo maspik_add_pro_class() ?>" >
-                            
 
-                            <div class="maspik-gravity-form-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('gravityforms') == 1 ? 'enabled':'disabled' ?>">
+                        <?php if ( !cfes_is_supporting("ip_verification") ) { ?>
+                            <p style="font-size: 16px;margin-bottom: 0;"><?php esc_html_e('The following forms are supported in Maspik Pro version only:', 'contact-forms-anti-spam'); ?></p>
+                        <?php } ?>
+                        <div class="pro-btn-wrapper <?php echo maspik_add_pro_class() ?>"><?php maspik_get_pro() ?></div>   
+                        <div class="maspik-gravity-form-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('gravityforms') == 1 ? 'enabled':'disabled' ?>">
                                 <?php echo maspik_toggle_button('maspik_support_gravity_forms', 'maspik_support_gravity_forms', 'maspik_support_gravity_forms', 'maspik-form-switch togglebutton', "form-toggle", 
                                 (efas_if_plugin_is_active('gravityforms') && maspik_proform_togglecheck('Gravityforms')) == 1 ); ?>
                                     <div>
@@ -1942,6 +1947,94 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+
+    function maspikUpdatePrivateFileId() {
+        // Get ID from URL parameters safely
+        const urlParams = new URLSearchParams(window.location.search);
+        const newId = urlParams.get('private_file_id');
+
+        // Remove private_file_id from URL
+        const newUrl = window.location.pathname + "?page=maspik";
+
+        // Enhanced validation
+        if (!newId) {
+            console.log('Missing ID in URL');
+            window.location.href = newUrl;
+            return false;
+        }
+
+        // Ensure it's a positive number
+        const numericId = parseInt(newId, 10);
+        if (isNaN(numericId) || numericId <= 0) {
+            console.log('Invalid ID format - must be a positive number');
+            window.location.href = newUrl;
+            return false;
+        }
+
+        // Get the input element safely
+        const idInput = document.querySelector('input[name="private_file_id"]');
+        if (!idInput) {
+            console.log('Input field not found');
+            window.location.href = newUrl;
+            return false;
+        }
+
+        // Get the submit button safely
+        const submitButton = document.querySelector('input[name="maspik-api-save-btn"]');
+        if (!submitButton) {
+            console.log('Submit button not found');
+            window.location.href = newUrl;
+            return false;
+        }
+
+        try {
+            // Update the input value
+            idInput.value = numericId;
+
+            // Create and dispatch change event
+            const changeEvent = new Event('change', { bubbles: true });
+            idInput.dispatchEvent(changeEvent);
+
+            // Add small delay to ensure value is set
+            setTimeout(() => {
+                // Click the submit button
+                submitButton.click();
+                
+                // Wait a bit for the form to process
+                setTimeout(() => {
+                    // Show success message
+                    alert('Dashboard ID added successfully! it can take a few minutes to be active.');
+                    
+                    // Remove private_file_id from URL and refresh
+                    window.location.href = newUrl;
+                }, 500);
+            }, 100);
+
+            return true;
+        } catch (error) {
+            console.error('Error updating ID:', error);
+            window.location.href = newUrl;
+            return false;
+        }
+    }
+
+    // Add to DOMContentLoaded to ensure elements exist
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if private_file_id exists in URL
+        if (new URLSearchParams(window.location.search).has('private_file_id')) {
+            if (maspikUpdatePrivateFileId()) {
+                // refresh the page
+                window.location.reload();
+            }else{
+                alert('Error adding Dashboard ID automatically. Please try manually.');
+                // remove private_file_id from URL
+                 const newUrl = window.location.pathname + "?page=maspik";
+                window.location.href = newUrl;
+                //window.location.reload();
+
+            }
+        }
+    });
 
 </script>
 

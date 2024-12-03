@@ -5,11 +5,11 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.7
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.2.9
+Stable tag: 2.2.10
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Block spam in any form, blacklist words/ honeypot / IP verification and more, integrate with almost any contact form plugin and comments. 
+The best spam protection plugin. Block spam using advanced filters, blacklists, and IP verification - works with all major form plugins and comments.
 
 == Description ==
 
@@ -60,6 +60,7 @@ Maspik integrates seamlessly with a wide range of popular contact forms:
 * Forminator forms
 * Fluentforms
 * Bricksbuilder forms
+* BuddyPress
 * WPForms*
 * GravityForms*
 * WordPress comments
@@ -111,6 +112,7 @@ Maspik currently supports:
 <li>Forminator forms</li>
 <li>Fluentforms</li>
 <li>Bricksbuilder forms</li>
+<li>BuddyPress</li>
 <li>Wpforms (Maspik Pro license required)</li>
 <li>Gravityforms (Maspik Pro license required)</li>
 <li>Wordpress comments</li>
@@ -144,6 +146,9 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 
 
 == Changelog ==
+
+= 2.2.10 - 03/12/2024 =
+* Improvement - Compatibility with WP version 6.7
 
 = 2.2.9 - 22/11/2024 =
 * Fixed: Removed autofill attribute from honeypot fields to improve compatibility with AMP pages
@@ -409,7 +414,6 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 
 = 0.7.3 -  29/07/2022 =
 * Bug fix - Prevents letters from becoming lowercase in regex format on tel field.
-* New Offer - Want to get a free Pro license? Write an article about Maspik on your relevant blog, and get a link from the plugin page and a professional license for free. Email me for more details (Yonifre AT gmail).
 
 = 0.7.2 -  19/07/2022 =
 *  Bug fix - Error message not displaying in some servers  

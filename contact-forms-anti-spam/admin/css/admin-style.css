@@ -680,10 +680,22 @@ div.pro-btn-wrapper.maspik-not-pro{
     opacity: 1; 
     display:flex;
     pointer-events: auto;
-    background-color: #fff;
     padding-bottom:0;
-    margin-top:30px;
+    margin-top:15px;
     margin-bottom:15px;
+}
+
+.forms-pro-block.maspik-not-pro {
+  opacity: 1 !important;
+  margin-top: 30px;
+}
+.maspik-accordion-form-option-field div.maspik-not-pro {
+  background-color: #024921;
+  color: #fff;
+}
+.maspik-accordion-form-option-field div.maspik-not-pro .disabled {
+  opacity: 1;
+  background-color: transparent;
 }
 
 .maspik-accordion-form-option-field .maspik-accordion-content .submit,  .pro-btn-wrapper{
