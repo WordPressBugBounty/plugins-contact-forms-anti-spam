@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Maspik - Spam blacklist\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-07-28 11:45+0000\n"
-"PO-Revision-Date: 2024-11-08 22:52+0000\n"
+"PO-Revision-Date: 2024-12-05 07:51+0000\n"
 "Last-Translator: \n"
 "Language-Team: Hebrew\n"
 "Language: he_IL\n"
@@ -12,30 +12,30 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Loco https://localise.biz/\n"
-"X-Loco-Version: 2.6.11; wp-6.6.1\n"
+"X-Loco-Version: 2.6.6; wp-6.7.1\n"
 "X-Domain: contact-forms-anti-spam"
 
-#: admin/partials/maspik-admin-display.php:1127
+#: admin/partials/maspik-admin-display.php:1130
 msgid " You can get more information"
 msgstr "ניתן לקבל מידע נוסף"
 
-#: includes/functions.php:2402
+#: includes/functions.php:2403
 msgid "(Reached Limit)"
 msgstr "(הגעת למגבלה)"
 
-#: admin/partials/maspik-admin-display.php:1000
+#: admin/partials/maspik-admin-display.php:1003
 msgid "(Usually Message/Long text)"
 msgstr "(בדרך כלל הודעה/טקסט ארוך)"
 
-#: admin/partials/maspik-admin-display.php:878
+#: admin/partials/maspik-admin-display.php:881
 msgid "(Usually Name/Subject)"
 msgstr "(בדרך כלל שם/נושא)"
 
-#: admin/partials/maspik-admin-display.php:1626
+#: admin/partials/maspik-admin-display.php:1628
 msgid "* Please save changes before checking."
 msgstr "* אנא שמור שינויים לפני הבדיקה"
 
-#: admin/partials/maspik-admin-display.php:1126
+#: admin/partials/maspik-admin-display.php:1129
 msgid "* represents any sequence of digits."
 msgstr "* מייצג כל רצף של ספרות"
 
@@ -43,15 +43,15 @@ msgstr "* מייצג כל רצף של ספרות"
 msgid ", thanks to your Pro subscription."
 msgstr ", אודות לרשיון הפרו שלך"
 
-#: admin/partials/maspik-admin-display.php:1125
+#: admin/partials/maspik-admin-display.php:1128
 msgid "? represents any single digit."
 msgstr "? מייצג ספרה בודדת"
 
-#: admin/partials/maspik-admin-display.php:1292
+#: admin/partials/maspik-admin-display.php:1293
 msgid "AbuseIPDB"
 msgstr "AbuseIPDB"
 
-#: admin/partials/maspik-admin-display.php:1275
+#: admin/partials/maspik-admin-display.php:1277
 msgid "AbuseIPDB API"
 msgstr "AbuseIPDB API"
 
@@ -59,7 +59,7 @@ msgstr "AbuseIPDB API"
 msgid "Active from Dashboard"
 msgstr "פעיל מלוח הבקרה"
 
-#: includes/functions.php:2491
+#: includes/functions.php:2492
 msgid "Add Dashboard ID"
 msgstr "הוסף מזהה לוח בקרה"
 
@@ -81,7 +81,7 @@ msgstr "טפסים מושפעים:"
 msgid "and since installing"
 msgstr "ומאז ההתקנה"
 
-#: includes/functions.php:2377 includes/functions.php:2420
+#: includes/functions.php:2378 includes/functions.php:2421
 msgid "API Calls Made"
 msgstr "קריאות API שבוצעו"
 
@@ -94,7 +94,6 @@ msgid "Armenian"
 msgstr "ארמנית"
 
 #: includes/functions.php:1662
-#, fuzzy
 #| msgid ""
 #| "Ask questions, share spam examples, get ideas on how to block them, share "
 #| "feedback, and suggest new features. Join us at"
@@ -105,7 +104,7 @@ msgstr ""
 "שאל שאלות, שתף דוגמאות ספאם, קבל רעיונות כיצד לחסום אותם, שתף משוב והצע "
 "תכונות חדשות. הצטרף אלינו ב"
 
-#: admin/partials/maspik-admin-display.php:802
+#: admin/partials/maspik-admin-display.php:805
 msgid "Auto-populate spam phrases"
 msgstr "מילוי אוטומטי של ביטויי ספאם"
 
@@ -121,22 +120,22 @@ msgstr "אפשרויות חסימת ספאם"
 msgid "Braille"
 msgstr "ברייל"
 
-#: admin/partials/maspik-admin-display.php:861
+#: admin/partials/maspik-admin-display.php:864
 msgid "By Field Options"
 msgstr "לפי אפשרויות שדה"
 
-#: admin/partials/maspik-admin-display.php:638
-#: admin/partials/maspik-admin-display.php:683
+#: admin/partials/maspik-admin-display.php:641
+#: admin/partials/maspik-admin-display.php:686
 msgid "Caution:"
 msgstr "זהירות:"
 
-#: admin/partials/maspik-admin-display.php:938
-#: admin/partials/maspik-admin-display.php:1076
-#: admin/partials/maspik-admin-display.php:1177
+#: admin/partials/maspik-admin-display.php:941
+#: admin/partials/maspik-admin-display.php:1079
+#: admin/partials/maspik-admin-display.php:1180
 msgid "Character limit custom validation error message"
 msgstr "הודעת שגיאת אימות מותאמת אישית למגבלת תווים"
 
-#: admin/partials/maspik-admin-display.php:1624
+#: admin/partials/maspik-admin-display.php:1626
 msgid "Check"
 msgstr "בדוק"
 
@@ -145,19 +144,15 @@ msgid ""
 "Check if the sender's IP address is flagged as spam in the Maspik database."
 msgstr "בדוק אם כתובת ה-IP של השולח מסומנת כספאם במסד הנתונים של מספיק"
 
-#: admin/partials/maspik-admin-display.php:1596
+#: admin/partials/maspik-admin-display.php:1598
 msgid "Comment"
 msgstr "תגובה"
 
-#: admin/partials/maspik-admin-display.php:825
+#: admin/partials/maspik-admin-display.php:828
 msgid "Connected"
 msgstr "מחובר"
 
-#: includes/functions.php:2567
-msgid "Connection error. Please try again."
-msgstr "שגיאת חיבור. אנא נסה שוב"
-
-#: admin/partials/maspik-admin-display.php:1594
+#: admin/partials/maspik-admin-display.php:1596
 msgid "Contact form"
 msgstr "טופס יצירת קשר"
 
@@ -165,7 +160,7 @@ msgstr "טופס יצירת קשר"
 msgid "Contact Us"
 msgstr "צור קשר"
 
-#: admin/partials/maspik-admin-display.php:1652
+#: admin/partials/maspik-admin-display.php:1654
 msgid "Copy list"
 msgstr "העתק רשימה"
 
@@ -173,18 +168,19 @@ msgstr "העתק רשימה"
 msgid "Country"
 msgstr "מדינה"
 
-#: admin/partials/maspik-admin-display.php:863
+#: admin/partials/maspik-admin-display.php:866
 msgid "Create a list of words or phrases you want to block."
 msgstr "צור רשימה של מילים או ביטויים שברצונך לחסום"
 
-#: admin/partials/maspik-admin-display.php:836
+#: admin/partials/maspik-admin-display.php:839
 #| msgid "Creat your own single Dashboard for managing multiple websites, at"
 msgid "Create your own single Dashboard for managing multiple websites, at"
 msgstr "צור לוח בקרה יחיד משלך לניהול מספר אתרים ב"
 
-#: admin/partials/maspik-admin-display.php:647
-#: admin/partials/maspik-admin-display.php:693
-#: admin/partials/maspik-admin-display.php:762
+#: admin/partials/maspik-admin-display.php:650
+#: admin/partials/maspik-admin-display.php:696
+#: admin/partials/maspik-admin-display.php:765
+#: admin/partials/maspik-admin-display.php:1139
 #| msgid "Validation error message"
 msgid "Custom validation error message"
 msgstr "הודעת שגיאת אימות מותאמת אישית"
@@ -206,10 +202,6 @@ msgstr "דנית (ÆæØøÅå)"
 msgid "Danish )A-Za-zÆæØøÅå)"
 msgstr "דנית (A-Za-zÆæØøÅå)"
 
-#: includes/functions.php:2560
-msgid "Dashboard ID added successfully!"
-msgstr "Dashboard ID נוסף בהצלחה!"
-
 #: admin/partials/maspik-log.php:81
 msgid "Data & Reason"
 msgstr "נתונים וסיבה"
@@ -218,7 +210,7 @@ msgstr "נתונים וסיבה"
 msgid "Date"
 msgstr "תאריך"
 
-#: admin/partials/maspik-admin-display.php:1492
+#: admin/partials/maspik-admin-display.php:1494
 msgid "Default validation error message"
 msgstr "הודעת שגיאת אימות ברירת מחדל"
 
@@ -230,7 +222,7 @@ msgstr "הולנ��י�� (A-Za-zÀ-ÖØ-öø-ÿ)"
 msgid "Dutch (À-ÖØ-öø-ÿ)"
 msgstr "הולנדית (À-ÖØ-öø-ÿ)"
 
-#: admin/partials/maspik-admin-display.php:864
+#: admin/partials/maspik-admin-display.php:867
 msgid "Each term should be on a separate line."
 msgstr "כל מונח צריך להיות בשורה נפרדת"
 
@@ -238,11 +230,11 @@ msgstr "כל מונח צריך להיות בשורה נפרדת"
 msgid "Elementor Bot detector"
 msgstr "גלאי בוטים של אלמנטור"
 
-#: admin/partials/maspik-admin-display.php:1607
+#: admin/partials/maspik-admin-display.php:1609
 msgid "Email (Email field)"
 msgstr "אימייל (שדה אימייל)"
 
-#: admin/partials/maspik-admin-display.php:960
+#: admin/partials/maspik-admin-display.php:963
 #| msgid "Email field"
 msgid "Email Fields"
 msgstr "שדות אימייל"
@@ -255,8 +247,8 @@ msgstr "אנגלית (A-Za-z)"
 msgid "Enjoyed Maspik?"
 msgstr "נהנית מMaspik?"
 
-#: admin/partials/maspik-admin-display.php:1069
-#: admin/partials/maspik-admin-display.php:1170
+#: admin/partials/maspik-admin-display.php:1072
+#: admin/partials/maspik-admin-display.php:1173
 msgid ""
 "Entries with less than <strong>Min</strong> or more than <strong>Max</strong>"
 " characters will be blocked"
@@ -264,19 +256,15 @@ msgstr ""
 "רשומות עם פחות מ-<strong>Min</strong> או יותר מ-<strong>Max</strong> תווים "
 "ייחסמו"
 
-#: admin/partials/maspik-admin-display.php:929
+#: admin/partials/maspik-admin-display.php:932
 msgid "Entries with less than Min or more than Max characters will be blocked"
-msgstr ""
-
-#: includes/functions.php:2563
-msgid "Error adding Dashboard ID. Please try again."
-msgstr "שגיאה בהוספת מזהה לוח הבקרה. אנא נסה שוב"
+msgstr "ערכים עם פחות X או יותר מ-X תווים ייחסמו"
 
 #: includes/functions.php:989 includes/functions.php:1028
 msgid "Ethiopic"
 msgstr "אתיופית"
 
-#: admin/partials/maspik-admin-display.php:1642
+#: admin/partials/maspik-admin-display.php:1644
 msgid "Example for"
 msgstr "דוגמה ל"
 
@@ -289,7 +277,7 @@ msgstr "הרחב הכל"
 msgid "Export Settings"
 msgstr "ייצא הגדרות"
 
-#: admin/partials/maspik-admin-display.php:1291
+#: admin/partials/maspik-admin-display.php:1292
 #: admin/partials/maspik-admin-display.php:1312
 msgid "For more infromation"
 msgstr "למידע נוסף"
@@ -306,7 +294,7 @@ msgstr "צרפתית (À-ÿ)"
 msgid "General: "
 msgstr "כללי: "
 
-#: admin/partials/maspik-admin-display.php:714
+#: admin/partials/maspik-admin-display.php:717
 msgid "Geolocation restrictions"
 msgstr "הגבלות מיקום גיאוגרפי"
 
@@ -326,7 +314,7 @@ msgstr "גרמנית ([ÄäÖöÜüß])"
 msgid "Give us 5 stars"
 msgstr "תן לנו 5 כוכבים"
 
-#: includes/functions.php:2316
+#: includes/functions.php:2317
 msgid "Go to Settings"
 msgstr "עבור להגדרות"
 
@@ -342,15 +330,15 @@ msgstr "סינית"
 msgid "Hebrew"
 msgstr "עברית"
 
-#: admin/partials/maspik-admin-display.php:1129
+#: admin/partials/maspik-admin-display.php:1132
 msgid "HERE"
 msgstr "כאן"
 
-#: admin/partials/maspik-admin-display.php:867
+#: admin/partials/maspik-admin-display.php:870
 msgid "here"
 msgstr "כאן"
 
-#: admin/partials/maspik-admin-display.php:1643
+#: admin/partials/maspik-admin-display.php:1645
 #| msgid "Here you can see an Example words for the"
 msgid "Here you can see an example options for the"
 msgstr "כאן אתה יכול לראות מילים לדוגמה עבור"
@@ -379,7 +367,7 @@ msgstr "הונגרית (A-Za-zÁáÉéÍíÓóÚúÜüŐőŰ)"
 msgid "Hungarian (ÁáÉéÍíÓóÚúÜüŐőŰ)"
 msgstr "הונגרית (ÁáÉéÍíÓóÚúÜüŐőŰ)"
 
-#: admin/partials/maspik-admin-display.php:680
+#: admin/partials/maspik-admin-display.php:683
 msgid ""
 "If there is even one character from one of these languages in the text "
 "fields, it will be marked as spam and blocked."
@@ -409,11 +397,11 @@ msgstr ""
 msgid "IP"
 msgstr "IP"
 
-#: admin/partials/maspik-admin-display.php:1245
+#: admin/partials/maspik-admin-display.php:1248
 msgid "IP Blacklist and 3rd Party APIs"
 msgstr "רשימה שחורה של IP וממשקי API של צד שלישי"
 
-#: includes/functions.php:2376 includes/functions.php:2419
+#: includes/functions.php:2377 includes/functions.php:2420
 msgid "IP Checks Attempted"
 msgstr "ניסיונות בדיקת IP"
 
@@ -421,14 +409,14 @@ msgstr "ניסיונות בדיקת IP"
 msgid "IP Verification"
 msgstr "אימות IP"
 
-#: includes/functions.php:2369
+#: includes/functions.php:2370
 msgid ""
 "IP Verification checks if the sender's IP address is flagged as spam in the "
 "Maspik database."
 msgstr ""
 "אימות IP בודק אם כתובת ה-IP של השולח מסומנת כספאם במסד הנתונים של מספיק"
 
-#: includes/functions.php:2378 includes/functions.php:2421
+#: includes/functions.php:2379 includes/functions.php:2422
 msgid "IPs Blocked"
 msgstr "כתובות IP שנחסמו"
 
@@ -440,11 +428,11 @@ msgstr "איטלקית (A-Za-zÀàÉéÈèÌìÍíÒòÓóÙùÚú)"
 msgid "Italian (ÀàÉéÈèÌìÍíÒòÓóÙùÚú)"
 msgstr "איטלקית (ÀàÉéÈèÌìÍíÒòÓóÙùÚú)"
 
-#: admin/partials/maspik-admin-display.php:1228
+#: admin/partials/maspik-admin-display.php:1231
 msgid "JavaScript check"
 msgstr "בדיקת JavaScript"
 
-#: admin/partials/maspik-admin-display.php:1230
+#: admin/partials/maspik-admin-display.php:1233
 msgid ""
 "JavaScript check - This feature adds a hidden field that is automatically "
 "filled with the current year using JavaScript. If the submitted year does "
@@ -465,15 +453,15 @@ msgstr "הצטרף לקהילת הפייסבוק שלנו!"
 msgid "Katakana"
 msgstr "קטקנה"
 
-#: admin/partials/maspik-admin-display.php:665
+#: admin/partials/maspik-admin-display.php:668
 msgid "Language Forbidden"
 msgstr "שפה אסורה"
 
-#: admin/partials/maspik-admin-display.php:622
+#: admin/partials/maspik-admin-display.php:625
 msgid "Language Required"
 msgstr "שפה נדרשת"
 
-#: admin/partials/maspik-admin-display.php:610
+#: admin/partials/maspik-admin-display.php:613
 msgid "Language restrictions"
 msgstr "הגבלות שפה"
 
@@ -481,11 +469,11 @@ msgstr "הגבלות שפה"
 msgid "Latin"
 msgstr "לטינית"
 
-#: admin/partials/maspik-admin-display.php:867
+#: admin/partials/maspik-admin-display.php:870
 msgid "Learn more about those option in our documentation"
 msgstr "למד עוד על אפשרויות אלה בתיעוד שלנו"
 
-#: admin/partials/maspik-admin-display.php:1293
+#: admin/partials/maspik-admin-display.php:1294
 msgid "Leave blank to disable"
 msgstr "השאר ריק כדי לבטל"
 
@@ -493,7 +481,7 @@ msgstr "השאר ריק כדי לבטל"
 msgid "Leave blank to disable."
 msgstr "השאר ריק כדי לבטל"
 
-#: admin/partials/maspik-admin-display.php:1109
+#: admin/partials/maspik-admin-display.php:1112
 msgid "leave empty to disable this option."
 msgstr "השאר ריק כדי לבטל אפשרות זו"
 
@@ -501,20 +489,20 @@ msgstr "השאר ריק כדי לבטל אפשרות זו"
 msgid "leave us a 5-star review"
 msgstr "השאר לנו ביקורת 5 כוכבים"
 
-#: includes/functions.php:2483
+#: includes/functions.php:2484
 msgid "License Activated Successfully!"
 msgstr "הרישיון הופעל בהצלחה!"
 
-#: admin/partials/maspik-admin-display.php:910
-#: admin/partials/maspik-admin-display.php:1152
+#: admin/partials/maspik-admin-display.php:913
+#: admin/partials/maspik-admin-display.php:1155
 msgid "Limit Characters"
 msgstr "הגבל תווים"
 
-#: admin/partials/maspik-admin-display.php:1654
+#: admin/partials/maspik-admin-display.php:1656
 msgid "List copied!"
 msgstr "הרשימה הועתקה!"
 
-#: admin/partials/maspik-admin-display.php:1256
+#: admin/partials/maspik-admin-display.php:1259
 msgid "List of block IPs"
 msgstr "רשימת כתובות IP חסומות"
 
@@ -526,11 +514,11 @@ msgstr "אפשרויות ראשיות"
 msgid "Maspik - Advanced Spam Protection"
 msgstr "מספיק - הגנה מתקדמת מספאם"
 
-#: admin/partials/maspik-admin-display.php:782
+#: admin/partials/maspik-admin-display.php:785
 msgid "MASPIK Dashboard"
 msgstr "לוח בקרה מספיק"
 
-#: admin/partials/maspik-admin-display.php:816
+#: admin/partials/maspik-admin-display.php:819
 msgid "Maspik Dashboard ID"
 msgstr "מספיק דאשבורד ID"
 
@@ -538,7 +526,7 @@ msgstr "מספיק דאשבורד ID"
 msgid "Maspik Import/Export Settings"
 msgstr "הגדרות ייבוא/ייצוא של מספיק"
 
-#: includes/functions.php:2315
+#: includes/functions.php:2316
 msgid ""
 "Maspik offers a wide range of options to protect your website from getting "
 "spam. In the settings page, you'll find easy-to-use tools for setting the "
@@ -547,7 +535,7 @@ msgstr ""
 "Maspik מציעה מגוון רחב של אפשרויות הגן על האתר שלך מפני קבלת ספאם. בעמוד "
 "ההגדרות תמצאו אפשרויות קלות לשימוש להגדרת רמת ההגנה הרצויה."
 
-#: admin/partials/maspik-admin-display.php:804
+#: admin/partials/maspik-admin-display.php:807
 msgid "Maspik spam blacklist"
 msgstr "מספיק - רשימה שחורה לספאם"
 
@@ -558,7 +546,7 @@ msgid ""
 msgstr ""
 "Maspik: עזרו לנו לשפר את חסימת הספאם! אנא אפשרו לנו לאסוף מידע שאינו רגיש."
 
-#: admin/partials/maspik-admin-display.php:1618
+#: admin/partials/maspik-admin-display.php:1620
 msgid "Message (Text area field)"
 msgstr "הודעה (שדה איזור תוכן)"
 
@@ -566,19 +554,19 @@ msgstr "הודעה (שדה איזור תוכן)"
 msgid "Mongolian"
 msgstr "מונגולית"
 
-#: includes/functions.php:2375
+#: includes/functions.php:2376
 msgid "Month"
 msgstr "חודש"
 
-#: admin/partials/maspik-admin-display.php:1200
+#: admin/partials/maspik-admin-display.php:1203
 msgid "More Options"
 msgstr "אפשרויות נוספות"
 
-#: admin/partials/maspik-admin-display.php:1601
+#: admin/partials/maspik-admin-display.php:1603
 msgid "Name (Text field)"
 msgstr "שם (שדה טקסט)"
 
-#: includes/functions.php:2426
+#: includes/functions.php:2427
 msgid "Need More API Requests?"
 msgstr "צריך עוד בקשות API?"
 
@@ -586,7 +574,7 @@ msgstr "צריך עוד בקשות API?"
 msgid "Need support? Do you have ideas on how to improve MASPIK?"
 msgstr "צריך תמיכה? יש לך רעיונות כיצד לשפר את MASPIK?"
 
-#: includes/functions.php:2385
+#: includes/functions.php:2386
 msgid "No data available. Please wait for some submissions."
 msgstr "אין נתונים זמינים. אנא המתן לשליחות נוספות."
 
@@ -598,11 +586,11 @@ msgstr "נורבגית (A-Za-zÆæØøÅå)"
 msgid "Norwegian (ÆæØøÅå)"
 msgstr "נורבגית (ÆæØøÅå)"
 
-#: admin/partials/maspik-admin-display.php:827
+#: admin/partials/maspik-admin-display.php:830
 msgid "Not Connected"
 msgstr "לא מחובר"
 
-#: includes/functions.php:2423
+#: includes/functions.php:2424
 msgid ""
 "Note: The number of IPs Blocked can be higher than API Calls Made because "
 "Maspik caches the results of the last 10 IP verifications. If an IP was "
@@ -618,15 +606,15 @@ msgstr ""
 msgid "of course!"
 msgstr "כמובן!"
 
-#: admin/partials/maspik-admin-display.php:1208
+#: admin/partials/maspik-admin-display.php:1211
 msgid "Ongoing Experiments"
 msgstr "ניסויים מתמשכים"
 
-#: admin/partials/maspik-admin-display.php:1108
+#: admin/partials/maspik-admin-display.php:1111
 msgid "Only the following phone formats will be allowed."
 msgstr "רק פורמטי הטלפון הבאים יהיו מותרים"
 
-#: includes/functions.php:2492
+#: includes/functions.php:2493
 msgid "Open Dashboard"
 msgstr "פתח Dashboard"
 
@@ -641,21 +629,15 @@ msgstr ""
 "והתאם את הגנת הספאם בהתאם. רוב התכונות עובדות אוטומטית, אבל אתה יכול למקסם "
 "את ההגנה על ידי הגדרת מילות מפתח מותאמות אישית"
 
-#. Description of the plugin
-msgid ""
-"Overall Spam Protection, blacklist words, IP, country, languages, from "
-"contact-forms and more..."
-msgstr ""
-
 #: includes/functions.php:1838
 msgid "Permission error"
 msgstr "שגיאת הרשאות"
 
-#: admin/partials/maspik-admin-display.php:1613
+#: admin/partials/maspik-admin-display.php:1615
 msgid "Phone (Phone field)"
 msgstr "טלפון (שדה טלפון)"
 
-#: admin/partials/maspik-admin-display.php:1598
+#: admin/partials/maspik-admin-display.php:1600
 msgid "Playground - Form example"
 msgstr "שטח משחקים - דוגמת טופס"
 
@@ -663,7 +645,7 @@ msgstr "שטח משחקים - דוגמת טופס"
 msgid ""
 "Please note that importing/exporting settings will affect most of the Maspik "
 "configuration."
-msgstr ""
+msgstr "שימו לב שהגדרות ייבוא/ייצוא ישפיעו על רוב ההגדרות של Maspik."
 
 #: includes/functions.php:1048
 msgid "Polish (A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż)"
@@ -673,7 +655,7 @@ msgstr "פולנית (A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż)"
 msgid "Polish (ĄąĆćĘęŁłŃńÓóŚśŹźŻż)"
 msgstr "פולנית (ĄąĆćĘęŁłŃńÓóŚśŹźŻż)"
 
-#: admin/partials/maspik-admin-display.php:803
+#: admin/partials/maspik-admin-display.php:806
 msgid "Popular spam words from"
 msgstr "מילות ספאם פופולריות מ"
 
@@ -681,15 +663,15 @@ msgstr "מילות ספאם פופולריות מ"
 msgid "ProxyCheck"
 msgstr "בדיקת פרוקסי"
 
-#: admin/partials/maspik-admin-display.php:1296
+#: admin/partials/maspik-admin-display.php:1297
 msgid "Proxycheck.io API"
 msgstr "Proxycheck.io API"
 
-#: admin/partials/maspik-admin-display.php:986
+#: admin/partials/maspik-admin-display.php:989
 msgid "Regex must start and end with a slash /"
 msgstr "ביטוי רגולרי חייב להתחיל ולהסתיים בלוכסן /"
 
-#: admin/partials/maspik-admin-display.php:1595
+#: admin/partials/maspik-admin-display.php:1597
 msgid "Registration"
 msgstr "הרשמה"
 
@@ -713,11 +695,11 @@ msgstr "רומנית (ĂăÂâÎîȘșȚț)"
 msgid "Russian (А-Яа-яЁ)"
 msgstr "רוסית (А-Яа-яЁ)"
 
-#: admin/partials/maspik-admin-display.php:1822
+#: admin/partials/maspik-admin-display.php:1824
 msgid "Select"
 msgstr "בחר"
 
-#: includes/functions.php:2487
+#: includes/functions.php:2488
 msgid "Select Dashboard ID:"
 msgstr "בחר מזהה לוח בקרה:"
 
@@ -733,11 +715,11 @@ msgstr "סרבית (А-Яа-яЋћĆć)"
 msgid "Setting page"
 msgstr "דף הגדרות"
 
-#: admin/partials/maspik-admin-display.php:1562
+#: admin/partials/maspik-admin-display.php:1564
 msgid "Share anonymous data to improve spam protection"
 msgstr "שתף נתונים אנונימיים לשיפור הגנת הספאם"
 
-#: admin/partials/maspik-admin-display.php:1659
+#: admin/partials/maspik-admin-display.php:1661
 msgid "Shortcode List"
 msgstr "רשימת שורטקודים"
 
@@ -753,12 +735,12 @@ msgstr "סלובקית (ÁáÄäČčĎďÉéÍíĹĺĽľŇňÓóÔôŔŕŠšŤť
 msgid "Source"
 msgstr "מקור"
 
-#: admin/partials/maspik-admin-display.php:1515
+#: admin/partials/maspik-admin-display.php:1517
 #: admin/partials/maspik-log.php:192
 msgid "Spam Log"
 msgstr "יומן ספאם"
 
-#: admin/partials/maspik-admin-display.php:1481
+#: admin/partials/maspik-admin-display.php:1483
 msgid "Spam Log and Validation message"
 msgstr "יומן ספאם והודעת אימות"
 
@@ -774,7 +756,7 @@ msgstr "ספרדית (A-Za-zÁÉÍÓÚáéíóúüÜñÑ)"
 msgid "Spanish (ÁÉÍÓÚáéíóúüÜñÑ)"
 msgstr "ספרדית (ÁÉÍÓÚáéíóúüÜñÑ)"
 
-#: admin/partials/maspik-admin-display.php:822
+#: admin/partials/maspik-admin-display.php:825
 msgid "Status"
 msgstr "סטטוס"
 
@@ -810,7 +792,7 @@ msgstr "תמיכה ב-Formidable"
 msgid "Support Forminator"
 msgstr "תמיכה ב-Forminator"
 
-#: admin/partials/maspik-admin-display.php:1438
+#: admin/partials/maspik-admin-display.php:1440
 msgid "Support Gravity Forms"
 msgstr "תמיכה ב-Gravity Forms"
 
@@ -822,11 +804,11 @@ msgstr "תמיכה ב-Jet Form"
 msgid "Support Ninja Forms"
 msgstr "תמיכה ב-Ninja Forms"
 
-#: admin/partials/maspik-admin-display.php:1464
+#: admin/partials/maspik-admin-display.php:1466
 msgid "Support Woocommerce Registration"
 msgstr "תמיכה ברישום Woocommerce"
 
-#: admin/partials/maspik-admin-display.php:1456
+#: admin/partials/maspik-admin-display.php:1458
 msgid "Support Woocommerce Review"
 msgstr "תמיכה בביקורות Woocommerce"
 
@@ -838,13 +820,13 @@ msgstr "תמיכה בתגובות WordPress"
 msgid "Support WP Registration"
 msgstr "תמיכה WP Registration "
 
-#: admin/partials/maspik-admin-display.php:1447
+#: admin/partials/maspik-admin-display.php:1449
 msgid "Support WPforms"
 msgstr "תמיכה ב-WPforms"
 
 #: admin/partials/maspik-admin-display.php:1329
 msgid "Supported forms"
-msgstr ""
+msgstr "טפסים נתמכים"
 
 #: includes/functions.php:1053
 msgid "Swedish (A-Za-zÄäÅåÖö)"
@@ -858,19 +840,19 @@ msgstr ""
 msgid "Syriac"
 msgstr ""
 
-#: admin/partials/maspik-admin-display.php:1642
+#: admin/partials/maspik-admin-display.php:1644
 msgid "Text field"
 msgstr "שדה טקסט"
 
-#: admin/partials/maspik-admin-display.php:1643
+#: admin/partials/maspik-admin-display.php:1645
 msgid "text field"
 msgstr "שדה טקסט"
 
-#: admin/partials/maspik-admin-display.php:876
+#: admin/partials/maspik-admin-display.php:879
 msgid "Text Fields"
 msgstr "שדות טקסט"
 
-#: admin/partials/maspik-admin-display.php:999
+#: admin/partials/maspik-admin-display.php:1002
 msgid "Textarea Fields"
 msgstr "שדות טקסט ארוך"
 
@@ -878,21 +860,31 @@ msgstr "שדות טקסט ארוך"
 msgid "Thai"
 msgstr "תאילנדית"
 
-#: includes/functions.php:2421
+#. Description of the plugin
+msgid ""
+"The best spam protection plugin. Block spam using advanced filters, "
+"blacklists, and IP verification..."
+msgstr ""
+
+#: admin/partials/maspik-admin-display.php:1433
+msgid "The following forms are supported in Maspik Pro version only:"
+msgstr ""
+
+#: includes/functions.php:2422
 msgid "The number of IP addresses identified and blocked as spam."
 msgstr "מספר כתובות ה-IP שזוהו ונחסמו כספאם."
 
-#: includes/functions.php:2420
+#: includes/functions.php:2421
 msgid ""
 "The number of IP checks sent to Maspik's servers (counts toward your monthly "
 "limit)."
 msgstr "מספר בדיקות ה-IP שנשלחו לשרתי מספיק (נספר במסגרת המכסה החודשית שלך)."
 
-#: admin/partials/maspik-admin-display.php:865
+#: admin/partials/maspik-admin-display.php:868
 msgid "The system is not case-sensitive"
 msgstr "המערכת אינה רגישה לאותיות גדולות/קטנות"
 
-#: includes/functions.php:2419
+#: includes/functions.php:2420
 msgid "The total number of times your site tried to verify an IP address."
 msgstr "המספר הכולל של פעמים שהאתר שלך ניסה לאמת כתובת IP."
 
@@ -903,7 +895,7 @@ msgid ""
 msgstr ""
 "אירעה שגיאה בהוספת הגדרה זו. אנא נסה שוב. אם הבעיה נמשכת, שלח לנו אימייל."
 
-#: admin/partials/maspik-admin-display.php:1222
+#: admin/partials/maspik-admin-display.php:1225
 msgid ""
 "This feature checks the time elapsed between a user first visiting the site "
 "and submitting the form. If the submission happens too quickly (within 4 "
@@ -914,7 +906,7 @@ msgstr ""
 "הטופס. אם השליחה מתבצעת מהר מדי (תוך 4 שניות), סביר להניח שהיא אוטומטית "
 "ותיחסם. זה עוזר למנוע שליחות ספאם מהירות מבוטים."
 
-#: admin/partials/maspik-admin-display.php:1599
+#: admin/partials/maspik-admin-display.php:1601
 msgid ""
 "This form allows you to test your entries to see if they will be blocked."
 msgstr "טופס זה מאפשר לך לבדוק את הרשומות שלך כדי לראות אם הן ייחסמו."
@@ -924,11 +916,11 @@ msgid ""
 "This looks like spam. Try to rephrase, or contact us in an alternative way."
 msgstr "זה נראה כמו ספאם. נסה לנסח מחדש, או צור איתנו קשר בדרך חלופית."
 
-#: admin/partials/maspik-admin-display.php:1220
+#: admin/partials/maspik-admin-display.php:1223
 msgid "Time Trap"
 msgstr "מלכודת זמן"
 
-#: admin/partials/maspik-admin-display.php:1026
+#: admin/partials/maspik-admin-display.php:1029
 msgid ""
 "Try to use full sentences that you typically find in spam emails, rather "
 "than single words."
@@ -955,7 +947,7 @@ msgstr "אוקראינית (A-Za-zА-ЩЬЮЯЇІЄҐа-щьюяїієґЁё)"
 msgid "Ukrainian (А-ЩЬЮЯЇІЄҐа-щьюяїієґЁё)"
 msgstr "אוקראינית (А-ЩЬЮЯЇІЄҐа-щьюяїієґЁё)"
 
-#: includes/functions.php:2417
+#: includes/functions.php:2418
 msgid "Understanding the Data"
 msgstr "הבנת הנתונים"
 
@@ -963,7 +955,7 @@ msgstr "הבנת הנתונים"
 msgid "Unknown language"
 msgstr "שפה לא ידועה"
 
-#: includes/functions.php:2427
+#: includes/functions.php:2428
 msgid ""
 "Upgrade to Maspik Pro to get up to 1,000 API requests per month and improve "
 "your site's spam protection!"
@@ -991,7 +983,7 @@ msgstr ""
 msgid "User Agent"
 msgstr "דפדפן משתמש"
 
-#: includes/functions.php:2484
+#: includes/functions.php:2485
 msgid ""
 "We found a control panel ID associated with this license, would you like us "
 "to automatically assign it to this site?"
@@ -999,7 +991,6 @@ msgstr ""
 "מצאנו מזהה לוח בקרה המשויך לרישיון זה, האם תרצה שנשייך אותו אוטומטית לאתר זה?"
 
 #: includes/functions.php:1660
-#, fuzzy
 #| msgid "We would be incredibly grateful if you could"
 msgid "We would be incredibly grateful if you could "
 msgstr "נהיה אסירי תודה אם תוכל"
@@ -1008,19 +999,19 @@ msgstr "נהיה אסירי תודה אם תוכל"
 msgid "We would love to hear from you at"
 msgstr "נשמח לשמוע ממך ב"
 
-#: admin/partials/maspik-admin-display.php:837
+#: admin/partials/maspik-admin-display.php:840
 msgid "website"
 msgstr "אתר אינטרנט"
 
-#: includes/functions.php:2314
+#: includes/functions.php:2315
 msgid "Welcome to Maspik Advanced Spam Protection"
 msgstr "ברוכים הבאים להגנת ספאם מתקדמת של מספיק"
 
-#: includes/functions.php:2367
+#: includes/functions.php:2368
 msgid "What is IP Verification?"
 msgstr "מהו אימות IP?"
 
-#: admin/partials/maspik-admin-display.php:685
+#: admin/partials/maspik-admin-display.php:688
 msgid ""
 "When blocking Latin languages in an individual (such as: Dutch, French), the "
 "chack is in the punctuation letters (But they are not always in use). Its to "
@@ -1029,7 +1020,7 @@ msgstr ""
 "בעת חסימת שפות לטיניות באופן פרטני (כגון: הולנדית, צרפתית), הבדיקה היא "
 "בסימני הפיסוק (אך הם לא תמיד בשימוש). זה כדי למנוע התראות שווא"
 
-#: admin/partials/maspik-admin-display.php:640
+#: admin/partials/maspik-admin-display.php:643
 msgid ""
 "When specifying Latin-based languages (e.g., Dutch, French), the check "
 "includes language-specific punctuation and letters A to Z (including English)"
@@ -1053,18 +1044,18 @@ msgstr ""
 "הנתונים שלך ואתה יכול לאפס אותו בכל עת.<br>איפוס היומן לא משנה דבר - הוא רק "
 "מוחק את ההיסטוריה"
 
-#: admin/partials/maspik-admin-display.php:1098
+#: admin/partials/maspik-admin-display.php:1101
 msgid "Whitelist Phone Fields formts"
 msgstr "פורמטים מותרים לשדות טלפון"
 
-#: admin/partials/maspik-admin-display.php:985
+#: admin/partials/maspik-admin-display.php:988
 msgid ""
 "Wildcard patterns are accepted. asterisk * Or question mark ? symbol are "
 "necessary for the recognition of the wildcard."
 msgstr ""
 "Wildcard patterns מתקבל. סימן כוכבית * או סימן שאלה ? הכרחיים לזיהוי Wildcard"
 
-#: admin/partials/maspik-admin-display.php:903
+#: admin/partials/maspik-admin-display.php:906
 msgid ""
 "Wildcard patterns are accepted. asterisk * symbol is necessary for the "
 "recognition of the wildcard."
@@ -1075,15 +1066,15 @@ msgid "WP Maspik Community - Stopping Spam Together"
 msgstr "WP Maspik Community - Stopping Spam Together"
 
 #. Author of the plugin
-#: admin/partials/maspik-admin-display.php:837
+#: admin/partials/maspik-admin-display.php:840
 msgid "WpMaspik"
 msgstr "WpMaspik"
 
-#: admin/partials/maspik-admin-display.php:1268
+#: admin/partials/maspik-admin-display.php:1270
 msgid "You can also filter entire CIDR range such as 134.209.0.0/16"
 msgstr "ניתן גם לסנן טווח CIDR שלם כגון 134.209.0.0/16"
 
-#: admin/partials/maspik-admin-display.php:1660
+#: admin/partials/maspik-admin-display.php:1662
 msgid "You can also use the following shortcodes:"
 msgstr "ניתן להשתמש גם בשורטקודים הבאים:"
 
@@ -1102,6 +1093,6 @@ msgstr ""
 "המשוב שלך לא רק עוזר לאחרים לגלות את התוסף שלנו אלא גם מזין את התשוקה שלנו "
 "להמשיך לשפר אותו. זה עוזר לנו לצמוח ולהמשיך להשתפר. תודה על התמיכה שלך!"
 
-#: includes/functions.php:2371
+#: includes/functions.php:2372
 msgid "Your IP Verification Activity"
 msgstr "פעילות אימות ה-IP שלך"

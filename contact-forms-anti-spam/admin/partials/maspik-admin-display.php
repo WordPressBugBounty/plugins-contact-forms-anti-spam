@@ -605,8 +605,8 @@ $spamcounter = maspik_spam_count();
             <!-- Accordion Item - End main check -->
             <!-- Accordion Item - Language Field - Custom -->
 
-            <?php $text_pro = "(Available in Maspik Pro)"; 
-            $span_pro = !cfes_is_supporting("language_restrictions") ? ' <span style="color: #f48623;font-size: 14px;text-transform: none;">' . $text_pro . '</span>' : ''; ?>
+            <?php $text_pro = "(Pro feature)"; 
+            $span_pro = !cfes_is_supporting("language_restrictions") ? ' <span style="color: #f48623;font-size: 12px;text-transform: none;">' . $text_pro . '</span>' : ''; ?>
             <div class="maspik-accordion-item maspik-accordion-lang-field <?php echo maspik_add_pro_class("country_location") ?> ">
                 <div class="maspik-accordion-header">
                     <div class="mpk-acc-header-texts">
@@ -717,9 +717,9 @@ $spamcounter = maspik_spam_count();
                             <?php esc_html_e('Geolocation restrictions', 'contact-forms-anti-spam'); echo $span_pro; ?>
                         </h4><!--Accordion Title-->
                         <?php 
-                                maspik_tooltip("Choose either to allow or to block and enter the countries in the next field.
-                                <em><br><br>If <strong>allowed</strong>, only forms from these countries will be accepted.
-                                <br>If <strong>blocked</strong>, all countries in the following list will be blocked.</em>");
+                                maspik_tooltip("Choose either to allow or to block and enter the countries in the next field.   
+                                If allowed, only forms from these countries will be accepted.
+                                If blocked, all countries in the following list will be blocked.");
                         ?>
                     </div>
                     <div class = "maspik-pro-button-wrap">
@@ -1258,8 +1258,7 @@ $spamcounter = maspik_spam_count();
                         <div class="maspik-accordion-subtitle-wrap short-tooltip">
                             <h3 class="maspik-accordion-subtitle"><?php esc_html_e("List of block IPs", 'contact-forms-anti-spam'); ?></h3>
                             <?php 
-                                maspik_tooltip("Any IP you enter above will be blocked.
-                                One IP per line.");
+                                maspik_tooltip("Any IP you enter above will be blocked.One IP per line.");
                             ?>
                         </div> <!--end of maspik-accordion-subtitle-wrap-->
                         <div class="maspik-ip-wrap maspik-main-list-wrap maspik-textfield-list">
@@ -1277,8 +1276,7 @@ $spamcounter = maspik_spam_count();
                         <div class="maspik-accordion-subtitle-wrap short-tooltip">
                             <h3 class="maspik-accordion-subtitle"><?php esc_html_e('AbuseIPDB API', 'contact-forms-anti-spam'); ?></h3>
                             <?php 
-                                maspik_tooltip("AbuseIPDB.com API<br>
-                                <em>Recommend not lower than 25 for less false positives.</em>");
+                                maspik_tooltip("AbuseIPDB.com API Recommend not lower than 25 for less false positives. We recommend setting threshold between 70-100 based on your needs.");
                             ?>
                         </div> <!--end of maspik-accordion-subtitle-wrap-->
                         
@@ -1298,8 +1296,7 @@ $spamcounter = maspik_spam_count();
                         <div class="maspik-accordion-subtitle-wrap short-tooltip add-space-top">
                             <h3 class="maspik-accordion-subtitle"><?php esc_html_e('Proxycheck.io API', 'contact-forms-anti-spam'); ?></h3>
                             <?php 
-                                maspik_tooltip("Proxycheck.io API<br>
-                                <em>Low risk 0-33, MidHigh risk = 33-66, Dangerous = 66 Above</em>");
+                                maspik_tooltip("Proxycheck.io API risk score: 0-50 may have false positives. Scores above 70 indicate higher reliability in detecting proxy/VPN usage. We recommend setting threshold between 70-100 based on your needs.");
                             ?>
                         </div> <!--end of maspik-accordion-subtitle-wrap-->
 
@@ -1387,7 +1384,7 @@ $spamcounter = maspik_spam_count();
                             <?php echo maspik_toggle_button('maspik_support_registration', 'maspik_support_registration', 'maspik_support_registration', 'maspik-form-switch togglebutton', "form-toggle", efas_if_plugin_is_active('Wordpress Registration')); ?>
                                 <div class="wp-reg">
                                         <h4> <?php esc_html_e('Support WP Registration', 'contact-forms-anti-spam'); ?></h4>
-                                        <?php maspik_tooltip('If Anyone can register is checked <br><em>(At WP Options => General).</em>') ?>
+                                        <?php maspik_tooltip('If Anyone can register is checked (At WP Options => General).') ?>
                                         
                                 </div>  
                         </div><!-- end of maspik-wp-registration-switch-wrap -->
