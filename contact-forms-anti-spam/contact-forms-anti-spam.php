@@ -4,13 +4,26 @@
  * Plugin Name:       Maspik - Advanced Spam Protection
  * Plugin URI:        https://wpmaspik.com/
  * Description:       The best spam protection plugin. Block spam using advanced filters, blacklists, and IP verification...
- * Version:           2.2.11
+ * Version:           2.2.12
  * Author:            WpMaspik
  * Author URI:        https://wpmaspik.com/?readme
- * License:           GPL-2.0+
- * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       contact-forms-anti-spam
  * Domain Path:       /languages
+ * License:           GPL-3.0+
+ * License URI:       http://www.gnu.org/licenses/gpl-3.0.txt
+ * 
+ * Maspik is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * Any spam blocking action taken by this plugin is solely at the user's own risk and discretion.
+ * The plugin developers and contributors cannot be held responsible for any false positives
+ * or legitimate messages that may be blocked.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Maspik. If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
 
 // If this file is called directly, abort.
@@ -19,7 +32,7 @@ if (!defined('ABSPATH')) exit;
 /**
  * Currently plugin version.
  */
-define( 'MASPIK_VERSION', '2.2.11' );
+define( 'MASPIK_VERSION', '2.2.12' );
 /**
  * The code that runs during plugin activation.
  * This action is documented in includes/class-settings-page-activator.php

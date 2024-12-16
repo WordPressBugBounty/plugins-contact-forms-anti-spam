@@ -1,5 +1,12 @@
 # Changelog #
 
+= 2.2.12 - 16/12/2024 =
+* New feature! - Add support in Numverify API for phone number validation.
+* Fixed - fix error in Formidable forms.
+* Fixed - Fixed an issue where the Dashboard ID was not displaying correctly.
+* Fixed - Fixed an issue where spam log entry limit was not working as in some cases.
+
+
 ## 2.2.11 - 05/12/2024 ##
 * Improvement - Improve text in settings page and translation
 * Bug fix - Fix UI glitch in settings page

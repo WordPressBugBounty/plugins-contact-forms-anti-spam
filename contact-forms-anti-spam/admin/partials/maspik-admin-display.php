@@ -284,7 +284,7 @@ $spamcounter = maspik_spam_count();
 
             //MASPIK API field
 
-                if( maspik_save_settings( 'private_file_id' , sanitize_text_field($_POST['private_file_id'])) != "success" ){ 
+                if( maspik_save_settings( 'private_file_id' , absint($_POST['private_file_id']) == 0 ? '' : absint($_POST['private_file_id'])) != "success" ){ 
                     $error_message .= $result_check . " ";
                 } //main list
 
@@ -339,6 +339,37 @@ $spamcounter = maspik_spam_count();
                 if( maspik_save_settings( 'proxycheck_io_risk' , sanitize_text_field( $_POST['proxycheck_io_risk'] )) != "success" ){ 
                     $error_message .= $result_check . " ";
                 } //ProxycheckIO API threshold
+
+                if( maspik_save_settings( 'numverify_api' , sanitize_text_field( stripslashes($_POST['numverify_api']) )) != "success" ){ 
+                    $error_message .= $result_check . " ";
+                } //numverify_api API code
+
+                if( maspik_save_settings( 'numverify_country' , sanitize_text_field( $_POST['numverify_country'] )) != "success" ){ 
+                    $error_message .= $result_check . " ";
+                } //numverify_country API threshold
+                if (isset($_POST['numverify_country']) && !empty($_POST['numverify_country'])) {
+                    $selectedCountry = $_POST['numverify_country'];
+                    $selectedCountryVal = "";
+
+                    foreach ($selectedCountry as $countryValue) {
+                        $escapedCValue =  $countryValue;
+                        $selectedCountryVal .= $escapedCValue . " ";
+                    }
+                    $selectedCountryVal = str_replace("\\p", "p", $selectedCountryVal);
+
+
+                    if( maspik_save_settings( 'numverify_country' , $selectedCountryVal ) != "success" ){ 
+                        $error_message .= $result_check . " ";
+                    }
+                }else{
+                    if( maspik_save_settings( 'numverify_country' , '' ) != "success" ){ 
+                        $error_message .= $result_check . " ";
+                    }
+
+                } //main list
+
+
+
 
             //General field END --
              
@@ -1289,10 +1320,12 @@ $spamcounter = maspik_spam_count();
                             </div>
 
                         </div> <!-- end of maspik-abuse-api-wrap  -->
+                    
                         <span class="maspik-subtext"><?php esc_html_e('For more infromation', 'contact-forms-anti-spam'); ?> <a target = "_blank" href="https://www.abuseipdb.com/?Maspik-plugin">
                         <?php esc_html_e('AbuseIPDB', 'contact-forms-anti-spam'); ?></a></span>
                         <span class="maspik-subtext"><?php esc_html_e('Leave blank to disable', 'contact-forms-anti-spam'); ?>.</span>
                                <?php maspik_spam_api_list('abuseipdb_api');?>
+
                         <div class="maspik-accordion-subtitle-wrap short-tooltip add-space-top">
                             <h3 class="maspik-accordion-subtitle"><?php esc_html_e('Proxycheck.io API', 'contact-forms-anti-spam'); ?></h3>
                             <?php 
@@ -1301,7 +1334,7 @@ $spamcounter = maspik_spam_count();
                         </div> <!--end of maspik-accordion-subtitle-wrap-->
 
 
-                         <div class="maspik-abuse-api-wrap maspik-main-list-wrap maspik-textfield-list">
+                        <div class="maspik-abuse-api-wrap maspik-main-list-wrap maspik-textfield-list">
 
                             <?php echo create_maspik_input('proxycheck_io_api', 'maspik-inputbox'); ?>
                             <div class="maspik-threshold-wrap">
@@ -1314,7 +1347,42 @@ $spamcounter = maspik_spam_count();
 
                         <span class="maspik-subtext"><?php esc_html_e('Leave blank to disable.', 'contact-forms-anti-spam'); ?></span>
                            
-                        <?php maspik_spam_api_list('proxycheck_io_api');?>          
+                        <?php maspik_spam_api_list('proxycheck_io_api');?>    
+                        
+                        <div class="maspik-accordion-subtitle-wrap short-tooltip add-space-top">
+                            <h3 class="maspik-accordion-subtitle"><?php esc_html_e('Numverify API', 'contact-forms-anti-spam'); ?></h3>
+                            <?php 
+                                maspik_tooltip("Numverify API is a phone number verification service that checks if a phone number is valid.");
+                            ?>
+                        </div> <!--end of maspik-accordion-subtitle-wrap-->
+
+                        <div class="maspik-numverify-api-wrap maspik-main-list-wrap maspik-textfield-list">
+
+                            <?php echo create_maspik_input('numverify_api', 'maspik-inputbox'); ?>
+
+                        </div> <!-- end of maspik-abuse-api-wrap  -->
+
+                        <span class="maspik-subtext"><?php esc_html_e('By default, Numverify requires phone numbers to include the country code.
+                        If your site serves a specific country and users don\'t enter country codes,
+                        you can select the country code from the list below. Note, if a country code is selected but the user enters different country code,
+                        the number will be invalid because it will contain two country codes.
+                        Please test thoroughly to understand this behavior.', 'contact-forms-anti-spam'); ?></span>
+                        
+                        <span class="maspik-subtext"><?php esc_html_e('For more infromation', 'contact-forms-anti-spam'); ?> <a target = "_blank" href="https://numverify.com/documentation/?Maspik-plugin">
+                        <?php esc_html_e('Numverify documentation', 'contact-forms-anti-spam'); ?></a></span>
+
+                        <?php maspik_spam_api_list('numverify_api');?>    
+
+                        <div class="maspik-select-list">
+                            <div class="maspik-main-list-wrap">
+                                
+                                <?php 
+                                    echo create_maspik_select("numverify_country", "numverify_country", maspik_countries_code_for_phone_number() , "", false);                                 
+                                ?> 
+                            </div>
+                                  
+                        </div> <!-- end of maspik-main-list-wrap -->
+
 
                             <?php  maspik_save_button_show() ?>
                         
@@ -1563,7 +1631,7 @@ $spamcounter = maspik_spam_count();
                                 
                                 echo "<h4>". esc_html__("Share anonymous data to improve spam protection", "contact-forms-anti-spam"). "</h4>";
                                     
-                                maspik_tooltip(esc_html__("By allowing us to track usage data, we can better help you by knowing which WordPress configurations, themes, and plugins to test and which options are needed.") );
+                                maspik_tooltip(esc_html__("By allowing us to track usage data, we can better help you by knowing which WordPress configurations, themes, and plugins to test and which options are needed.", "contact-forms-anti-spam") );
                                     
                              ?>
                         </div><!-- end of mmaspik-add-country-switch-wrap -->
@@ -1820,7 +1888,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     jQuery(document).ready(function() {
         jQuery('.maspik-select').select2({
-          multiple: true,
+          //multiple: true,
           placeholder:"<?php esc_html_e('Select', 'contact-forms-anti-spam' ) ;?>",
         });
     });

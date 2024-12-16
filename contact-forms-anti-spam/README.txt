@@ -1,13 +1,13 @@
 === Maspik - Advanced Spam Protection ===
 Contributors: yonifre
-Donate link: paypal.me/yonifre
+Donate link: https://paypal.me/yonifre
 Tags: spam, blacklist, anti spam, Honeypot, antispam 
 Tested up to: 6.7
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.2.11
-License: GPLv2 or later
-License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Stable tag: 2.2.12
+License: GPLv3
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 The best spam protection plugin. Block spam using advanced filters, blacklists, and IP verification - works with all major form plugins and comments.
 
@@ -123,7 +123,7 @@ Maspik currently supports:
 </ul>
 
 More forms will be supported in future releases.
-Looking for specific plugin support? Let us know at https://wpmaspik.com/#contact
+Looking for specific plugin support? Let us know at [WpMaspik.com](https://wpmaspik.com/#contact)
 
 = Where do I set this up? =
 
@@ -148,6 +148,12 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 
 
 == Changelog ==
+
+= 2.2.12 - 16/12/2024 =
+* New feature! - Add support in Numverify API for phone number validation.
+* Fixed - fix error in Formidable forms.
+* Fixed - Fixed an issue where the Dashboard ID was not displaying correctly.
+* Fixed - Fixed an issue where spam log entry limit was not working as in some cases.
 
 = 2.2.11 - 05/12/2024 =
 * Improvement - Improve text in settings page and translation

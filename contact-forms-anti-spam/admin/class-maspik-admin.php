@@ -175,7 +175,7 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
 
         function create_maspik_input($name, $class = '', $mode = "text") {      
             
-            $data = maspik_get_settings($name);
+            $data = ( $mode === "number" && maspik_get_settings($name) ) ? (int)maspik_get_settings($name) : maspik_get_settings($name);
 
             $class_attr = !empty($class) ? ' class="' . esc_attr($class . " is-". $mode) . '"' : '';
             $input = "<input  name='" . esc_attr($name) . "' id='". esc_attr($name) . " '" . $class_attr . " type='" . $mode . "' value='". esc_attr($data) ."'></input>";
@@ -206,7 +206,7 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
                 $numbox .=  esc_attr($data);
 
             }else{
-                    $numbox .= esc_attr($default);
+                $numbox .= esc_attr($default);
 
             }
 
@@ -223,7 +223,7 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
             return $numbox;
         }
 
-        function create_maspik_select($name, $class, $array, $attr="") {      
+        function create_maspik_select($name, $class, $array, $attr="", $multiple = true) {      
             
             $the_array = $array;
             $setting_value = maspik_get_dbvalue();
@@ -237,7 +237,8 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
                     $result_array = explode(" ", $result->$setting_value);
                 }
             }
-            $select =  '<select '. $class_attr .' multiple="multiple" '.$attr.' name="'.esc_attr($name).'[]" id="'.esc_attr($name).'"  >';
+            $multiple = $multiple ? "multiple=" : "";
+            $select =  '<select '. $class_attr .' '.$multiple.' '.$attr.' name="'.esc_attr($name).'[]" id="'.esc_attr($name).'"  >';
             foreach ($the_array as $key => $value) {
                 $select .=  ' <option value="'.esc_attr($key).'" ';
                 foreach ($result_array as $aresult) {
@@ -326,7 +327,6 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
                 efas_get_spam_api("textarea_field") 
             ){
                 return true;
-
             }
         }
     //Maspik API status checker - END

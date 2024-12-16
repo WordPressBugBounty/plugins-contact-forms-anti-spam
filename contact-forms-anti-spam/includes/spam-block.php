@@ -420,6 +420,21 @@ function checkTelForSpam($field_value) {
         }
     }
 
+    // Numverify API integration
+    $numverify_api_key = sanitize_text_field(maspik_get_settings('numverify_api')); // Fetch the API key from plugin settings
+    if (!empty($numverify_api_key)) {
+        $numverify_result = numverify_validate_number($field_value, $numverify_api_key);
+        if ($numverify_result['valid']) {
+            // Do nothing, Numverify validation passed
+            //return array('valid' => true, 'reason' => "Numverify validation passed", 'message' => 'tel_formats');
+        } else {
+            $reason = "Numverify validation failed: " . esc_html($numverify_result['error']);
+            return array('valid' => false, 'reason' => $reason, 'message' => 'tel_formats', 'label' => 'tel_formats');
+        }
+    }
+
+        
+
     $tel_formats = empty($tel_formats) ? [] : explode("\n", str_replace("\r", "", $tel_formats));
     // Check if there are additional blacklist entries from the spam API
     if ($additional_blacklist = efas_get_spam_api('phone_format')) {
@@ -453,7 +468,7 @@ function checkTelForSpam($field_value) {
                 return array('valid' => true, 'reason' => "Wildcard pattern match: $format", 'message' => 'tel_formats');
             }
         } 
-    }
+    }    
 
     return array('valid' => false, 'reason' => $reason, 'message' => 'tel_formats', 'label' => 'tel_formats');
 }
@@ -729,3 +744,53 @@ function Maspik_add_hp_js_to_footer() {
     }
 }
 add_action('wp_footer', 'Maspik_add_hp_js_to_footer');
+
+
+/**
+ * Validate phone number with Numverify API and optional country code.
+ */
+function numverify_validate_number($phone_number, $api_key) {
+    $phone_number_clean = preg_replace('/[^0-9]/', '', $phone_number); // Will keep only digits 0-9, removing everything else including +
+
+    // Check if country code is enabled in the settings
+    $country_code_kye = trim(maspik_get_settings('numverify_country')) === 'none' ? '' : sanitize_text_field(maspik_get_settings('numverify_country')); // country code from the settings
+    if ( !empty($country_code_kye) ) {
+        $country_phone_code_array = maspik_countries_code_for_phone_number();
+        $country_phone_code_from_country_code = $country_phone_code_array[$country_code_kye];
+        $country_phone_code_clean = preg_replace('/[^0-9]/', '', $country_phone_code_from_country_code);
+        if (strpos($phone_number_clean, $country_phone_code_clean) === 0) {
+            $phone_number_clean = substr($phone_number_clean, strlen($country_phone_code_clean));
+        }
+    }
+
+    // Build the API URL with optional country code
+    $url = add_query_arg(array(
+        'access_key' => $api_key,
+        'number' => $phone_number_clean,
+        'country_code' => $country_code_kye // will be added only if there is a country code
+    ), 'https://apilayer.net/api/validate');
+
+    $response = wp_remote_get($url, array('timeout' => 10, 'sslverify' => true)); // Force SSL verification
+
+    // Handle errors in API response
+    if (is_wp_error($response)) {
+        return array('valid' => true, 'error' => 'API request failed');
+    }
+
+    $body = wp_remote_retrieve_body($response);
+    $result = json_decode($body, true);
+
+    if (empty($result) || isset($result['error'])) {
+        return array(
+            //'valid' => false,//isset($result['valid']) ? $result['valid'] : true,
+            'valid' => true,
+            'error' => $result['error']['info'] ?? 'Unknown error'
+        );
+    }
+
+    // Return the actual validation result from the API
+    return array(
+        'valid' => isset($result['valid']) ? $result['valid'] : true,
+        'error' => isset($result['error']) ? $result['error'] : "invalid phone number ($phone_number)",
+    );
+}
