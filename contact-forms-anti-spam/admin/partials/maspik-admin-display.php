@@ -184,7 +184,6 @@ $spamcounter = maspik_spam_count();
                     }
                     $selectedLangNeededVal = str_replace("\\p", "p", $selectedLangNeededVal);
 
-
                     if( maspik_save_settings( 'lang_needed' , $selectedLangNeededVal ) != "success" ){ 
                         $error_message .= $result_check . " ";
                     }
@@ -468,7 +467,6 @@ $spamcounter = maspik_spam_count();
 
             //Other Options END --
         }
-
 
     //Save Commands - END
 

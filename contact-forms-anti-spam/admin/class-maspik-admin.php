@@ -237,7 +237,7 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
                     $result_array = explode(" ", $result->$setting_value);
                 }
             }
-            $multiple = $multiple ? "multiple=" : "";
+            $multiple = $multiple ? "multiple='multiple'" : "";
             $select =  '<select '. $class_attr .' '.$multiple.' '.$attr.' name="'.esc_attr($name).'[]" id="'.esc_attr($name).'"  >';
             foreach ($the_array as $key => $value) {
                 $select .=  ' <option value="'.esc_attr($key).'" ';
@@ -406,16 +406,21 @@ class Maspik_Admin {
             $first_maspik_api_id = maspik_get_settings('private_file_id');
             $dashboard_url = 'https://wpmaspik.com/?page_id=' . esc_attr($first_maspik_api_id . '&ref=plugin-menue&my-account=1');
             $url = $first_maspik_api_id ? $dashboard_url : 'https://wpmaspik.com/my-account?ref=plugin-menue';
-            add_submenu_page(
-                $this->plugin_name,
-                'Maspik dashboard',
-                'Maspik dashboard',
-                'edit_pages',
-                $url,
-                '',
-                null
-            );
+            $title = 'Maspik dashboard';
+        }else{
+            $url = 'https://wpmaspik.com/?ref=upgrade-to-PRO-plugin-menue';
+            $title = 'Upgrade to PRO';
         }
+        add_submenu_page(
+            $this->plugin_name,
+            $title,
+            $title,
+            'edit_pages',
+            $url,
+            '',
+            null
+        );
+
 
     }
 

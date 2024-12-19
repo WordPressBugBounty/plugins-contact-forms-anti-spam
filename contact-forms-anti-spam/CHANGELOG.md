@@ -1,5 +1,8 @@
 # Changelog #
 
+= 2.2.13 - 19/12/2024 =
+* Fixed HTML error in settings page that prevented select fields from being saved.
+
 = 2.2.12 - 16/12/2024 =
 * New feature! - Add support in Numverify API for phone number validation.
 * Fixed - fix error in Formidable forms.

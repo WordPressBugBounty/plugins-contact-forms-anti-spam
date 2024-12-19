@@ -907,7 +907,7 @@ function maspik_is_field_value_equal_to_string($string, $field_value) {
 function efas_get_spam_api($field = "text_field",$type = "array") {
     $spamapi_option = get_option('spamapi'); 
    
-    if (!maspik_get_settings('private_file_id') || !is_array($spamapi_option) || !cfes_is_supporting("api") || !isset($spamapi_option[$field])) {
+    if ((!maspik_get_settings('private_file_id') && !maspik_get_settings("popular_spam") ) || !is_array($spamapi_option) || !cfes_is_supporting("api") || !isset($spamapi_option[$field])) {
         return false;
     }
 

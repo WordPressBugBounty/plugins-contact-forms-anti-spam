@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.7
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.2.12
+Stable tag: 2.2.13
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -44,8 +44,9 @@ Maspik allows you to specify words, email addresses, phone formats, IP addresses
   * IP verification
   * Block submissions without source URLs (Elementor)
 * **API Integrations:**
-  * Proxycheck.io
-  * AbuseIPDB.com
+  * Proxycheck.io (check IP address against proxy/VPN/TOR)
+  * AbuseIPDB.com (check IP address against abuse/spam/malicious/proxy/VPN/TOR)
+  * Numverify.com (validate phone number)
 
 ## Supported Forms ##
 
@@ -100,6 +101,21 @@ Install and activate the plugin.
 In the Wordpress dashboard menu, find the Maspik - Spam Blacklist setting page.
 Add spam words as needed.
 == Frequently Asked Questions ==
+
+= How to Block Spam in WordPress? =
+With Maspik, you can effectively block spam submissions, spam comments, spam bots, and spam registrations in WordPress. Our powerful anti-spam plugin provides comprehensive protection against comment spam, form spam, registration spam, and automated bot submissions.
+
+Simply go through the settings page, activate the features that fit your needs, and you're done! The plugin acts as a spam filter and spam blocker, helping you stop spam in WordPress without using CAPTCHA. It's the perfect solution for blocking unwanted spam content, spam users, and spam attacks on your WordPress site.
+
+Key features include:
+- Block spam comments and spam registrations
+- Stop spam bots and automated submissions 
+- Filter out spam content and spam users
+- Protect contact forms from spam
+- No CAPTCHA required
+- Easy spam prevention setup
+
+
 = Does the plugin work with all Wordpress forms? =
 Maspik currently supports:
 
@@ -148,6 +164,10 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 
 
 == Changelog ==
+
+
+= 2.2.13 - 19/12/2024 =
+* Fixed HTML error in settings page that prevented select fields from being saved.
 
 = 2.2.12 - 16/12/2024 =
 * New feature! - Add support in Numverify API for phone number validation.
