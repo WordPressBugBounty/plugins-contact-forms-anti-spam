@@ -12,7 +12,10 @@ add_filter( 'gform_field_validation', function ( $result, $value, $form, $field 
   $count = count($form['fields'])+1 ;
   $reason = "";
   $spam = false;
-  if($field['id'] == $count){
+  // find last field id
+  $last_field_id = end($form['fields'])['id'];
+
+  if($field['id'] == $last_field_id){
   
     if ( !$result['is_valid'] ) {
       return $result;

@@ -1,9 +1,16 @@
 # Changelog #
 
-= 2.2.13 - 19/12/2024 =
+## 2.2.14 - 05/01/2025 ##
+* Happy New Year! may all your spam be blocked!
+* Improvement - Improve Database performance
+* Improvement - Improve code performance 
+* New feature! - Advance key check formaly known as "Time Check", better performance and more accurate.
+
+
+## 2.2.13 - 19/12/2024 ##
 * Fixed HTML error in settings page that prevented select fields from being saved.
 
-= 2.2.12 - 16/12/2024 =
+## 2.2.12 - 16/12/2024 ##
 * New feature! - Add support in Numverify API for phone number validation.
 * Fixed - fix error in Formidable forms.
 * Fixed - Fixed an issue where the Dashboard ID was not displaying correctly.

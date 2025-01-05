@@ -11,27 +11,36 @@ if ( ! defined( 'WPINC' ) ) {
 
     define('MASPIK_API_KEY', 'KVJS5BDFFYabnZkQ3Svty6z6CIsxp3YG5ny4lrFQ');
 
-    function maspik_auto_update_db(){    
-        if ( !maspik_table_exists('text_blacklist') ) { 
-            create_maspik_log_table();
-            create_maspik_table();
-            if( get_option('text_blacklist') ){
-                maspik_run_transfer();
-            }
-            maspik_make_default_values();
-        }
-    }
-    add_action('admin_init', 'maspik_auto_update_db' , 10);
 
     // run the default values function only once if necessary
     function maspik_check_if_need_to_run_once() {
-        $maspik_run_once = get_option( 'maspik_run_once', 0 ); // default to 0 if option doesn't exist
-        if ( $maspik_run_once < 2 ) {
-            maspik_make_default_values();
-            update_option( 'maspik_run_once', $maspik_run_once + 1 ); // update to 2 to prevent reruns
+        // check if already run
+        static $already_run = false;
+        // already run, or not in admin, return
+        if ($already_run || !is_admin()) {
+            //return;
         }
+
+        $maspik_run_once = get_option('maspik_run_once');
+        
+        // if the option doesn't exist, set it to 0
+        if ($maspik_run_once === false) {
+            add_option('maspik_run_once', 0);
+            $maspik_run_once = 0;
+        }
+
+        if ($maspik_run_once < 2) {
+            if (!maspik_table_exists('text_blacklist')) { 
+                create_maspik_log_table();
+                create_maspik_table();
+            }    
+            maspik_make_default_values();
+            update_option('maspik_run_once', ++$maspik_run_once); // update to 2 to prevent reruns
+        }
+
+        $already_run = true;
     }
-    add_action( 'admin_init', 'maspik_check_if_need_to_run_once' , 20);
+    add_action( 'plugins_loaded', 'maspik_check_if_need_to_run_once' , 20);
 
      //Check for PRO -addclass- 
         function maspik_add_pro_class($type = ""){

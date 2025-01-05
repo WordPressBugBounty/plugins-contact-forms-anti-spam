@@ -1098,7 +1098,7 @@ $spamcounter = maspik_spam_count();
                             </div>
                                         
                             <span class="maspik-subtext">
-                                        <?php esc_html_e("Entries with less than <strong>Min</strong> or more than <strong>Max</strong> characters will be blocked", "contact-forms-anti-spam"); ?>
+                                        <?php esc_html_e("Entries with less than Min or more than Max characters will be blocked", "contact-forms-anti-spam"); ?>
                                 </span>
 
                                 <div class="maspik-custom-msg-wrap">
@@ -1249,9 +1249,9 @@ $spamcounter = maspik_spam_count();
                         <div class="maspik-txt-custom-msg-head togglewrap maspik-honeypot-wrap">
                             <?php echo maspik_toggle_button('maspikTimeCheck', 'maspikTimeCheck', 'maspikTimeCheck', 'maspik-honeypot togglebutton',"",""); ?>
                                 <div>
-                                    <h4> <?php esc_html_e('Time Trap', 'contact-forms-anti-spam'); ?>
+                                    <h4> <?php esc_html_e('Advance key check', 'contact-forms-anti-spam'); ?>
                                     </h4>
-                                    <span><?php esc_html_e('This feature checks the time elapsed between a user first visiting the site and submitting the form. If the submission happens too quickly (within 4 seconds), it\'s likely automated and will be blocked. This helps prevent rapid-fire spam submissions from bots.', 'contact-forms-anti-spam'); ?></span>
+                                    <span><?php esc_html_e('Advanced key check - This feature adds a hidden field that is automatically filled with a unique key. If the submitted key does not match the expected key, it likely means the form was submitted by a bot or automated script. The submission will be blocked as a security measure.', 'contact-forms-anti-spam'); ?></span>
                             </div>  
                         </div><!-- end of maspik-maspikTimeCheck -->
                         <div class="maspik-txt-custom-msg-head togglewrap maspik-honeypot-wrap">

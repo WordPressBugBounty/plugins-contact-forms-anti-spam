@@ -19,6 +19,7 @@ parse_str($_POST['data'], $parsed_data);
 $extracted_data = array(
     'Maspik-exactTime' => isset($parsed_data['Maspik-exactTime']) ? $parsed_data['Maspik-exactTime'] : false,
     'Maspik-currentYear' => isset($parsed_data['Maspik-currentYear']) ? $parsed_data['Maspik-currentYear'] : false,
+    'maspik_spam_key' => isset($parsed_data['maspik_spam_key']) ? $parsed_data['maspik_spam_key'] : false,
     'full-name-maspik-hp' => isset($parsed_data['full-name-maspik-hp']) ? $parsed_data['full-name-maspik-hp'] : false
 );
 

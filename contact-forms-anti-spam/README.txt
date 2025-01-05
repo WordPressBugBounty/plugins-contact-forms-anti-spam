@@ -5,24 +5,31 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.7
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.2.13
+Stable tag: 2.2.14
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-The best spam protection plugin. Block spam using advanced filters, blacklists, and IP verification - works with all major form plugins and comments.
+🛡️ **Block Spam in 2 Minutes** - No CAPTCHA Required!
+The most efficient spam protection for WordPress forms and comments, with 95%+ success rate.
 
 == Description ==
 
-## Say Goodbye to Spam with Maspik! ##
-Maspik uses a highly efficient "blacklist" method that surpasses traditional CAPTCHA services like Google's in both efficiency and accuracy, with a success rate of over 95%.
+## Why Maspik?
+* 🚀 **Quick Setup**: Ready in 2 minutes
+* 🎯 **High Success Rate**: Better protection than traditional CAPTCHA
+* 🔍 **Smart Detection**: Identifies spam patterns automatically
+* 🌐 **Wide Compatibility**: Works with all major form plugins
+* 🛠️ **Fully Customizable**: Adapt to your specific needs
 
-With Maspik, you have the power to define what is considered spam by adding phrases to your blacklist. Fast and precise blocking of spam submissions takes as little as 2 minutes to set up.
+## Key Features
+✅ Works instantly with popular form plugins
+✅ No CAPTCHA needed
+✅ Smart blacklist system
+✅ IP & country blocking
+✅ Phone number validation
+✅ Multi-language support
 
-## How to block spam in wordpress? ##
-
-Maspik allows you to specify words, email addresses, phone formats, IP addresses, and more. If submissions contain links, originate from certain countries, or are in specified languages, Maspik flags them as spam and keeps them out of your inbox.
-
-## Features ##
+## Detailed Features: Our Advanced Spam Protection & Filtering ##
 
 * **Blacklisting by Field Type:**
   * Text fields (Name/Subject)
@@ -70,18 +77,15 @@ Maspik integrates seamlessly with a wide range of popular contact forms and comm
 * WooCommerce review* 
 (*) Pro license required
 
-## We offer also a Pro version! ##
+### We offer also a Pro version! ###
 
-### Pro Version Features ###
-
-The Pro version offers advanced functionality:
-
-* IP verification - Increases the monthly limit from 100 to 1,000 IP checks.
-* Integration with the Maspik Spam API
-* Create and use your own SPAM API across multiple websites
-* Import/Export Settings
-* Blocking based on specific languages (e.g. block Russian/Chinese/Arabic content)
-* Country-specific blocking or allowing submissions (e.g. block USA/China/Russia)
+## Pro Version Features 🌟
+⭐ Advanced IP verification (1,000 checks/month)
+⭐ Custom spam API for multiple sites
+⭐ Country-based filtering
+⭐ Language detection & blocking
+⭐ Settings Import/Export
+⭐ Premium support
 
 ##Important Note##
 
@@ -92,14 +96,36 @@ The plugin is GDPR compliant.
 
 For more information, visit our website: [WpMaspik.com](https://wpmaspik.com/?readme-file)
 
-
+## Support & Community
+* 📚 [Documentation](https://wpmaspik.com/documentation/)
+* 💬 [Community Forum](https://www.facebook.com/groups/maspik)
+* 🐛 [Report Issues](https://wpmaspik.com/#support)
+* 💡 [Feature Requests](https://wpmaspik.com/#support)
+* 💰 [Recive Pro for free](https://wpmaspik.com/get-maspik-pro-for-free-share-your-expertise/)
+* 💖 [Support us with 5 stars review](https://wordpress.org/support/plugin/contact-forms-anti-spam/reviews/#new-post)
+* 💎 [Donate to support our work](https://paypal.me/yonifre)
 
 == Installation ==
 
-Search for "Maspik - Spam Blacklist" in the Wordpress Plugin repository through the 'Plugins' menu in Wordpress.
-Install and activate the plugin.
-In the Wordpress dashboard menu, find the Maspik - Spam Blacklist setting page.
-Add spam words as needed.
+## Getting Started 🚀
+1. **Installation**
+   * Search for "Maspik" in WordPress plugins
+   * Click Install & Activate
+
+2. **Basic Setup**
+   * Go to Maspik Settings
+   * Enable desired protections
+   * Save changes
+
+3. **Advanced Configuration** (Optional)
+   * Add custom spam phrases
+   * Configure IP blocking
+   * Set up phone validation
+
+4. **Playground**
+   * Test your settings with the playground form and in the live form
+   * Check the spam log to see if spam is being blocked
+
 == Frequently Asked Questions ==
 
 = How to Block Spam in WordPress? =
@@ -107,7 +133,7 @@ With Maspik, you can effectively block spam submissions, spam comments, spam bot
 
 Simply go through the settings page, activate the features that fit your needs, and you're done! The plugin acts as a spam filter and spam blocker, helping you stop spam in WordPress without using CAPTCHA. It's the perfect solution for blocking unwanted spam content, spam users, and spam attacks on your WordPress site.
 
-Key features include:
+Maspik features include:
 - Block spam comments and spam registrations
 - Stop spam bots and automated submissions 
 - Filter out spam content and spam users
@@ -165,9 +191,17 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 
 == Changelog ==
 
+= 2.2.14 - 05/01/2025 = 
+✨ **New Features**
+* Enhanced Advanced Key Check system
+✨ **Improvements**
+* Improved database performance
+* Optimized code execution
 
 = 2.2.13 - 19/12/2024 =
-* Fixed HTML error in settings page that prevented select fields from being saved.
+🐛 **Bug Fixes**
+* Fixed HTML settings save issue
+* Improved form field handling
 
 = 2.2.12 - 16/12/2024 =
 * New feature! - Add support in Numverify API for phone number validation.

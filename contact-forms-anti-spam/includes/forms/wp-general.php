@@ -82,12 +82,18 @@ add_filter('preprocess_comment', 'maspik_comments_checker');
  * Add honeypot field to the registration form
  */
 function maspik_add_honeypot_to_register_form() {
+    if (maspik_get_settings("maspik_support_registration") !== "no" && cfes_is_supporting("plugin")) {
     ?>
-    <p style="opacity: 0; position: absolute; top: 0; left: 0; height: 0; width: 0; z-index: -1;">
-        <label for="full-name-maspik-hp">Leave this field unfilled</label>
-        <input type="text" name="full-name-maspik-hp" value="" tabindex="-1" autocomplete="off">
-    </p>
+        <p class="maspik-field" style="opacity: 0; position: absolute; top: 0; left: 0; height: 0; width: 0; z-index: -1;">
+            <label for="full-name-maspik-hp">Leave this field unfilled</label>
+            <input type="text" name="full-name-maspik-hp" value="" tabindex="-1" autocomplete="off">
+        </p>
+        <p class="maspik-field" style="opacity: 0; position: absolute; top: 0; left: 0; height: 0; width: 0; z-index: -1;">
+            <label for="Maspik-currentYear">Leave this field unfilled</label>
+            <input type="text" name="Maspik-currentYear" value="" tabindex="-1" autocomplete="off">
+        </p>
     <?php
+    }
 }
 add_action('register_form', 'maspik_add_honeypot_to_register_form');
 
@@ -95,40 +101,44 @@ add_action('register_form', 'maspik_add_honeypot_to_register_form');
  * Check registration form for spam
  */
 function maspik_check_wp_registration_form($errors) {
-    $user_email = isset($_POST['user_email']) ? sanitize_email($_POST['user_email']) : sanitize_email($_POST['email']);
-    $spam = false;
-    $ip = efas_getRealIpAddr();
-    $reason = "";
-    $message = "";
-    $maspikHoneypot = maspik_get_settings('maspikHoneypot');
 
-    if ($maspikHoneypot && !empty($_POST['full-name-maspik-hp'])) {
-        $spam = true;
-        $reason = "Honeypot Triggered";
-    }
+    if (maspik_get_settings("maspik_support_registration") !== "no" && cfes_is_supporting("plugin")) {
+        $user_email = isset($_POST['user_email']) ? sanitize_email($_POST['user_email']) : sanitize_email($_POST['email']);
+        $spam = false;
+        $ip = efas_getRealIpAddr();
+        $reason = "";
+        $message = "";
+        $maspikHoneypot = maspik_get_settings('maspikHoneypot');
 
-    // Country IP Check
-    if (!$spam) {
-        $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST,"wp_registration");
-        $spam = $GeneralCheck['spam'] ?? false;
-        $reason = $GeneralCheck['reason'] ?? '';
-        $message = $GeneralCheck['message'] ?? '';
-        $spam_val = $GeneralCheck['value'] ?? '';
-        $spam_lbl = $GeneralCheck['reason'] ?? '';
-    }
-
-    if ($user_email && !$spam) {
-        $spam = checkEmailForSpam($user_email);
-        if ($spam && !$reason) {
-            $reason = "Email $user_email is blocked";
-            $spam_lbl = 'emails_blacklist';
-            $spam_val = $user_email;
+        if ($maspikHoneypot && !empty($_POST['full-name-maspik-hp'])) {
+            $spam = true;
+            $reason = "Honeypot Triggered";
         }
-    }
-    $error_message = cfas_get_error_text($message);
-    if ($spam && isset($_POST['wp-submit']) && maspik_get_settings("maspik_support_registration") !== "no") {
-        efas_add_to_log("Registration", $reason, $_POST, 'WP registration', $spam_lbl, $spam_val);
-        $errors->add('maspik_error', $error_message);
+
+        // Country IP Check
+        if (!$spam) {
+            $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST,"wp_registration");
+            $spam = $GeneralCheck['spam'] ?? false;
+            $reason = $GeneralCheck['reason'] ?? '';
+            $message = $GeneralCheck['message'] ?? '';
+            $spam_val = $GeneralCheck['value'] ?? '';
+            $spam_lbl = $GeneralCheck['reason'] ?? '';
+        }
+
+        if ($user_email && !$spam) {
+            $spam = checkEmailForSpam($user_email);
+            if ($spam && !$reason) {
+                $reason = "Email $user_email is blocked";
+                $spam_lbl = 'emails_blacklist';
+                $spam_val = $user_email;
+            }
+        }
+        $error_message = cfas_get_error_text($message);
+        if ( $spam && isset($_POST['wp-submit']) ) {
+            efas_add_to_log("Registration", $reason, $_POST, 'WP registration', $spam_lbl, $spam_val);
+            $errors->add('maspik_error', $error_message);
+        }
+
     }
 
     return $errors;
@@ -144,35 +154,37 @@ add_action('woocommerce_register_form', 'maspik_add_honeypot_to_register_form', 
  * Check WooCommerce registration form for spam
  */
 function maspik_register_form_honeypot_check_in_woocommerce_registration($errors, $username, $email) {
-    $error_message = cfas_get_error_text();
-    $maspikHoneypot = maspik_get_settings('maspikHoneypot');
-    if ($maspikHoneypot && !empty($_POST['full-name-maspik-hp'])) {
-        efas_add_to_log("Registration", 'Honeypot Triggered', $_POST, 'Woocommerce registration');
-        wp_die($error_message, "Spam error", ['response' => 200]);
-    }
-
-    $user_email = sanitize_email($email);
-    $spam = false;
-    $ip = efas_getRealIpAddr();
-    $reason = "";
-
-    // Country IP Check
-    $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST,"woocommerce_registration");
-    $spam = $GeneralCheck['spam'] ?? false;
-    $reason = $GeneralCheck['reason'] ?? '';
-    $message = $GeneralCheck['message'] ?? '';
-
-    $error_message = cfas_get_error_text($message);
-
-    if ($user_email && !$spam) {
-        $spam = checkEmailForSpam($user_email);
-        if ($spam && !$reason) {
-            $reason = "Email $user_email is blocked";
+    if (maspik_get_settings("maspik_support_Woocommerce_registration") !== "no") {
+        $error_message = cfas_get_error_text();
+        $maspikHoneypot = maspik_get_settings('maspikHoneypot');
+        if ($maspikHoneypot && !empty($_POST['full-name-maspik-hp'])) {
+            efas_add_to_log("Registration", 'Honeypot Triggered', $_POST, 'Woocommerce registration');
+            wp_die($error_message, "Spam error", ['response' => 200]);
         }
-    }
-    if ($spam && maspik_get_settings("maspik_support_Woocommerce_registration") !== "no") {
-        efas_add_to_log("Registration", $reason, $_POST, 'Woocommerce registration');
-        wp_die($error_message, "Spam error", ['response' => 200]);
+
+        $user_email = sanitize_email($email);
+        $spam = false;
+        $ip = efas_getRealIpAddr();
+        $reason = "";
+
+        // Country IP Check
+        $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST,"woocommerce_registration");
+        $spam = $GeneralCheck['spam'] ?? false;
+        $reason = $GeneralCheck['reason'] ?? '';
+        $message = $GeneralCheck['message'] ?? '';
+
+        $error_message = cfas_get_error_text($message);
+
+        if ($user_email && !$spam) {
+            $spam = checkEmailForSpam($user_email);
+            if ($spam && !$reason) {
+                $reason = "Email $user_email is blocked";
+            }
+        }
+        if ($spam && maspik_get_settings("maspik_support_Woocommerce_registration") !== "no") {
+            efas_add_to_log("Registration", $reason, $_POST, 'Woocommerce registration');
+            wp_die($error_message, "Spam error", ['response' => 200]);
+        }
     }
     return $errors;
 }

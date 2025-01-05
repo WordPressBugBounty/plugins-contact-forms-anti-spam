@@ -182,52 +182,69 @@ function maspik_delete_filter() {
 //Spam log delete functions -- END
 
 function maspik_insert_to_table() {
-    global $wpdb;
+    static $already_run = false;
+    
+    // Run only once per request
+    if ($already_run) {
+        return;
+    }
+    
+    // Check if we already checked the columns today (saved in options)
+    $last_check = get_option('maspik_insert_last_check');
+    if ($last_check && $last_check > strtotime('-48 hours')) {
+        $already_run = true;
+        return;
+    }
 
+    global $wpdb;
     $table = maspik_get_dbtable();
     $setting_value = maspik_get_dbvalue();
     $setting_label = maspik_get_dblabel();
 
-
     // Rows to be inserted if they don't exist
     $rows = [
-        //Add rows here
-        [$setting_label => 'MaspikHoneypot', $setting_value => 1], //Honeypot ver 2.1.2
-        [$setting_label => 'maspik_support_jetforms', $setting_value => 'yes'], //jetforms ver 2.1.2
-        [$setting_label => 'maspik_support_everestforms', $setting_value => 'yes'], //everestforms ver 2.1.2
-        [$setting_label => 'maspikDbCheck', $setting_value => 1], //maspikDbCheck ver 2.1.6
-        [$setting_label => 'maspik_support_buddypress_forms', $setting_value => 'yes'] //buddypress ver 2.2.7
-
+        ['MaspikHoneypot', 1], // Honeypot ver 2.1.2
+        ['maspik_support_jetforms', 'yes'], // jetforms ver 2.1.2
+        ['maspik_support_everestforms', 'yes'], // everestforms ver 2.1.2
+        ['maspikDbCheck', 1], // maspikDbCheck ver 2.1.6
+        ['maspik_support_buddypress_forms', 'yes'] // buddypress ver 2.2.7
     ];
 
-    // Check and insert each row
-    foreach ($rows as $row) {
-        $insert_name = $row[$setting_label];
-        $insert_value = $row[$setting_value];
+    // Check if the rows already exist
+    $existing_rows = $wpdb->get_col("
+        SELECT $setting_label 
+        FROM $table 
+        WHERE $setting_label IN ('" . implode("','", array_column($rows, 0)) . "')
+    ");
 
-        // Check if row already exists
-        $existing_row = $wpdb->get_row(
-            $wpdb->prepare(
-                "SELECT * FROM $table WHERE $setting_label = %s",
-                $insert_name
-            )
-        );
-
-        // If the row doesn't exist, insert it
-        if (null === $existing_row) {
-            $wpdb->insert(
-                $table,
-                [
-                    $setting_label => $insert_name,
-                    $setting_value => $insert_value
-                ]
+    // Prepare rows to add
+    $rows_to_insert = [];
+    foreach ($rows as [$name, $value]) {
+        if (!in_array($name, $existing_rows)) {
+            $rows_to_insert[] = $wpdb->prepare(
+                "(%s, %s)",
+                $name,
+                $value
             );
         }
     }
+
+    // Insert all new rows in one query
+    if (!empty($rows_to_insert)) {
+        $wpdb->query("
+            INSERT INTO $table ($setting_label, $setting_value) 
+            VALUES " . implode(',', $rows_to_insert)
+        );
+    }
+
+    // Update the last check time
+    update_option('maspik_insert_last_check', time());
+    $already_run = true;
 }
 
 // Hook the function on load
-add_action('init', 'maspik_insert_to_table');
+// this function is not needed anymore, TODO next: remove it from the code completely
+//add_action('init', 'maspik_insert_to_table');
 
 
 
@@ -235,89 +252,96 @@ add_action('init', 'maspik_insert_to_table');
 //check if table exists
 
     function maspik_table_exists($rowtocheck = false) {
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'maspik_options';
+        static $table_exists = null;     
+        static $row_exists = array();    
         
-        // First, check if the table exists
-        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") == $table_name;
+        // First time $table_exists will be null
+        if ($table_exists === null) {
+            global $wpdb;
+            $table_name = $wpdb->prefix . 'maspik_options';
+            // Check and save the result
+            $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") == $table_name;
+        }
+        // In the next times, use the saved value
         
         if (!$table_exists) {
             return false;
         }
         
-        // If the table exists and rowtocheck is 'text_blacklist', check for the specific row
         if ($rowtocheck == 'text_blacklist') {
-            $row_exists = $wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM {$table_name} WHERE option_name = %s",
-                $rowtocheck
-            ));
-            return $row_exists > 0;
+            // Check if we already checked this row
+            if (!isset($row_exists['text_blacklist'])) {
+                global $wpdb; 
+                $table_name = $wpdb->prefix . 'maspik_options'; 
+                // If we didn't check this row, check and save the result
+                $row_exists['text_blacklist'] = $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$table_name} WHERE option_name = %s",
+                    $rowtocheck
+                )) > 0;
+            }
+            // In the next times, use the saved value
+            return $row_exists['text_blacklist'];
         }
         
-        // For all other cases, just return true if the table exists
         return true;
     }
 
     function maspik_logtable_exists() {
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'maspik_spam_logs';
-        return $wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") == $table_name;
+        static $table_exists = null;
+        
+        if ($table_exists === null) {
+            global $wpdb;
+            $table_name = $wpdb->prefix . 'maspik_spam_logs';
+            $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") == $table_name;
+        }
+        
+        return $table_exists;
     }
 
 //check if table exists - END
 
 // Save to DB Function 
     function maspik_save_settings($col_name, $new_value) {
+        // check if the values are valid
+        if (empty($col_name) || $col_name === '0' || $col_name === 0) {
+            return ;
+        }
+
         global $wpdb;
-            
         $table = maspik_get_dbtable();
         $setting_value = maspik_get_dbvalue();
         $setting_label = maspik_get_dblabel();
 
-        // Check if the row exists
+            // sanitize the values
+        $col_name = sanitize_text_field($col_name);
+        $new_value = is_numeric($new_value) ? intval($new_value) : wp_strip_all_tags($new_value);
+
+        // check if the row exists
         $exists = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM $table WHERE $setting_label = %s",
             $col_name
         ));
 
         if ($exists) {
-            // Update existing row
-            if (is_numeric($new_value)) {
-                $result = $wpdb->update(
-                    $table,
-                    array($setting_value => $new_value),
-                    array($setting_label => $col_name),
-                    array('%d'),
-                    array('%s')
-                );
-            } else {
-                $result = $wpdb->update(
-                    $table,
-                    array($setting_value => $new_value),
-                    array($setting_label => $col_name),
-                    array('%s'),
-                    array('%s')
-                );
-            }
+            $result = $wpdb->update(
+                $table,
+                array($setting_value => $new_value),
+                array($setting_label => $col_name),
+                array('%s'), // always use %s because the value has already been sanitized
+                array('%s')
+            );
         } else {
-            // Insert new row
             $result = $wpdb->insert(
                 $table,
                 array(
                     $setting_label => $col_name,
                     $setting_value => $new_value
                 ),
-                array(is_numeric($new_value) ? '%d' : '%s')
+                array('%s', '%s')
             );
         }
-            
-        if ($result !== false) {
-            $result_check = "success";
-        } else {
-            $result_check = $wpdb->last_error;
-        }
 
-        return $result_check;
+        return ($result !== false) ? "success" : $wpdb->last_error;
     }
 // Save to DB Function - END
 
@@ -330,14 +354,15 @@ add_action('init', 'maspik_insert_to_table');
         return $table;
     }
 
-    function maspik_get_dbtable(){
+    function maspik_get_dbtable() {
         global $wpdb;
-        if(maspik_table_exists()){
-            $table = $wpdb->prefix . 'maspik_options'; // new table
-        } else {
-            $table = $wpdb->options; // wp options table
+        $table = $wpdb->prefix . 'maspik_options';
+        
+        // if the table doesn't exist, create it
+        if (!maspik_table_exists()) {
+            create_maspik_table();
         }
-
+        
         return $table;
     }
 
@@ -357,6 +382,10 @@ add_action('init', 'maspik_insert_to_table');
 //Get data from DB
 
 function maspik_get_settings($data_name, $type = '', $table_var = 'new'){
+    if (!maspik_table_exists()) {
+        return '';
+    }
+
     global $wpdb;
     if($table_var == 'old'){
         $table = $wpdb->prefix . 'options'; // old table
@@ -425,8 +454,13 @@ function maspik_get_settings($data_name, $type = '', $table_var = 'new'){
     //make new main table
         function create_maspik_table() {
             global $wpdb;
-        
+            
             $table_name = $wpdb->prefix . 'maspik_options';
+            
+            // check if the table already exists
+            if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name) {
+                return; // the table already exists, no need to create it
+            }
             
             $charset_collate = $wpdb->get_charset_collate();
             
@@ -444,210 +478,32 @@ function maspik_get_settings($data_name, $type = '', $table_var = 'new'){
     //make new log table
         function create_maspik_log_table() {
             global $wpdb;
-        
             $table_name = $wpdb->prefix . 'maspik_spam_logs';
             
-            $charset_collate = $wpdb->get_charset_collate();
-            
+            // define the structure of the table
             $sql = "CREATE TABLE $table_name (
-                id mediumint(9) NOT NULL AUTO_INCREMENT, 
+                id mediumint(9) NOT NULL AUTO_INCREMENT,
+                spam_type varchar(191) NOT NULL,
+                spam_value varchar(191) NOT NULL,
+                spam_detail longtext NOT NULL,
+                spam_ip varchar(191) NOT NULL,
+                spam_country varchar(191) NOT NULL,
+                spam_agent varchar(191) NOT NULL,
+                spam_date varchar(191) NOT NULL,
+                spam_source varchar(191) NOT NULL,
+                spamsrc_label varchar(191) NOT NULL,
+                spamsrc_val varchar(191) NOT NULL,
+                spam_tag varchar(191) NOT NULL,
                 PRIMARY KEY  (id)
-            ) $charset_collate;"; //adding all col variables in the append funct
+            ) " . $wpdb->get_charset_collate();
 
+            // if the table doesn't exist or if we need to update the structure
             require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
             dbDelta($sql);
-
-        }
-
-        function maspik_append_logtable() {
-            global $wpdb;
-        
-            // Define the table name
-            $table_name = maspik_get_logtable();
             
-            // Define the columns you want to check and add
-            $columns = array(
-                'spam_type' => 'varchar(191) NOT NULL',
-                'spam_value' => 'varchar(191) NOT NULL',
-                'spam_detail' => 'longtext NOT NULL',
-                'spam_ip' => 'varchar(191) NOT NULL',
-                'spam_country' => 'varchar(191) NOT NULL',
-                'spam_agent' => 'varchar(191) NOT NULL',
-                'spam_date' => 'varchar(191) NOT NULL',
-                'spam_source' => 'varchar(191) NOT NULL',
-                'spamsrc_label' => 'varchar(191) NOT NULL',
-                'spamsrc_val' => 'varchar(191) NOT NULL',
-                'spamsrc_label' => 'varchar(191) NOT NULL',
-                'spamsrc_val' => ' varchar(191) NOT NULL',
-                'spam_tag' => ' varchar(191) NOT NULL',
-            );
-        
-            // Fetch the current columns in the table
-            $existing_columns = $wpdb->get_results("DESCRIBE $table_name", ARRAY_A);
-        
-            // Create a list of existing column names
-            $existing_column_names = array_column($existing_columns, 'Field');
-        
-            // Prepare SQL for adding new columns
-            $add_columns_sql = array();
-            foreach ($columns as $column_name => $column_definition) {
-                if (!in_array($column_name, $existing_column_names)) {
-                    $add_columns_sql[] = "ADD COLUMN $column_name $column_definition";
-                }
-            }
-        
-            // If there are columns to add, build and execute the query
-            if (!empty($add_columns_sql)) {
-                $sql = "ALTER TABLE $table_name " . implode(', ', $add_columns_sql);
-                $wpdb->query($sql); // Directly execute the query
-            }
+            // mark the function as run successfully
+            update_option('maspik_columns_last_check', '2');
         }
-        
-        add_action('admin_init', 'maspik_append_logtable');
-
-    //transfer data from wp_options to the new table
-        function transfer_data_to_table($data) {
-            global $wpdb;
-
-            $source_table = $wpdb->prefix . 'options';
-            $target_table = $wpdb->prefix . 'maspik_options';
-
-            foreach ($data as $option_name => $option_value) {
-                // First, check if the option exists in the source table
-                $existing_value = $wpdb->get_var($wpdb->prepare(
-                    "SELECT option_value FROM $source_table WHERE option_name = %s",
-                    $option_name
-                ));
-
-                if ($existing_value !== null) {
-                    // The option exists, so try to transfer it
-                    $transfer_success = $wpdb->insert(
-                        $target_table,
-                        array(
-                            'option_name' => $option_name,
-                            'option_value' => $existing_value,
-                        ),
-                        array('%s', '%s')
-                    );
-
-                    // If transfer is successful, delete from source table
-                    if ($transfer_success) {
-                        $wpdb->delete($source_table, array('option_name' => $option_name));
-                    }
-                } else {
-                    // The option doesn't exist in the source, so insert the default value
-                    maspik_save_settings($option_name, $option_value);
-                }
-            }
-        }
-
-
-    //runs transfer - list of rows to be transfered
-        function maspik_run_transfer(){
-            $data = array(
-                //text field
-                'text_blacklist' => '', 
-                'MinCharactersInTextField' => '',
-                'MaxCharactersInTextField' => '',
-                'custom_error_message_MaxCharactersInTextField' => '',
-                //email field
-                'emails_blacklist' => '', 
-                //textarea field
-                'textarea_blacklist' => '',
-                'MinCharactersInTextAreaField' => '',
-                'MaxCharactersInTextAreaField' => '',
-                'contain_links' => '',
-                'custom_error_message_MaxCharactersInTextAreaField' => '',
-                //Phone field
-                'tel_formats' => '',
-                'MinCharactersInPhoneField' => '',
-                'MaxCharactersInPhoneField' => '',
-                'custom_error_message_MaxCharactersInPhoneField' => '',
-                'custom_error_message_tel_formats' => '',
-                //Language needed
-                'lang_needed' => '',
-                'custom_error_message_lang_needed' => '',
-                //Language needed
-                'lang_forbidden' => '',
-                'custom_error_message_lang_forbidden' => '',
-                //Countries
-                'country_blacklist' => '',
-                'AllowedOrBlockCountries' => '',  
-                'custom_error_message_country_blacklist' => '',
-                //General
-                'NeedPageurl' => '1',
-                'ip_blacklist' => '',
-                'error_message' => '',
-                'abuseipdb_api' => '',
-                'abuseipdb_score' => '',
-                'proxycheck_io_api' => '',
-                'proxycheck_io_risk' => '',
-                //form-support
-                'maspik_support_Elementor_forms' => 'yes',
-                'maspik_support_cf7' => 'yes',
-                'maspik_support_woocommerce_review' => 'yes',            
-                'maspik_support_Woocommerce_registration' => 'yes',
-                'maspik_support_Wpforms' => 'yes',
-                'maspik_support_gravity_forms' => 'yes',
-                'maspik_support_formidable_forms' => 'yes',
-                'maspik_support_fluentforms_forms' => 'yes',
-                'maspik_support_bricks_forms' => 'yes',
-                'maspik_support_forminator_forms' => 'yes',
-                'maspik_support_ninjaforms' => 'yes',
-                'maspik_support_registration' => 'yes',
-                'maspik_support_wp_comment' => 'yes',
-                'maspik_support_buddypress_forms' => 'yes',
-                //extra
-                'maspik_Store_log' => 'yes',
-                'spam_log_limit' => '1000',
-                //toggles
-                'text_limit_toggle' => '',
-                'text_custom_message_toggle',
-                'textarea_limit_toggle',
-                'textarea_link_limit_toggle',
-                'textarea_custom_message_toggle',
-                'tel_limit_toggle',
-                'phone_limit_custom_message_toggle',
-                'phone_custom_message_toggle',
-                'lang_need_custom_message_toggle',
-                'lang_forbidden_custom_message_toggle',
-                'country_custom_message_toggle',
-                'MaspikHoneypot' => '1',
-                'maspik_support_jetforms' => '1',
-                'maspik_support_everestforms' => '1',
-                'maspik_support_jetforms' => '1',
-                'maspik_support_everestforms' => '1',
-                'maspikDbCheck' => '1'
-            );
-            transfer_data_to_table($data);
-
-            // Additional logic for toggles if needed
-            $togglearray = array(
-                "MaxCharactersInTextField",
-                "custom_error_message_MaxCharactersInTextField",
-                "contain_links",
-                "MaxCharactersInTextAreaField",
-                "custom_error_message_MaxCharactersInTextAreaField",
-                "MaxCharactersInPhoneField",
-                "custom_error_message_MaxCharactersInPhoneField",
-                "custom_error_message_tel_formats",
-                "lang_needed",
-                "lang_forbidden",
-                "country_blacklist"
-            );
-
-            foreach ($togglearray as $toggledata) {
-                if (trim(maspik_get_settings($toggledata)) != "") {
-                    maspik_save_settings(maspik_toggle_match($toggledata), "1");
-                }
-            }
-
-            if (trim(maspik_get_settings('maspik_Store_log')) == "" || !maspik_get_settings('maspik_Store_log')) {
-                maspik_save_settings('maspik_Store_log', "yes");
-            }
-        }
-
-// New table management functions - END
 
 
 function efas_get_browser_name($user_agent){
@@ -2469,9 +2325,10 @@ function maspik_increment_blocks() {
 // Set default values for various settings
 function maspik_make_default_values() {
     // Set default values for various settings
-    maspik_save_settings("maspikDbCheck", 1);
-    maspik_save_settings("maspikHoneypot", 1);
-    maspik_save_settings("NeedPageurl", 1);
+    maspik_save_settings("maspikDbCheck", "1");
+    maspik_save_settings("maspikHoneypot", "1");
+    maspik_save_settings("NeedPageurl", "1");
+    maspik_save_settings("maspik_Store_log", "yes");
     // Set default support options for various forms and integrations
     maspik_save_settings("maspik_support_cf7", "yes");
     maspik_save_settings("maspik_support_wp_comment", "yes");
@@ -2806,86 +2663,20 @@ function maspik_handle_activation_popup() {
 
 add_action('admin_footer', 'maspik_handle_activation_popup');
 
-function maspik_add_dashboard_id_callback() {
-    // Enable error logging
-    //error_log('Maspik: Starting dashboard ID update process');
+/**
+ * Retrieves the spam key (generating if needed).
+ *
+ * @return string The unique spam key.
+ */
+function maspik_get_spam_key() {
+    // Retrieve the key from the plugin settings or generate one if it doesn't exist
+    $key = get_option( 'maspik_spam_key' );
 
-    // Check user permissions
-    if (!current_user_can('manage_options')) {
-        //error_log('Maspik: User does not have sufficient permissions');
-        wp_send_json_error(array(
-            'message' => 'Unauthorized access',
-            'code' => 'no_permissions'
-        ));
-        return;
+    if ( ! $key ) {
+        // If no key exists, generate one and save it
+        $key = wp_generate_password( 64, false, false );
+        update_option( 'maspik_spam_key', $key, false );
     }
 
-    // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'maspik_activation_popup_nonce')) {
-        //error_log('Maspik: Invalid nonce');
-        wp_send_json_error(array(
-            'message' => 'Security check failed',
-            'code' => 'invalid_nonce'
-        ));
-        return;
-    }
-
-    // Validate dashboard_id
-    if (!isset($_POST['dashboard_id'])) {
-        //error_log('Maspik: No dashboard ID provided');
-        wp_send_json_error(array(
-            'message' => 'No dashboard ID provided',
-            'code' => 'no_id'
-        ));
-        return;
-    }
-
-    $dashboard_id = absint($_POST['dashboard_id']);
-    if ($dashboard_id === 0) {
-        //error_log('Maspik: Invalid dashboard ID format');
-        wp_send_json_error(array(
-            'message' => 'Invalid dashboard ID format',
-            'code' => 'invalid_id_format'
-        ));
-        return;
-    }
-
-    // Validate against allowed IDs
-    $maspik_api_id = get_option("maspik_api_id");
-    $valid_ids = array_map('absint', array_map('trim', explode(',', $maspik_api_id)));
-    
-    //error_log('Maspik: Checking ID ' . $dashboard_id . ' against valid IDs: ' . implode(',', $valid_ids));
-    
-    if (!in_array($dashboard_id, $valid_ids)) {
-        //error_log('Maspik: Dashboard ID not in allowed list');
-        wp_send_json_error(array(
-            'message' => 'Invalid dashboard ID',
-            'code' => 'id_not_allowed'
-        ));
-        return;
-    }
-
-    // Update the option
-    $result = maspik_save_settings('private_file_id', $dashboard_id);
-    
-    if ($result) {
-        //error_log('Maspik: Successfully updated dashboard ID to ' . $dashboard_id);
-        if (function_exists('cfas_refresh_api')) {
-            cfas_refresh_api('add_dashboard_id');
-        }
-        wp_send_json_success(array(
-            'message' => 'Dashboard ID updated successfully',
-            'dashboard_id' => $dashboard_id
-        ));
-    } else {
-        //error_log('Maspik: Failed to update dashboard ID');
-        wp_send_json_error(array(
-            'message' => 'Failed to update dashboard ID',
-            'code' => 'update_failed'
-        ));
-    }
+    return $key;
 }
-//add_action('wp_ajax_maspik_add_dashboard_id', 'maspik_add_dashboard_id_callback');
-
-
-

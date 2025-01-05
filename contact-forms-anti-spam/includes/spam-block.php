@@ -24,7 +24,35 @@ function maspik_make_extra_spam_check($post) {
         ];
     }
 
+    // Spam key check, maspikTimeCheck is the old name
+    if (maspik_get_settings('maspikTimeCheck')) {
+
+            // Check if the spam key exists in the POST data
+        if (!isset($post['maspik_spam_key']) || empty($post['maspik_spam_key'])) {
+            // Spam detected, return error or handle as necessary
+            return [
+                'spam' => true,
+                'reason' => "Spam key check failed (empty)",
+                'message' => "maspikTimeCheck"
+            ];
+        }
+
+        // Get the correct key
+        $correct_spam_key = maspik_get_spam_key();
+
+        // If the provided spam key does not match, mark as spam
+        if ($post['maspik_spam_key'] !== $correct_spam_key) {
+            return [
+                'spam' => true,
+                'reason' => "Spam key check failed (not match)",
+                'message' => "maspikTimeCheck"
+            ];
+        }
+
+    }
+
     // Year check
+
     if (maspik_get_settings('maspikYearCheck')) {
         $serverYear = intval(date('Y'));
         $submittedYear = sanitize_text_field($post['Maspik-currentYear']);
@@ -36,8 +64,11 @@ function maspik_make_extra_spam_check($post) {
             ];
         }
     }
+    
 
     // Time check
+    // TODO: remove this check, it's not needed
+    /*
     if (maspik_get_settings('maspikTimeCheck') && isset($post['Maspik-exactTime']) && is_numeric($post['Maspik-exactTime'])) {
         $inputTime = (int)$post['Maspik-exactTime'];
         $currentTime = time();
@@ -64,6 +95,7 @@ function maspik_make_extra_spam_check($post) {
             ];
         }
     }
+    */
 
     // If we've made it this far, it's not spam
     return [
@@ -423,10 +455,9 @@ function checkTelForSpam($field_value) {
     // Numverify API integration
     $numverify_api_key = sanitize_text_field(maspik_get_settings('numverify_api')); // Fetch the API key from plugin settings
     if (!empty($numverify_api_key)) {
-        $numverify_result = numverify_validate_number($field_value, $numverify_api_key);
+        $numverify_result = maspik_numverify_validate_number($field_value, $numverify_api_key);
         if ($numverify_result['valid']) {
-            // Do nothing, Numverify validation passed
-            //return array('valid' => true, 'reason' => "Numverify validation passed", 'message' => 'tel_formats');
+            // Do nothing, Numverify validation passed, continue with the next check
         } else {
             $reason = "Numverify validation failed: " . esc_html($numverify_result['error']);
             return array('valid' => false, 'reason' => $reason, 'message' => 'tel_formats', 'label' => 'tel_formats');
@@ -745,11 +776,76 @@ function Maspik_add_hp_js_to_footer() {
 }
 add_action('wp_footer', 'Maspik_add_hp_js_to_footer');
 
+/**
+ * Injects the spam key field dynamically into forms with specific classes using JavaScript.
+ */
+function maspik_add_spam_key_field_js() {
+    if (!maspik_get_settings("maspikTimeCheck") ) {
+        return;
+    }
+    // Define an array of classes for the forms you want to target
+    $target_classes = array(
+       /* 'wpcf7-form', // Add the class for Contact Form 7
+        'elementor-form',  // Add the class for Elementor Forms
+        'gform_wrapper',   // Add the class for Gravity Forms
+        'wpforms-form',    // Add the class for WPForms
+        'frm_forms form', // Add the class for formidable
+        'forminator-ui', // Add the class for Forminator option 1
+        'forminator_ajax', // Add the class for Forminator option 2
+        'forminator-custom-form', // Add the class for Forminator option 3  
+        'fluentform form', // Add the class for FluentForms
+        'everest-forms', // Add the class for Everest Forms
+        'jet-form-builder', // Add the class for Jet Form Builder
+        'nf-form-layout form', // Add the class for Ninja Forms
+        'nf-form-wrap form', // Add the class for Ninja Forms
+        '.nf-after-form-content', // Add the class for Ninja Forms
+        'gravityform', // Add the class for Gravity Forms
+        'woocommerce-review', // Add the class for WooCommerce Reviews
+        'woocommerce-registration', // Add the class for WooCommerce Registration
+        'bricks-form', // Add the class for Bricks Forms
+        'buddypress', // Add the class for BuddyPress
+        'buddyforms', // Add the class for BuddyForms
+        'wp-block-form', // Add the class for Gutenberg Forms */
+        'form' // for any form
+        // Add other form classes as needed
+
+    );
+
+    $spam_key = maspik_get_spam_key(); // Get the unique spam key
+
+    // Convert the classes array to a string for JavaScript
+    $target_classes_js = implode('", "', $target_classes);
+
+    // Add a script that adds the hidden field dynamically via JavaScript when the form is submitted
+    echo '
+        <script type="text/javascript">
+        // Maspik add key to forms
+            document.addEventListener("DOMContentLoaded", function() {
+                var spamKey = "' . esc_js( $spam_key ) . '";
+                var input = document.createElement("input");
+                input.type = "hidden";
+                input.name = "maspik_spam_key";
+                input.value = spamKey;
+                input.setAttribute("autocomplete", "off");
+                
+                // Select all forms with the specified classes
+                var forms = document.querySelectorAll("form");
+                forms.forEach(function(form) {
+                    // Only add the spam key if its not already added
+                    if (!form.querySelector("input[name=maspik_spam_key]")) {
+                        form.appendChild(input.cloneNode(true));
+                    }
+                });
+            });
+        </script>';
+}
+add_action('wp_footer', 'maspik_add_spam_key_field_js' , 99); // Add to wp_footer()
+
 
 /**
  * Validate phone number with Numverify API and optional country code.
  */
-function numverify_validate_number($phone_number, $api_key) {
+function maspik_numverify_validate_number($phone_number, $api_key) {
     $phone_number_clean = preg_replace('/[^0-9]/', '', $phone_number); // Will keep only digits 0-9, removing everything else including +
 
     // Check if country code is enabled in the settings

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Maspik - Spam blacklist\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-07-28 11:45+0000\n"
-"PO-Revision-Date: 2025-01-05 02:38+0000\n"
+"PO-Revision-Date: 2025-01-05 02:36+0000\n"
 "Last-Translator: \n"
 "Language-Team: Hebrew\n"
 "Language: he_IL\n"
@@ -75,7 +75,7 @@ msgstr ""
 
 #: admin/partials/maspik-admin-display.php:1252
 msgid "Advance key check"
-msgstr "בדיקת ספאם מתוחכמת"
+msgstr ""
 
 #: admin/partials/maspik-admin-display.php:1254
 msgid ""
@@ -84,9 +84,6 @@ msgid ""
 "key, it likely means the form was submitted by a bot or automated script. "
 "The submission will be blocked as a security measure."
 msgstr ""
-"בדיקת מפתח מתקדמת - תכונה זו מוסיפה שדה נסתר שמתמלא אוטומטית במפתח ייחודי. "
-"אם המפתח שנשלח אינו תואם למפתח הצפוי, סביר להניח שהטופס נשלח על ידי בוט או "
-"סקריפט אוטומטי. ההגשה תיחסם כאמצעי אבטחה."
 
 #: admin/partials/maspik-admin-display.php:521
 msgid "Affected forms:"
@@ -909,8 +906,6 @@ msgid ""
 "The best spam protection plugin. Block spam using advanced filters, "
 "blacklists, and IP verification..."
 msgstr ""
-"התוסף הטוב ביותר להגנה מפני ספאם. חסום ספאם באמצעות מסננים מתקדמים, רשימות "
-"שחורות ואימות IP..."
 
 #: admin/partials/maspik-admin-display.php:1499
 msgid "The following forms are supported in Maspik Pro version only:"
