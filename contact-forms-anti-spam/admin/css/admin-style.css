@@ -348,10 +348,10 @@ tr.hide {
     margin: 0;
 }
 
-#frmContact input.maspik-btn, .maspik-accordion-content-wrap #submit, .copy.maspik-btn, .log-reset.maspik-btn, .maspik-update-db #submit,#exp-imp-settings .export-import-btn{
+#frmContact input.maspik-btn, .maspik-accordion-content-wrap #submit, .copy.maspik-btn, .log-reset.maspik-btn, .maspik-update-db #submit,#exp-imp-settings .export-import-btn,.maspik-btn-self{
     color:#FFF;
     font-family:'Montserrat', 'Open Sans', sans-serif;
-    font-weight: 300;
+    font-weight: 400;
     text-transform: Uppercase;
     background-color: #F48722;
     cursor: pointer;
@@ -360,12 +360,14 @@ tr.hide {
     transition: 0.3s;
     border:none;
 }
-
+.maspik-btn-self{
+  padding: 10px 20px;
+}
 input.export-import-btn {
     padding: 5px 20px !important;
 }
 
-.maspik-btn:hover,.log-reset.maspik-btn:hover, .maspik-accordion-content-wrap #submit:hover{
+.maspik-btn:hover,.log-reset.maspik-btn:hover, .maspik-accordion-content-wrap #submit:hover,.maspik-btn-self:hover{
     color:#fff;
     transition: 0.3s;
     background-color: #374945!important;
@@ -1281,6 +1283,8 @@ h3.maspik-protag.maspik-not-pro{
   }
   .maspik-not-pro.maspik-accordion-item .maspik-accordion-content{
     opacity: 0.7;
+  }
+  .maspik-not-pro.maspik-accordion-item .maspik-accordion-content > *{
     pointer-events: none;
   }
 
@@ -1498,6 +1502,8 @@ td.column-value.column-entries {
     position: absolute;
     right: 10px;
     top: 10px;
+    font-size: 24px; 
+
   }
 
   .maspik-popup-wrap .close-popup>.dashicons{

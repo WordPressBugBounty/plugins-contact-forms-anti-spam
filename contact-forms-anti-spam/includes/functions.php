@@ -433,126 +433,78 @@ function maspik_get_settings($data_name, $type = '', $table_var = 'new'){
 
 // New table management functions
 
-    //check if data is in the new table
-        function maspik_check_table($value) {
-            global $wpdb;
-            $table_name =$wpdb->prefix . 'maspik_options';
+//check if data is in the new table
+function maspik_check_table($value) {
+    global $wpdb;
+    $table_name =$wpdb->prefix . 'maspik_options';
 
-            $column_name = maspik_get_dblabel(); 
-            $specific_data = $value;
-        
-            $query = $wpdb->prepare("SELECT COUNT(*) FROM $table_name WHERE $column_name = %s", $specific_data);
-            $count = $wpdb->get_var($query);
-        
-            if($count == 0) {
-                return false;
-            }else{
-                return true;
-            }
-        }
+    $column_name = maspik_get_dblabel(); 
+    $specific_data = $value;
 
-    //make new main table
-        function create_maspik_table() {
-            global $wpdb;
-            
-            $table_name = $wpdb->prefix . 'maspik_options';
-            
-            // check if the table already exists
-            if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name) {
-                return; // the table already exists, no need to create it
-            }
-            
-            $charset_collate = $wpdb->get_charset_collate();
-            
-            $sql = "CREATE TABLE $table_name (
-                id mediumint(9) NOT NULL AUTO_INCREMENT,
-                option_name varchar(191) NOT NULL,
-                option_value longtext NOT NULL,
-                PRIMARY KEY  (id)
-            ) $charset_collate;";
-            
-            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-            dbDelta($sql);        
-        }
+    $query = $wpdb->prepare("SELECT COUNT(*) FROM $table_name WHERE $column_name = %s", $specific_data);
+    $count = $wpdb->get_var($query);
 
-    //make new log table
-        function create_maspik_log_table() {
-            global $wpdb;
-            $table_name = $wpdb->prefix . 'maspik_spam_logs';
-            
-            // define the structure of the table
-            $sql = "CREATE TABLE $table_name (
-                id mediumint(9) NOT NULL AUTO_INCREMENT,
-                spam_type varchar(191) NOT NULL,
-                spam_value varchar(191) NOT NULL,
-                spam_detail longtext NOT NULL,
-                spam_ip varchar(191) NOT NULL,
-                spam_country varchar(191) NOT NULL,
-                spam_agent varchar(191) NOT NULL,
-                spam_date varchar(191) NOT NULL,
-                spam_source varchar(191) NOT NULL,
-                spamsrc_label varchar(191) NOT NULL,
-                spamsrc_val varchar(191) NOT NULL,
-                spam_tag varchar(191) NOT NULL,
-                PRIMARY KEY  (id)
-            ) " . $wpdb->get_charset_collate();
-
-            // if the table doesn't exist or if we need to update the structure
-            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-            dbDelta($sql);
-            
-            // mark the function as run successfully
-            update_option('maspik_columns_last_check', '2');
-        }
-
-
-function efas_get_browser_name($user_agent){
-        // Make case insensitive.
-        $t = strtolower($user_agent);
-
-        // If the string *starts* with the string, strpos returns 0 (i.e., FALSE). Do a ghetto hack and start with a space.
-        // "[strpos()] may return Boolean FALSE, but may also return a non-Boolean value which evaluates to FALSE."
-        //     http://php.net/manual/en/function.strpos.php
-        $t = " " . $t;
-
-        // Humans / Regular Users     
-        if     (strpos($t, 'opera'     ) || strpos($t, 'opr/')     ) return 'Opera'            ;
-        elseif (strpos($t, 'edge'      )                           ) return 'Edge'             ;
-        elseif (strpos($t, 'chrome'    )                           ) return 'Chrome'           ;
-        elseif (strpos($t, 'safari'    )                           ) return 'Safari'           ;
-        elseif (strpos($t, 'firefox'   )                           ) return 'Firefox'          ;
-        elseif (strpos($t, 'msie'      ) || strpos($t, 'trident/7')) return 'Internet Explorer';
-
-        // Search Engines 
-        elseif (strpos($t, 'google'    )                           ) return '[Bot] Googlebot'   ;
-        elseif (strpos($t, 'bing'      )                           ) return '[Bot] Bingbot'     ;
-        elseif (strpos($t, 'slurp'     )                           ) return '[Bot] Yahoo! Slurp';
-        elseif (strpos($t, 'duckduckgo')                           ) return '[Bot] DuckDuckBot' ;
-        elseif (strpos($t, 'baidu'     )                           ) return '[Bot] Baidu'       ;
-        elseif (strpos($t, 'yandex'    )                           ) return '[Bot] Yandex'      ;
-        elseif (strpos($t, 'sogou'     )                           ) return '[Bot] Sogou'       ;
-        elseif (strpos($t, 'exabot'    )                           ) return '[Bot] Exabot'      ;
-        elseif (strpos($t, 'msn'       )                           ) return '[Bot] MSN'         ;
-
-        // Common Tools and Bots
-        elseif (strpos($t, 'mj12bot'   )                           ) return '[Bot] Majestic'     ;
-        elseif (strpos($t, 'ahrefs'    )                           ) return '[Bot] Ahrefs'       ;
-        elseif (strpos($t, 'semrush'   )                           ) return '[Bot] SEMRush'      ;
-        elseif (strpos($t, 'rogerbot'  ) || strpos($t, 'dotbot')   ) return '[Bot] Moz or OpenSiteExplorer';
-        elseif (strpos($t, 'frog'      ) || strpos($t, 'screaming')) return '[Bot] Screaming Frog';
-       
-        // Miscellaneous
-        elseif (strpos($t, 'facebook'  )                           ) return '[Bot] Facebook'     ;
-        elseif (strpos($t, 'pinterest' )                           ) return '[Bot] Pinterest'    ;
-       
-        // Check for strings commonly used in bot user agents  
-        elseif (strpos($t, 'crawler' ) || strpos($t, 'api'    ) ||
-                strpos($t, 'spider'  ) || strpos($t, 'http'   ) ||
-                strpos($t, 'bot'     ) || strpos($t, 'archive') ||
-                strpos($t, 'info'    ) || strpos($t, 'data'   )    ) return '[Bot] Other'   ;
-       
-        return 'Other (Unknown)';
+    if($count == 0) {
+        return false;
+    }else{
+        return true;
+    }
 }
+
+//make new main table
+function create_maspik_table() {
+    global $wpdb;
+    
+    $table_name = $wpdb->prefix . 'maspik_options';
+    
+    // check if the table already exists
+    if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name) {
+        return; // the table already exists, no need to create it
+    }
+    
+    $charset_collate = $wpdb->get_charset_collate();
+    
+    $sql = "CREATE TABLE $table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        option_name varchar(191) NOT NULL,
+        option_value longtext NOT NULL,
+        PRIMARY KEY  (id)
+    ) $charset_collate;";
+    
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);        
+}
+
+//make new log table
+function create_maspik_log_table() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'maspik_spam_logs';
+    
+    // define the structure of the table
+    $sql = "CREATE TABLE $table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        spam_type varchar(191) NOT NULL,
+        spam_value varchar(191) NOT NULL,
+        spam_detail longtext NOT NULL,
+        spam_ip varchar(191) NOT NULL,
+        spam_country varchar(191) NOT NULL,
+        spam_agent varchar(191) NOT NULL,
+        spam_date varchar(191) NOT NULL,
+        spam_source varchar(191) NOT NULL,
+        spamsrc_label varchar(191) NOT NULL,
+        spamsrc_val varchar(191) NOT NULL,
+        spam_tag varchar(191) NOT NULL,
+        PRIMARY KEY  (id)
+    ) " . $wpdb->get_charset_collate();
+
+    // if the table doesn't exist or if we need to update the structure
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+    
+    // mark the function as run successfully
+    update_option('maspik_columns_last_check', '2');
+}
+
 
 
 function maspik_limit_log_size() {
@@ -604,7 +556,7 @@ function efas_add_to_log($type = '', $input = '', $post = null, $source = "Eleme
         
         $spamsrc_val = substr(wp_slash(sanitize_textarea_field($spamsrc_val)), 0, 190);
         $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
-        $browser_name = efas_get_browser_name($user_agent);
+        $browser_name = maspik_get_browser_name($user_agent);
         $date = current_time('mysql'); // timestamp
         $result = maspik_save_log(
             substr(wp_slash(sanitize_text_field($type)), 0, 190),
@@ -1372,6 +1324,12 @@ function maspik_proform_togglecheck($plugin){
 
     
 }
+
+// Check if WooCommerce support is enabled
+function maspik_if_woo_support_is_enabled() {
+    return cfes_is_supporting("plugin") && class_exists('WooCommerce') && maspik_get_settings("maspik_support_Woocommerce_registration") != "no";
+}
+
 
 function maspik_if_plugin_is_active($plugin){
 
@@ -2679,4 +2637,112 @@ function maspik_get_spam_key() {
     }
 
     return $key;
+}
+
+function maspik_get_browser_name($user_agent) {
+    // If there is no user agent, return a suspicious message
+    if (empty($user_agent)) {
+        return '[Suspicious] Empty UA';
+    }
+
+    // Clean the user agent and convert to lowercase
+    $t = strtolower(trim($user_agent));
+    
+    // Add a space at the beginning to prevent false positives with strpos
+    $t = " " . $t;
+
+    // Array of trusted browsers
+    $trusted_browsers = [
+        'instagram' => '[Trusted] Instagram App',
+        'fb_iab'    => '[Trusted] Facebook App',
+        'fbav'      => '[Trusted] Facebook App',
+        'whatsapp'  => '[Trusted] WhatsApp',
+        'telegram'  => '[Trusted] Telegram',
+        'line/'     => '[Trusted] LINE'
+    ];
+
+    // Array of suspicious browsers
+    $suspicious_browsers = [
+        'headless'  => '[Suspicious] Headless',
+        'phantomjs' => '[Suspicious] PhantomJS',
+        'selenium'  => '[Suspicious] Selenium',
+        'puppet'    => '[Suspicious] Puppeteer'
+    ];
+
+    // Array of regular browsers
+    $regular_browsers = [
+        'chrome'    => 'Chrome',
+        'firefox'   => 'Firefox',
+        'safari'    => 'Safari',
+        'edge'      => 'Edge',
+        'opera'     => 'Opera',
+        'opr/'      => 'Opera'
+    ];
+
+    // Array of known bots
+    $known_bots = [
+        'google'    => '[Bot] Googlebot',
+        'bing'      => '[Bot] Bingbot',
+        'yandex'    => '[Bot] Yandex'
+    ];
+
+    // Array of suspicious tools
+    $suspicious_tools = [
+        'curl'      => '[Suspicious] Curl',
+        'wget'      => '[Suspicious] Wget',
+        'python'    => '[Suspicious] Python',
+        'ruby'      => '[Suspicious] Ruby',
+        'perl'      => '[Suspicious] Perl'
+    ];
+
+    // Check for short User Agent
+    if (strlen($t) < 30) {
+        return '[Suspicious] Short UA';
+    }
+
+    // Check for trusted browsers
+    foreach ($trusted_browsers as $key => $value) {
+        if (strpos($t, $key) !== false) {
+            return $value;
+        }
+    }
+
+    // Check for suspicious browsers
+    foreach ($suspicious_browsers as $key => $value) {
+        if (strpos($t, $key) !== false) {
+            return $value;
+        }
+    }
+
+    // Check for regular browsers
+    foreach ($regular_browsers as $key => $value) {
+        if (strpos($t, $key) !== false) {
+            return $value;
+        }
+    }
+
+    // Check for known bots
+    foreach ($known_bots as $key => $value) {
+        if (strpos($t, $key) !== false) {
+            return $value;
+        }
+    }
+
+    // Check for suspicious tools
+    foreach ($suspicious_tools as $key => $value) {
+        if (strpos($t, $key) !== false) {
+            return $value;
+        }
+    }
+
+    // Check for generic bot patterns
+    $bot_patterns = ['bot', 'crawler', 'spider', 'http'];
+    foreach ($bot_patterns as $pattern) {
+        if (strpos($t, $pattern) !== false) {
+            return '[Bot] Generic';
+        }
+    }
+
+    // If no match found, return the first 50 characters of the UA
+    return '[Unknown] ' . substr($user_agent, 0, 50);
 }

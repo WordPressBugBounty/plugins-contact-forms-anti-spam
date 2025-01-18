@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.7
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.2.14
+Stable tag: 2.3.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -19,14 +19,15 @@ The most efficient spam protection for WordPress forms and comments, with 95%+ s
 * 🎯 **High Success Rate**: Better protection than traditional CAPTCHA
 * 🔍 **Smart Detection**: Identifies spam patterns automatically
 * 🌐 **Wide Compatibility**: Works with all major form plugins
-* 🛠️ **Fully Customizable**: Adapt to your specific needs
+* 🛠️ **Fully Customizable**: Adapt to your specific needs you can block any spam you want with Blacklist system
 
 ## Key Features
-✅ Works instantly with popular form plugins
+✅ Works instantly with popular form plugins and registration forms
 ✅ No CAPTCHA needed
 ✅ Smart blacklist system
 ✅ IP & country blocking
 ✅ Phone number validation
+✅ Several ways to block spam with advanced honeypot fields
 ✅ Multi-language support
 
 ## Detailed Features: Our Advanced Spam Protection & Filtering ##
@@ -69,12 +70,13 @@ Maspik integrates seamlessly with a wide range of popular contact forms and comm
 * Fluentforms
 * Bricksbuilder forms
 * BuddyPress
-* WPForms*
-* GravityForms*
 * WordPress comments
 * WordPress registration form
+* WPForms*
+* GravityForms*
 * WooCommerce registration form*
-* WooCommerce review* 
+* WooCommerce review*
+
 (*) Pro license required
 
 ### We offer also a Pro version! ###
@@ -94,16 +96,18 @@ The plugin is provided "as is" and the user assumes full responsibility for conf
 
 The plugin is GDPR compliant.
 
-For more information, visit our website: [WpMaspik.com](https://wpmaspik.com/?readme-file)
 
 ## Support & Community
-* 📚 [Documentation](https://wpmaspik.com/documentation/)
+* 🚀 [Get Started guide](https://wpmaspik.com/documentation/getting-started/?readme-file)
+* 📚 [Documentation](https://wpmaspik.com/documentation/?readme-file)
 * 💬 [Community Forum](https://www.facebook.com/groups/maspik)
-* 🐛 [Report Issues](https://wpmaspik.com/#support)
-* 💡 [Feature Requests](https://wpmaspik.com/#support)
-* 💰 [Recive Pro for free](https://wpmaspik.com/get-maspik-pro-for-free-share-your-expertise/)
+* 🐛 [Report Issues](https://wpmaspik.com/#support?readme-file)
+* 💡 [Feature Requests](https://wpmaspik.com/#support?readme-file)
+* 💰 [Recive Pro for free](https://wpmaspik.com/get-maspik-pro-for-free-share-your-expertise/?readme-file)
 * 💖 [Support us with 5 stars review](https://wordpress.org/support/plugin/contact-forms-anti-spam/reviews/#new-post)
 * 💎 [Donate to support our work](https://paypal.me/yonifre)
+* ✨ [WP Maspik](https://wpmaspik.com/?readme-file)
+
 
 == Installation ==
 
@@ -127,6 +131,27 @@ For more information, visit our website: [WpMaspik.com](https://wpmaspik.com/?re
    * Check the spam log to see if spam is being blocked
 
 == Frequently Asked Questions ==
+
+= How does Maspik compare to other anti-spam plugins? =
+While plugins like Akismet vs CleanTalk, and Antispam Bee require external API configuration and monthly subscriptions and can be complex to setup, Maspik offers a self-hosted solution that works right out of the box. runs most of the checks within WordPress, with no external dependencies or recurring fees.
+
+= What's the setup process like? =
+Installation takes just 2 minutes: search for "Maspik" in your WordPress plugins section, click install, and activate. The plugin comes with smart pre-configured protection that works immediately. You can start blocking spam right away without any technical configuration.
+
+= How effective is Maspik at blocking spam? =
+Maspik uses multiple detection methods including smart pattern recognition, honeypot fields, and blacklist systems to achieve a 95%+ success rate in blocking spam. Unlike traditional CAPTCHA solutions, it works silently without disrupting your real users.
+
+= Will Maspik affect my site's performance? =
+No. Maspik is designed for optimal performance, using server-side processing. All spam checking is done efficiently without impacting your front-end page load times.
+
+= What kind of customization options are available? =
+You can customize text blacklists, email patterns, character limits, link restrictions, IP blocking rules, and country-based filtering. Each form type can have its own specific settings, letting you create the perfect balance of protection for your needs.
+
+= Does Maspik protect all types of forms? =
+Yes! Maspik protects contact forms, comments, registration forms, and more. It works with all major form plugins including Contact Form 7, Elementor Forms, Ninja Forms, and many others. Premium users also get protection for WooCommerce forms, WPForms, and Gravity Forms.
+
+= How does the spam logging system work? =
+Maspik includes a detailed spam log that shows you exactly what's being blocked and why. This helps you fine-tune your settings and understand the types of spam targeting your site. You can review blocked submissions and adjust your protection accordingly.
 
 = How to Block Spam in WordPress? =
 With Maspik, you can effectively block spam submissions, spam comments, spam bots, and spam registrations in WordPress. Our powerful anti-spam plugin provides comprehensive protection against comment spam, form spam, registration spam, and automated bot submissions.
@@ -167,14 +192,6 @@ Maspik currently supports:
 More forms will be supported in future releases.
 Looking for specific plugin support? Let us know at [WpMaspik.com](https://wpmaspik.com/#contact)
 
-= Where do I set this up? =
-
-In the WordPress dashboard menu, look for the 'Maspik spam" item and click on it.
-
-= Will MASPIK slow down my site? =
-No.
-I developed this plugin using high-quality server-side code and avoided using CSS/JS to ensure optimal website performance as CSS/JS running in the front-end can slow down websites.
-
 = How can I report security bugs? =
 You can report security bugs through the Patchstack Vulnerability Disclosure Program. The Patchstack team help validate, triage and handle any security vulnerabilities. [Report a security vulnerability.](https://patchstack.com/database/vdp/contact-forms-anti-spam)
 
@@ -191,15 +208,22 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 
 == Changelog ==
 
+= 2.3.0 - 18/01/2025 = 
+* Improved WP registration form support
+* Improved Comments form support
+* Improved WooCommerce registration form support
+* Improved code performance
+* Improved Elementor form support
+* Improved default settings auto activation
+* Removed update support from Maspik versions smaller than 2.0.0 to improve stability and performance
+
+
 = 2.2.14 - 05/01/2025 = 
-✨ **New Features**
-* Enhanced Advanced Key Check system
-✨ **Improvements**
+* New feature! - Enhanced Advanced Key Check system
 * Improved database performance
 * Optimized code execution
 
 = 2.2.13 - 19/12/2024 =
-🐛 **Bug Fixes**
 * Fixed HTML settings save issue
 * Improved form field handling
 

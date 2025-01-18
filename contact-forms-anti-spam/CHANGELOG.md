@@ -1,5 +1,15 @@
 # Changelog #
 
+## 2.3.0 - 18/01/2025 ##
+* Improved WP registration form support
+* Improved Comments form support
+* Improved WooCommerce registration form support
+* Improved code performance
+* Improved Elementor form support
+* Improved default settings auto activation
+* Removed update support from Maspik versions smaller than 2.0.0 to improve stability and performance
+
+
 ## 2.2.14 - 05/01/2025 ##
 * Happy New Year! may all your spam be blocked!
 * Improvement - Improve Database performance

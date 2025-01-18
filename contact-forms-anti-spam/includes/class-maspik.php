@@ -167,6 +167,16 @@ class Maspik {
           require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/buddypress.php';
         }
       }
+
+	  // Hello Plus
+	  /* Not yet supported
+      if( maspik_get_settings( "maspik_support_helloplus_forms" ) != "no" ){ 
+        if ( maspik_is_plugin_active( 'hello-plus/hello-plus.php' ) ) {
+			  require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/helloplus.php';
+        }
+      }*/
+
+
 		
       // If agree to shere Non sensitive information 
       if( maspik_get_settings("shere_data", '', 'old') || maspik_get_settings("shere_data") ){ 

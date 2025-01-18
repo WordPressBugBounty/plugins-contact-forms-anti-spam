@@ -1199,7 +1199,7 @@ $spamcounter = maspik_spam_count();
                                 </div>
                                             
                                 <span class="maspik-subtext">
-                                        <?php esc_html_e("Entries with less than <strong>Min</strong> or more than <strong>Max</strong> characters will be blocked", "contact-forms-anti-spam"); ?>
+                                        <?php esc_html_e("Entries with less than Min or more than Max characters will be blocked", "contact-forms-anti-spam"); ?>
                                 </span>
                             
                                 <div class="maspik-custom-msg-wrap">
@@ -1411,12 +1411,28 @@ $spamcounter = maspik_spam_count();
                             </div>  
                         </div><!-- end of maspik-cf7-switch-wrap -->
 
+                        <div class="maspik-elementor-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('elementor') == 1 ? 'enabled':'disabled' ?>">
+                            <?php echo maspik_toggle_button('maspik_support_Elementor_forms', 'maspik_support_Elementor_forms', 'maspik_support_Elementor_forms', 'maspik-form-switch togglebutton', "form-toggle",efas_if_plugin_is_active('elementor')); 
+                            
+                            ?>
+                                <div>
+                                    <h4> <?php esc_html_e('Support Elementor forms', 'contact-forms-anti-spam'); ?> </h4>
+                            </div>  
+                        </div><!-- end of maspik-elementor-switch-wrap -->
+
                         <div class="maspik-wp-comment-switch-wrap togglewrap maspik-form-switch-wrap">
                             <?php echo maspik_toggle_button('maspik_support_wp_comment', 'maspik_support_wp_comment', 'maspik_support_wp_comment', 'maspik-form-switch togglebutton', "form-toggle", maspik_get_settings( "maspik_support_wp_comment", 'form-toggle' )); ?>
                                 <div>
-                                    <h4> <?php esc_html_e('Support wp comment', 'contact-forms-anti-spam'); ?> </h4>
+                                    <h4> <?php esc_html_e('Support WP comments', 'contact-forms-anti-spam'); ?> </h4>
                             </div>  
                         </div><!-- end of maspik-wp-comment-switch-wrap -->
+
+                        <div class="maspik-wp-registration-switch-wrap togglewrap maspik-form-switch-wrap">
+                            <?php echo maspik_toggle_button('maspik_support_registration', 'maspik_support_registration', 'maspik_support_registration', 'maspik-form-switch togglebutton', "form-toggle", maspik_get_settings( "maspik_support_registration", 'form-toggle' )); ?>
+                                <div>
+                                    <h4> <?php esc_html_e('Support WP registration', 'contact-forms-anti-spam'); ?> </h4>
+                            </div>  
+                        </div><!-- end of maspik-wp-registration-switch-wrap -->
 
                         <div class="maspik-formidable-switch-wrap togglewrap maspik-form-switch-wrap  <?php echo efas_if_plugin_is_active('formidable') == 1 ? 'enabled':'disabled' ?>">
                             <?php echo maspik_toggle_button('maspik_support_formidable_forms', 'maspik_support_formidable_forms', 'maspik_support_formidable_forms', 'maspik-form-switch togglebutton', "form-toggle", efas_if_plugin_is_active('formidable')); ?>
@@ -1446,29 +1462,14 @@ $spamcounter = maspik_spam_count();
                             </div>  
                         </div><!-- end of maspik-bricks-switch-wrap -->
 
-                        <div class="maspik-wp-registration-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('Wordpress Registration') == 1 ? 'enabled':'disabled' ?>">
-                            <?php echo maspik_toggle_button('maspik_support_registration', 'maspik_support_registration', 'maspik_support_registration', 'maspik-form-switch togglebutton', "form-toggle", efas_if_plugin_is_active('Wordpress Registration')); ?>
-                                <div class="wp-reg">
-                                        <h4> <?php esc_html_e('Support WP Registration', 'contact-forms-anti-spam'); ?></h4>
-                                        <?php maspik_tooltip('If Anyone can register is checked (At WP Options => General).') ?>
-                                        
-                                </div>  
-                        </div><!-- end of maspik-wp-registration-switch-wrap -->
 
-                        <div class="maspik-elementor-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('elementor-pro') == 1 ? 'enabled':'disabled' ?>">
-                            <?php echo maspik_toggle_button('maspik_support_Elementor_forms', 'maspik_support_Elementor_forms', 'maspik_support_Elementor_forms', 'maspik-form-switch togglebutton', "form-toggle", efas_if_plugin_is_active('elementor-pro')); ?>
-                                <div>
-                                    <h4> <?php esc_html_e('Support Elementor forms', 'contact-forms-anti-spam'); ?> </h4>
-                                </div>  
-                        </div><!-- end of maspik-elementor-switch-wrap -->
-
-                        <div class="maspik-wp-ninjaform-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('ninjaforms') == 1 ? 'enabled':'disabled' ?>">
+                        <div class="maspik-support-ninjaforms-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('ninjaforms') == 1 ? 'enabled':'disabled' ?>">
                             <?php echo maspik_toggle_button('maspik_support_ninjaforms', 'maspik_support_ninjaforms', 'maspik_support_ninjaforms', 'maspik-form-switch togglebutton', "form-toggle", efas_if_plugin_is_active('ninjaforms')); ?>
                                 <div class="wp-reg">
                                         <h4> <?php esc_html_e('Support Ninja Forms', 'contact-forms-anti-spam'); ?></h4>
                                         
                                 </div>  
-                        </div><!-- end of maspik-wp-ninjaform-switch-wrap-->
+                        </div><!-- end of maspik-support-ninjaforms-switch-wrap-->
 
                         <div class="maspik-wp-jetform-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('jetforms') == 1 ? 'enabled':'disabled' ?>">
                             <?php echo maspik_toggle_button('maspik_support_jetforms', 'maspik_support_jetforms', 'maspik_support_jetforms', 'maspik-form-switch togglebutton', "form-toggle", efas_if_plugin_is_active('jetforms')); ?>
@@ -2101,6 +2102,80 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </script>
 
+
+        <!-- Pro Popup -->
+        <div id="popup-background"></div>
+        <div id="pro-popup" class="maspik-popup-wrap">
+            <div class="maspik-popup">
+                <div class="maspik-popup-header">
+                    <h3><?php esc_html_e('Upgrade to Premium Version', 'contact-forms-anti-spam'); ?></h3>
+                    <button class="close-popup">×</button>
+                </div>
+                <div class="maspik-popup-content">
+                    <p><?php esc_html_e('This feature is only available for Pro users.', 'contact-forms-anti-spam'); ?></p>
+                    <p><b><?php esc_html_e('Check out what you get with Maspik PRO:', 'contact-forms-anti-spam'); ?></b></p>
+                    <ul>
+                        <li><span class="dashicons dashicons-star-filled"></span> <?php esc_html_e('Advanced IP verification (1,000 checks/month)', 'contact-forms-anti-spam'); ?></li>
+                        <li><span class="dashicons dashicons-star-filled"></span> <?php esc_html_e('Custom spam API for multiple sites', 'contact-forms-anti-spam'); ?></li>
+                        <li><span class="dashicons dashicons-star-filled"></span> <?php esc_html_e('Country-based filtering', 'contact-forms-anti-spam'); ?></li>
+                        <li><span class="dashicons dashicons-star-filled"></span> <?php esc_html_e('Language detection & blocking', 'contact-forms-anti-spam'); ?></li>
+                        <li><span class="dashicons dashicons-star-filled"></span> <?php esc_html_e('Settings Import/Export', 'contact-forms-anti-spam'); ?></li>
+                        <li><span class="dashicons dashicons-star-filled"></span> <?php esc_html_e('Premium support', 'contact-forms-anti-spam'); ?></li>
+                    </ul>
+                    <p><b><?php esc_html_e('Start blocking spam like a Pro!', 'contact-forms-anti-spam'); ?></b></p>
+                    <div class="maspik-popup-buttons">
+                        <a href="https://wpmaspik.com/?ref=getpro" target="_blank" class="maspik-btn-self"><?php esc_html_e('Upgrade Now', 'contact-forms-anti-spam'); ?></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // Listen for clicks on pro accordion content
+                document.querySelectorAll('.maspik-not-pro .maspik-accordion-content').forEach(content => {
+                    content.addEventListener('click', (e) => {
+                        // Check if click is not on an interactive element
+                        if (!e.target.closest('button, input, select, a')) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const proPopup = document.getElementById('pro-popup');
+                            proPopup.classList.add('active');
+                            document.getElementById('popup-background').style.display = 'block';
+                        }
+                    });
+                });
+
+                // Handle upgrade button click
+                document.querySelector('#pro-popup .upgrade-button').addEventListener('click', () => {
+                        window.open('https://wpmaspik.com/?ref=getpro', '_blank');
+                });
+
+                // Close popup when clicking close button
+                document.querySelector('#pro-popup .close-popup').addEventListener('click', () => {
+                    document.getElementById('pro-popup').classList.remove('active');
+                    document.getElementById('popup-background').style.display = 'none';
+                });
+
+                // Close popup when clicking outside
+                document.addEventListener('click', (event) => {
+                    if (!event.target.closest('#pro-popup') && 
+                        !event.target.closest('.maspik-not-pro .maspik-accordion-content')) {
+                        document.getElementById('pro-popup').classList.remove('active');
+                        document.getElementById('popup-background').style.display = 'none';
+                    }
+                });
+
+                // Close popup with ESC key
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        document.getElementById('pro-popup').classList.remove('active');
+                        document.getElementById('popup-background').style.display = 'none';
+                    }
+                });
+            });
+        </script>
+    
 </div>
 <?php
 

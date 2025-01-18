@@ -276,7 +276,7 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
 **/
 function validateTextField($field_value) {  
     // Convert the field value to lowercase.
-    $field_value = strtolower($field_value);
+    $field_value = is_array($field_value) ? strtolower(implode(" ",$field_value)) : strtolower($field_value);
   	$text_blacklist = maspik_get_settings( 'text_blacklist' ) ? efas_makeArray(maspik_get_settings('text_blacklist') ) : array();
 	$spam = false;
   	if ( efas_get_spam_api() ){
@@ -344,7 +344,7 @@ function validateTextField($field_value) {
 
 function checkEmailForSpam($field_value) {
     // Check if the field is empty
-    if (empty($field_value)) {
+    if (empty($field_value) || is_array($field_value)) {
         return false; // Not spam if the field is empty.
     }
 
@@ -509,7 +509,9 @@ function checkTelForSpam($field_value) {
 * Textarea field check 
 **/
 function checkTextareaForSpam($field_value) {
-    $field_value = is_array($field_value) ? $field_value : strtolower($field_value);
+
+    $field_value = is_array($field_value) ? strtolower(implode(" ",$field_value)) : strtolower($field_value);
+
 
     // Get the blacklist from options and merge with API data if available
     $textarea_blacklist = maspik_get_settings('textarea_blacklist') ? efas_makeArray(maspik_get_settings('textarea_blacklist')) : array();
@@ -839,7 +841,10 @@ function maspik_add_spam_key_field_js() {
             });
         </script>';
 }
+// add to all forms
 add_action('wp_footer', 'maspik_add_spam_key_field_js' , 99); // Add to wp_footer()
+// add to user registration form on admin side
+add_action('register_form', 'maspik_add_spam_key_field_js' , 99); // Add to wp_footer()
 
 
 /**
