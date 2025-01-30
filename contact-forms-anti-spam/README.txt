@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.7
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.3.0
+Stable tag: 2.4.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -207,6 +207,16 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 
 
 == Changelog ==
+
+= 2.4.0 - 30/01/2025 = 
+* Announcement - In this version we made some improvements to reduce false positives. read more in the [announcement page](https://wpmaspik.com/maspik-2-4-0-smarter-spam-blocking-fewer-false-positives/?readme-file)
+* Improved - Text and textarea field blacklist's now match exact words only, preventing false positives from partial word matches (e.g., "ad" won't block "shade", but "seo" will block "Seo expert").
+* Improved - Improve email field blacklist check - Now checks both if an email exactly matches or is contained within blacklisted patterns, (e.g. "Seo" will block "seoexpert@gmail.com").
+* Improved - Made settings page text clearer and easier to understand.
+* Improved - Improve link detection in text area fields.
+* Improved - Improve text area field character limit check.
+* Fixed - Fix JS error on settings page.
+* Fixed - Fix Serbian language detection.
 
 = 2.3.0 - 18/01/2025 = 
 * Improved WP registration form support

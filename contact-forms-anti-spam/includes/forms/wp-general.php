@@ -34,7 +34,7 @@ function maspik_comments_checker(array $data) {
     $reason = $GeneralCheck['reason'] ?? '';
     $message = $GeneralCheck['message'] ?? '';
     $spam_val = $GeneralCheck['value'] ?? '';
-    $spam_lbl = $GeneralCheck['reason'] ?? '';
+    $spam_lbl = $GeneralCheck['message'] ?? '';
     $type = "General";
 
     // Name check
@@ -70,10 +70,11 @@ function maspik_comments_checker(array $data) {
 
     if ($spam) {
         // If identified as spam, handle the action (logging, error message, etc.)
-        $message = cfas_get_error_text($message);
+        $error_message = cfas_get_error_text($message);
         $args = ['response' => 200];
         efas_add_to_log("$type", $reason, $data, $comment_type, $spam_lbl, $spam_val);
-        wp_die($message, "Spam error", $args);
+
+        wp_die($error_message, "Spam error", $args);
     }
 
     return $data;
@@ -131,7 +132,7 @@ function maspik_check_wp_registration_form($errors) {
             $reason = $GeneralCheck['reason'] ?? '';
             $message = $GeneralCheck['message'] ?? '';
             $spam_val = $GeneralCheck['value'] ?? '';
-            $spam_lbl = $GeneralCheck['reason'] ?? '';
+            $spam_lbl = $GeneralCheck['message'] ?? '';
             $type = "General";
         }
 
@@ -174,7 +175,6 @@ add_filter('registration_errors', 'maspik_check_wp_registration_form', 10, 1);
  */
 function maspik_register_form_honeypot_check_in_woocommerce_registration($errors, $username, $email) {
     if ( maspik_if_woo_support_is_enabled() ) {
-        $error_message = cfas_get_error_text();
 
         $user_email = sanitize_email($email);
         $user_login = sanitize_text_field($username);
@@ -187,7 +187,7 @@ function maspik_register_form_honeypot_check_in_woocommerce_registration($errors
         $spam = $GeneralCheck['spam'] ?? false;
         $reason = $GeneralCheck['reason'] ?? '';
         $message = $GeneralCheck['message'] ?? '';
-
+        $spam_val = $GeneralCheck['message'] ?? '';
         $error_message = cfas_get_error_text($message);
         $type = "General";
         if ($user_email && !$spam) {
@@ -212,6 +212,7 @@ function maspik_register_form_honeypot_check_in_woocommerce_registration($errors
 
 
         if ($spam) {
+            $error_message = cfas_get_error_text($message);
             efas_add_to_log("$type", $reason, $_POST, 'Woocommerce registration', $spam_lbl, $spam_val);
             wp_die($error_message, "Spam error", ['response' => 200]);
         }

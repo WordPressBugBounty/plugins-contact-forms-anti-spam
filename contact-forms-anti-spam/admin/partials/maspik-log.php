@@ -136,7 +136,6 @@ function cfes_build_table() {
                   <td class='column-value column-entries'>
                       <div class='maspik-accordion-item'>
                           <div class='maspik-accordion-header log-accordion'><div class='spam-value-text'>".esc_html($row['spam_value']) .
-                          "<span class='span-alt-text'>" .  $spam_alt_text . "</span>" . 
                           "</div>" .
                           maspik_spam_item_option($row_id, $spam_value, $spam_val_intext)
                           ."
@@ -321,6 +320,14 @@ toggleAllBtn.addEventListener("click", function() {
 });
 
 //Accordion Script -- END
+
+// Replace asterisks with proper opening and closing <u> tags
+document.querySelectorAll('.spam-value-text').forEach(element => {
+    let text = element.innerHTML;
+    // Replace pairs of asterisks with opening and closing <u> tags
+    text = text.replace(/\*(.*?)\*/g, '<u>$1</u>');
+    element.innerHTML = text;
+});
 
 
 </script>

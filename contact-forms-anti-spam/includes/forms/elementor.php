@@ -104,11 +104,11 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
     $ip =  $meta['remote_ip']['value'] ? $meta['remote_ip']['value'] : efas_getRealIpAddr();
     // Country IP Check 
     $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"elementor");
-    $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
-    $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
-    $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
+    $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false;
+    $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false;
+    $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false;
     $error_message = cfas_get_error_text($message);
-    $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
+    $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false;
     if($spam){
       efas_add_to_log($type = "General",$reason, $form_data,"Elementor forms", $message,  $spam_val);
       $ajax_handler->add_error( $lastKeyId, $error_message );

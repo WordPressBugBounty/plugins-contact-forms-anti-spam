@@ -692,12 +692,19 @@ function efas_makeArray($string,$type="") {
 }
 
 // Check if field value exists in string
-function maspik_is_field_value_exist_in_string($bad_string, $field_value) {
+function maspik_is_field_value_exist_in_string($bad_string, $field_value, $make_space = 1) {
     if (!$bad_string || !$field_value) {
         return false;
     }
     $bad_string_lower = strtolower(trim($bad_string));
-    $field_value_lower = strtolower(trim($field_value));    
+    $field_value_lower = strtolower(trim($field_value));
+    
+    if($make_space == 1){
+        // Add spaces to both strings to ensure word boundaries
+        $bad_string_lower = " " . $bad_string_lower . " ";
+        $field_value_lower = " " . $field_value_lower . " ";
+    }
+    
     return strpos($field_value_lower, $bad_string_lower) !== false;
 }
 
@@ -809,7 +816,7 @@ function efas_array_of_lang_forbidden(){
             '[ÆæØøÅå]' => esc_html__('Danish (ÆæØøÅå)', 'contact-forms-anti-spam'),
             '[ÆæØøÅå]' => esc_html__('Norwegian (ÆæØøÅå)', 'contact-forms-anti-spam'),
             '[ÁáÄäČčĎďÉéÍíĹĺĽľŇňÓóÔôŔŕŠšŤťÚúÝýŽž]' => esc_html__('Slovak (ÁáÄäČčĎďÉéÍíĹĺĽľŇňÓóÔôŔŕŠšŤťÚúÝýŽž)', 'contact-forms-anti-spam'),
-            '[A-Za-zА-Яа-яЋћĆć]' => esc_html__('Serbian (А-Яа-яЋћĆć)', 'contact-forms-anti-spam'),
+            '[А-Яа-яЋћĆć]' => esc_html__('Serbian (А-Яа-яЋћĆć)', 'contact-forms-anti-spam'),
 
      );
 } 

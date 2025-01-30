@@ -550,10 +550,13 @@ $spamcounter = maspik_spam_count();
                     if($save_notif == "yes"){
                         if($error_message){
                             global $wpdb;
-                            echo "<div class='maspik-save-message error'> Error updating record: " . esc_html($wpdb->last_error) . "</div>";
-                                
+                            echo "<div class='maspik-save-message error'>" . 
+                                esc_html__('Error updating record:', 'contact-forms-anti-spam') . 
+                                " " . esc_html($wpdb->last_error) . "</div>";
                         } else {
-                            echo "<div class='maspik-save-message success'> Successfully Saved! </div>";
+                            echo "<div class='maspik-save-message success'>" . 
+                                esc_html__('Successfully Saved!', 'contact-forms-anti-spam') . 
+                                "</div>";
                         }
                     }
                 ?></div>
@@ -596,11 +599,9 @@ $spamcounter = maspik_spam_count();
                             echo $over_max_checks ? '.</span>' : '';
 
                             if (!cfes_is_supporting("ip_verification")) {
-                                echo ' ';
-                                esc_html_e('Upgrade to Pro for 1,000 checks/month', 'contact-forms-anti-spam');
+                                echo ' ' . esc_html__('Upgrade to Pro for 1,000 checks/month', 'contact-forms-anti-spam');
                             }else{
-                                echo ' ';
-                                esc_html_e(', thanks to your Pro subscription.', 'contact-forms-anti-spam');
+                                echo ' ' . esc_html__('thanks to your Pro subscription.', 'contact-forms-anti-spam');
                             }
                             ?>
                         </span>
@@ -891,11 +892,11 @@ $spamcounter = maspik_spam_count();
             <div class="maspik-section-head maspik-more-setting">
                 
                 <h2 class='maspik-title maspik-bl-title'><?php esc_html_e('By Field Options', 'contact-forms-anti-spam'); ?></h2>
-                <p>
-                    <?php esc_html_e('Create a list of words or phrases you want to block.', 'contact-forms-anti-spam'); ?><br>
-                    <?php esc_html_e('Each term should be on a separate line.', 'contact-forms-anti-spam'); ?><br>
-                    <?php esc_html_e('The system is not case-sensitive', 'contact-forms-anti-spam'); ?><br>
-                </p>
+                <ul>
+                    <li><?php esc_html_e('Create a list of words or phrases you want to block.', 'contact-forms-anti-spam'); ?></li>
+                    <li><?php esc_html_e('Each term should be on a separate line.', 'contact-forms-anti-spam'); ?></li>
+                    <li><?php esc_html_e('The system is not case-sensitive', 'contact-forms-anti-spam'); ?></li>
+                </ul>
                 <p><?php esc_html_e('Learn more about those option in our documentation', 'contact-forms-anti-spam'); ?> <a target="_blank" href="https://wpmaspik.com/documentation/?fromplugin"><?php esc_html_e('here', 'contact-forms-anti-spam'); ?></a>.</p>
 
 
@@ -931,8 +932,14 @@ $spamcounter = maspik_spam_count();
                             ?>      
 
                         </div> <!-- end of maspik-main-list-wrap -->
-                        <span class="maspik-subtext">
-                        <?php esc_html_e('Wildcard patterns are accepted. asterisk * symbol is necessary for the recognition of the wildcard.', 'contact-forms-anti-spam'); ?></span>
+                        <div class="maspik-subtext">
+                            <h5><?php esc_html_e('How to use block text input fields with this option?', 'contact-forms-anti-spam'); ?></h5>
+                            <ul class="methods-list maspik-list">
+                                <li><?php esc_html_e('Enter the complete name (e.g: Eric jones)', 'contact-forms-anti-spam'); ?></li>
+                                <li><?php esc_html_e('Enter specific word (e.g: Eric) to block all names that contain the word Eric, like Eric jones, but not Ericjones (without space)', 'contact-forms-anti-spam'); ?></li>
+                                <li><?php esc_html_e('For advanced users - use wildcards (*) to create flexible blocking patterns', 'contact-forms-anti-spam'); ?></li>
+                            </ul>
+                        </div>
                                     
                         <div class="maspik-limit-char-wrap">
                             <div class="maspik-limit-char-head togglewrap">
@@ -999,9 +1006,9 @@ $spamcounter = maspik_spam_count();
                     <div class="maspik-accordion-content-wrap hide-form-title">
                         <div class="maspik-setting-info">
                             <?php 
-                            maspik_tooltip("If the text value is EQUAL to one of the values above, MASPIK will tag it as spam and it will be blocked.");
+                            maspik_tooltip("If the text value is CONTAIN to one of the values above, MASPIK will tag it as spam and it will be blocked. you can add wildcard patterns like test@*.ru will block test@mail.ru");
                                 
-                            maspik_popup("georginahaynes620@gmail.com|ericjonesonline@outlook.com|*.ru|*+*@*.*|/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.ru\b/|eric*@*.com|xrumer888@outlook.com", "Email field", "See examples" ,"visibility");
+                            maspik_popup("@test.com|ericjonesonline@|*.ru|*+*@*.*|/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.ru\b/|eric*@*.com|xrumer888@|test@spam.com", "Email field", "See examples" ,"visibility");
                                 ?>
                         </div> <!--end of maspik-setting-info-->
                             
@@ -1014,10 +1021,14 @@ $spamcounter = maspik_spam_count();
                             ?>      
 
                         </div> <!-- end of maspik-main-list-wrap -->
-                        <span class="maspik-subtext"><?php esc_html_e('Wildcard patterns are accepted. asterisk * Or question mark ? symbol are necessary for the recognition of the wildcard.', 'contact-forms-anti-spam'); ?><br>
-                        <?php esc_html_e('Regex must start and end with a slash /', 'contact-forms-anti-spam'); ?>
-
-                        </span>
+                        <div class="maspik-subtext">
+                            <h5><?php esc_html_e('How to use block email fields with this option?', 'contact-forms-anti-spam'); ?></h5>
+                            <ul class="methods-list maspik-list">
+                                <li><?php esc_html_e('Block specific email: Enter the complete email address (e.g: info@speed-seo.net)', 'contact-forms-anti-spam'); ?></li>
+                                <li><?php esc_html_e('Use part of email: Enter the part of the email (e.g: @gmail.com) to block all emails that contain this part @gmail.com, like test@gmail.com', 'contact-forms-anti-spam'); ?></li>
+                                <li><?php esc_html_e('For advanced users - use wildcards (*) or regular expressions (/pattern/) to create flexible blocking patterns', 'contact-forms-anti-spam'); ?></li>
+                            </ul>
+                        </div>
                                 
                         <?php maspik_save_button_show() ?>
                     </div>
@@ -1055,14 +1066,21 @@ $spamcounter = maspik_spam_count();
                             ?>      
 
                         </div> <!-- end of maspik-main-list-wrap -->
-                        <span class="maspik-subtext"><?php esc_html_e('Try to use full sentences that you typically find in spam emails, rather than single words.', 'contact-forms-anti-spam'); ?></span>
+                        <div class="maspik-subtext">
+                            <h5><?php esc_html_e('How to use block textarea fields with this option?', 'contact-forms-anti-spam'); ?></h5>
+                            <ul class="methods-list maspik-list">
+                                <li><?php esc_html_e('Enter the complete phrase (e.g: Seo expert)', 'contact-forms-anti-spam'); ?></li>
+                                <li><?php esc_html_e('Enter specific word (e.g: Seo) to block all content that contain the word Seo, like Seo expert, but not Seoexpert (without space)', 'contact-forms-anti-spam'); ?></li>
+                                <li><?php esc_html_e('Be careful with this option, it can block a lot of false positives, dont add generic words like "hello" or "thank you"', 'contact-forms-anti-spam'); ?></li>
+                            </ul>
+                        </div>
 
                         <div class="maspik-limit-char-head togglewrap">
                                 <?php
                                             
                                     echo maspik_toggle_button('textarea_link_limit_toggle', 'textarea_link_limit_toggle', 'textarea_link_limit_toggle', 'maspik-toggle-text-limit togglebutton',"","",['contain_links']);
                                             
-                                    echo "<h4> Limit Links </h4>";
+                                    echo "<h4>" . esc_html_e('Limit Links', 'contact-forms-anti-spam') . "</h4>";
 
                                     maspik_tooltip("Spammers tend to include links.
                                     <br>If there is no reason for anyone to send links when completing your forms, set this to 0");
@@ -1080,7 +1098,7 @@ $spamcounter = maspik_spam_count();
                                             
                                     echo maspik_toggle_button('textarea_limit_toggle', 'textarea_limit_toggle', 'textarea_limit_toggle', 'maspik-toggle-textarea-limit togglebutton',"","",['MinCharactersInTextAreaField','MaxCharactersInTextAreaField']);
                                             
-                                    echo "<h4> Limit Characters </h4>";
+                                    echo "<h4>" . esc_html_e('Limit Characters', 'contact-forms-anti-spam') . "</h4>";
 
                                     maspik_tooltip("If the text field contains more characters that this value, it will be considered spam and it will be blocked.");                             
                                 ?>
@@ -1690,7 +1708,7 @@ $spamcounter = maspik_spam_count();
                         <span class="note" id="note-textarea"></span>
                     </div>
                     <div>
-                        <input type="submit" name="send" class="btn-submit maspik-btn" value="<?php esc_html_e('Check', 'contact-forms-anti-spam'); ?>" />
+                        <input type="submit" name="send" class="btn-submit maspik-btn" value="<?php esc_attr_e('Check', 'contact-forms-anti-spam'); ?>" />
                     </div>
                     <br><strong><?php esc_html_e('* Please save changes before checking.', 'contact-forms-anti-spam'); ?></strong>
                     <br><div id="statusMessage"></div>
@@ -2011,21 +2029,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-
+<?php if (cfes_is_supporting("api")) { ?>
     function maspikUpdatePrivateFileId() {
         // Get ID from URL parameters safely
         const urlParams = new URLSearchParams(window.location.search);
         const newId = urlParams.get('private_file_id');
+        
+        // If there's no private_file_id parameter, exit early
+        if (!newId) {
+            return false;
+        }
 
         // Remove private_file_id from URL
         const newUrl = window.location.pathname + "?page=maspik";
-
-        // Enhanced validation
-        if (!newId) {
-            console.log('Missing ID in URL');
-            window.location.href = newUrl;
-            return false;
-        }
 
         // Ensure it's a positive number
         const numericId = parseInt(newId, 10);
@@ -2084,24 +2100,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add to DOMContentLoaded to ensure elements exist
     document.addEventListener('DOMContentLoaded', function() {
-        // Check if private_file_id exists in URL
-        if (new URLSearchParams(window.location.search).has('private_file_id')) {
-            if (maspikUpdatePrivateFileId()) {
-                // refresh the page
-                window.location.reload();
-            }else{
-                alert('Error adding Dashboard ID automatically. Please try manually.');
-                // remove private_file_id from URL
-                 const newUrl = window.location.pathname + "?page=maspik";
-                window.location.href = newUrl;
-                //window.location.reload();
-
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasPrivateFileId = urlParams.has('private_file_id');
+        
+        // Only proceed if private_file_id exists in URL
+        if (hasPrivateFileId) {
+            try {
+                if (!maspikUpdatePrivateFileId()) {
+                    alert('Error adding Dashboard ID automatically. Please try manually.');
+                    const newUrl = window.location.pathname + "?page=maspik";
+                    window.location.href = newUrl;
+                }
+            } catch (error) {
+                console.error('Error in maspikUpdatePrivateFileId:', error);
             }
         }
     });
-
+    <?php } // END is supporting ?>
 </script>
 
+<?php if (!cfes_is_supporting("general")) { ?>
 
         <!-- Pro Popup -->
         <div id="popup-background"></div>
@@ -2146,11 +2164,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 });
 
-                // Handle upgrade button click
-                document.querySelector('#pro-popup .upgrade-button').addEventListener('click', () => {
-                        window.open('https://wpmaspik.com/?ref=getpro', '_blank');
-                });
-
+                // Remove the unnecessary event listener since the button is already an <a> tag with target="_blank"
+                
                 // Close popup when clicking close button
                 document.querySelector('#pro-popup .close-popup').addEventListener('click', () => {
                     document.getElementById('pro-popup').classList.remove('active');
@@ -2175,6 +2190,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
         </script>
+<?php } // END is not supporting ?>
     
 </div>
 <?php

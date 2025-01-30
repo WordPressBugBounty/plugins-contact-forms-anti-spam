@@ -294,14 +294,14 @@ function validateTextField($field_value) {
  			if (strpos($bad_string, '*') !== false) {
                 // Handle wildcard pattern using fnmatch
                 if (fnmatch($bad_string, $field_value, FNM_CASEFOLD)) {
-                    $spam = "Input $field_value is blocked by wildcard pattern";
+                    $spam = "Input *$field_value* is blocked by wildcard pattern";
                     return array('spam' => $spam, 'message' => "text_blacklist");
                   	break;
                 }
             } else {
                 // Check if exist in string 
                 if (maspik_is_field_value_exist_in_string($bad_string, $field_value) ) {
-                    $spam =  "Forbidden input $field_value, because <u>$bad_string</u> is blocked";
+                    $spam =  "Forbidden input *$field_value*, because *$bad_string* is blocked";
                     return array('spam' => $spam, 'message' => "text_blacklist", "option_value" => $bad_string,  'label' => "text_blacklist");
                    	break;
                 }
@@ -323,12 +323,12 @@ function validateTextField($field_value) {
         if (is_numeric($MaxCharacters) && $MaxCharacters > 3) {
             $CountCharacters = mb_strlen($field_value); // Use mb_strlen for multibyte characters
             if ($CountCharacters > $MaxCharacters ) {
-                $spam = "More than $MaxCharacters characters";
+                $spam = "More than *$MaxCharacters* characters";
                 return array('spam' => $spam, 'message' => $message,"option_value" =>$MaxCharacters , 'label' => "MaxCharactersInTextField");
             }
 
             if ($CountCharacters < $MinCharacters ) {
-                $spam = "Less than $MinCharacters characters";
+                $spam = "Less than *$MinCharacters* characters";
                 return array('spam' => $spam, 'message' => $message,"option_value" =>$MinCharacters, 'label' => "MinCharactersInTextField");
             }
         }
@@ -392,25 +392,17 @@ function checkEmailForSpam($field_value) {
             }
 
             if (preg_match($bad_string_lower, $field_value_lower)) {
-                return "because regular expression pattern '$bad_string' is in the blacklist";
+                return "because regular expression pattern *'$bad_string'* is in the blacklist";
             }
         }
         // Check for wildcard pattern using fnmatch
         elseif (strpbrk($bad_string_lower, '*?') !== false) {
             if (fnmatch($bad_string_lower, $field_value_lower, FNM_CASEFOLD)) {
-                return "because wildcard pattern '$bad_string' is in the blacklist";
+                return "because wildcard pattern *'$bad_string'* is in the blacklist";
             }
-        }
-        // Check for exact match of the email domain
-        elseif ($bad_string_lower[0] === '@') {
-            if ($email_domain === substr($bad_string_lower, 1)) {
-                return "because spam email domain '$bad_string' is in the blacklist";
-            }
-        }
-        // Check for exact match
-        else {
-            if (maspik_is_field_value_equal_to_string($bad_string_lower, $field_value_lower)) {
-                return "because email '$bad_string' is in the blacklist";
+        }else {
+            if (maspik_is_field_value_exist_in_string($bad_string_lower, $field_value_lower,$make_space = 0)) {
+                return "because email *'$bad_string'* is in the blacklist";
             }
         }
     }
@@ -475,7 +467,7 @@ function checkTelForSpam($field_value) {
         return array('valid' => true, 'reason' => 'Empty formats', 'message' => 'Empty formats');
     }
     
-    $reason = "Phone number " . $field_value . " does not meet the given format. ";
+    $reason = "Phone number *$field_value* does not meet the given format. ";
 
     foreach ($tel_formats as $format) {
         $format = trim($format);
@@ -490,13 +482,13 @@ function checkTelForSpam($field_value) {
             }
 
             if (preg_match($format, $field_value)) {
-                return array('valid' => true, 'reason' => "Regular expression match: $format", 'message' => 'tel_formats');
+                return array('valid' => true, 'reason' => "Regular expression match: *$format*", 'message' => 'tel_formats');
             }
         } 
         // Wildcard pattern
         elseif (strpbrk($format, '*?') !== false) {
             if (fnmatch($format, $field_value, FNM_CASEFOLD)) {
-                return array('valid' => true, 'reason' => "Wildcard pattern match: $format", 'message' => 'tel_formats');
+                return array('valid' => true, 'reason' => "Wildcard pattern match: *$format*", 'message' => 'tel_formats');
             }
         } 
     }    
@@ -522,7 +514,7 @@ function checkTextareaForSpam($field_value) {
     
     foreach ($textarea_blacklist as $bad_string) {
         if ( maspik_is_field_value_exist_in_string($bad_string, $field_value) ) {
-            return array('spam' => "field value includes <u>$bad_string</u>", 'message' => "textarea_field" , 'option_value' => $field_value, 'label' => "textarea_blacklist"  );
+            return array('spam' => "field value includes *$bad_string*", 'message' => "textarea_field" , 'option_value' => $bad_string, 'label' => "textarea_blacklist"  );
         }
     }
 
@@ -590,16 +582,40 @@ function checkTextareaForSpam($field_value) {
     
     // Check for maximum number of links
     $max_linksAPI = is_numeric( efas_get_spam_api('contain_links', $type = "bool") ) ? efas_get_spam_api('contain_links', $type = "bool") : false;
-    $max_links = is_numeric( maspik_get_settings('contain_links') ) ? maspik_get_settings('contain_links') : $max_linksAPI ;
-    if (is_numeric($max_links) && maspik_get_settings('textarea_link_limit_toggle') ) {
+    $max_links = is_numeric( maspik_get_settings('contain_links') ) ? maspik_get_settings('contain_links') : $max_linksAPI;
+    
+    if (is_numeric($max_links) && maspik_get_settings('textarea_link_limit_toggle')) {
         $max_links = intval($max_links);
-        $reg_exUrl = "/(http|https)\:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(\/\S*)?/";
-        $num_links = preg_match_all($reg_exUrl, $field_value);
-        if ($num_links > $max_links) {
-            return array('spam' => "Contains <u>more than $max_links links</u>", 'message' => "contain_links");
+        
+        
+        // Count HTML links and http(s) links
+        $patterns = array(
+            '/<a[^>]*href[^>]*>/i',            // HTML links (<a href="...")
+            '/https?:\/\/[^\s<>"\']+/i',       // http(s):// links with any valid URL chars
+            '/www\.[a-z0-9][-a-z0-9.]+\.[a-z0-9-]+/i'  // www.domain.tld with www.
+        );
+        
+        $num_links = 0;
+        foreach ($patterns as $pattern) {
+            $matches = array();
+            $count = preg_match_all($pattern, $field_value, $matches);
+            $num_links += ($count ? $count : 0);            
+        }
+        
+        // If max_links is 0, block any links. Otherwise, block if more than max_links
+        if (($max_links === 0 && $num_links > 0) || ($max_links > 0 && $num_links > $max_links)) {
+            $message = $max_links === 0 ? 
+                "Links are not allowed" : 
+                "Contains <u>more than $max_links links</u>";
+            
+            return array(
+                'spam' => $message,
+                'message' => "contain_links",
+                'option_value' => $num_links,
+                'label' => "contain_links"
+            );
         }
     }
-
     // Get the maximum character limit from the spam API or options
     $MaxCharacters = maspik_get_settings('MaxCharactersInTextAreaField') ? maspik_get_settings('MaxCharactersInTextAreaField') : efas_get_spam_api('MaxCharactersInTextAreaField',$type = "bool");
     $MinCharacters = maspik_get_settings('MinCharactersInTextAreaField') ? maspik_get_settings('MinCharactersInTextAreaField') : efas_get_spam_api('MinCharactersInTextAreaField',$type = "bool");
@@ -614,15 +630,18 @@ function checkTextareaForSpam($field_value) {
 
     // Check if the maximum character limit is valid
     if (maspik_get_settings(maspik_toggle_match('MaxCharactersInTextAreaField')) == 1 || maspik_is_contain_api(['MaxCharactersInTextAreaField', 'MinCharactersInTextAreaField'])) {
-        if (is_numeric($MaxCharacters) && $MaxCharacters > 3) {
-            $CountCharacters = mb_strlen($field_value); // Use mb_strlen for multibyte characters
-            if ($CountCharacters > $MaxCharacters) {
-                $spam = "More than $MaxCharacters characters in Text Area field.";
-                return array('spam' => $spam, 'message' =>  $message, "option_value" => $MaxCharacters , 'label' => "MaxCharactersInTextAreaField");
-            }elseif ($CountCharacters < $MinCharacters) {
-                $spam = "Less than $MinCharacters characters in Text Area field.";
-                return array('spam' => $spam, 'message' =>  $message, "option_value" => $MinCharacters , 'label' => "MinCharactersInTextAreaField");
-            }
+        $CountCharacters = mb_strlen($field_value); // Use mb_strlen for multibyte characters
+        
+        // Check maximum characters if set, and if the character limit is greater than 2 (to)
+        if (is_numeric($MaxCharacters) && $MaxCharacters > 2 && $CountCharacters > $MaxCharacters) {
+            $spam = "More than $MaxCharacters characters in Text Area field.";
+            return array('spam' => $spam, 'message' =>  $message, "option_value" => $MaxCharacters , 'label' => "MaxCharactersInTextAreaField");
+        }
+        
+        // Check minimum characters if set
+        if (is_numeric($MinCharacters) && $MinCharacters > 0 && $CountCharacters < $MinCharacters) {
+            $spam = "Less than $MinCharacters characters in Text Area field.";
+            return array('spam' => $spam, 'message' =>  $message, "option_value" => $MinCharacters , 'label' => "MinCharactersInTextAreaField");
         }
     }
 
