@@ -10,7 +10,7 @@ function maspik_validate_forminator_general($submit_errors, $form_id, $field_dat
     $spam = false;
     $reason ="";
     // ip
-    $ip =  efas_getRealIpAddr();
+    $ip =  maspik_get_real_ip();
 
 
     

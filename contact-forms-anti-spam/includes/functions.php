@@ -539,10 +539,9 @@ function efas_add_to_log($type = '', $input = '', $post = null, $source = "Eleme
 
     // Sanitize and escape user inputs
     if (maspik_get_settings("maspik_Store_log") == 'yes') {
-        $sanitized_data = array_map('sanitize_text_field', $post); 
-        $serialize_data = serialize($sanitized_data);
+        $serialize_data = is_array($post) ? serialize(array_map('sanitize_text_field', $post)) : '';
 
-        $ip = efas_getRealIpAddr();
+        $ip = maspik_get_real_ip();
         $countryName = "Other (Unknown)";
         
         $response = wp_remote_get("http://www.geoplugin.net/json.gp?ip=" . $ip );
@@ -661,19 +660,46 @@ function maspik_Download_log_btn(){
 }
 
 
+// not in use anymore, use maspik_get_real_ip instead, from 2.4.1
 function efas_getRealIpAddr() {
     $default_ip_header = 'REMOTE_ADDR'; // Default header to fetch the IP address
-
     // If no custom header is provided or the IP is not valid, use the default REMOTE_ADDR header
     $ip_address = $_SERVER[$default_ip_header];
-
     // Validate the default IP address
     if (filter_var($ip_address, FILTER_VALIDATE_IP)) {
         return $ip_address;
     }
-
     // If validation fails, return a default value or handle it as needed
     return '127.0.0.1'; 
+}
+
+function maspik_get_real_ip() {
+    $headers = [
+        'CF-Connecting-IP', // Cloudflare (most accurate for Cloudflare)
+        'HTTP_CF_CONNECTING_IP', // Cloudflare (less popular)
+        'HTTP_X_REAL_IP', // Nginx 
+        'HTTP_X_FORWARDED_FOR',  // Proxy forwarding
+        'HTTP_CLIENT_IP',
+        'HTTP_X_FORWARDED',
+        'HTTP_X_CLUSTER_CLIENT_IP',
+        'HTTP_FORWARDED_FOR',
+        'HTTP_FORWARDED',
+        'REMOTE_ADDR' // Default
+    ];
+
+    foreach ($headers as $key) {
+        if (!empty($_SERVER[$key])) {
+            $ip_list = explode(',', $_SERVER[$key]);
+            foreach ($ip_list as $ip) {
+                $ip = trim($ip);
+                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                    return $ip;
+                }
+            }
+        }
+    }
+
+    return '127.0.0.1';
 }
 
 
@@ -1871,20 +1897,6 @@ function Maspik_dismiss_notice_callback() {
     set_transient('Mapik_dismissed_shereing_notice', true, MONTH_IN_SECONDS); // Set the transient to dismiss the notice
     wp_die();
 }
-
-function  maspik_add_country_to_submissions($linebreak = "<br>") {
-    $ip =  efas_getRealIpAddr();
-    $countryName = "Other (Unknown)";
-    $xml = @simplexml_load_file("http://www.geoplugin.net/xml.gp?ip=" . $ip);
-    $countryName = $xml->geoplugin_countryName ? $xml->geoplugin_countryName : $countryName;
-    $sanitizedCountryName = sanitize_text_field($countryName);
-    if ($xml && $sanitizedCountryName) {
-      return " $linebreak Maspik:$linebreak Country: $sanitizedCountryName  - IP: $ip ";
-    }
-  return "";
-}
-
-
 
 // Maspik if bricks exist
 add_action('init', 'maspik_if_bricks_exist');

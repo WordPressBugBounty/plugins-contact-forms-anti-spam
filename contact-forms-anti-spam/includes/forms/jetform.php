@@ -8,7 +8,7 @@ function validate_jet_form_for_spam($form_handler) {
     if (isset($form_handler->request_handler->_fields) && is_array($form_handler->request_handler->_fields)) {
         $form_fields = $form_handler->request_handler->_fields;
         $error_message = cfas_get_error_text();
-        $ip = efas_getRealIpAddr();
+        $ip = maspik_get_real_ip();
 
         // Country IP Check
         $spam = false;

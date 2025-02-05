@@ -107,7 +107,7 @@ function maspik_validate_cf7_process( $result, $tags ) {
     }
 
     // General Check
-    $ip = efas_getRealIpAddr();
+    $ip = maspik_get_real_ip();
     $GeneralCheck = GeneralCheck( $ip, $spam, $reason, $_POST, "cf7" );
     $spam = isset( $GeneralCheck['spam'] ) ? $GeneralCheck['spam'] : false;
     $reason = isset( $GeneralCheck['reason'] ) ? $GeneralCheck['reason'] : false;

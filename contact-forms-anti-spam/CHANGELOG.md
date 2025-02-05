@@ -1,5 +1,11 @@
 # Changelog #
 
+## 2.4.1 - 05/02/2025 ## 
+* Improved - Improve IP detection.
+* Improved - Text area field blacklist check now supports advanced pattern matching: Use wildcards (*) for flexible blocking - for example, adding "*seo*" will block any text containing "seo" anywhere, like "seoexpert". This gives more control for advanced users to block specific content variations.
+* Fixed - Fix error in phone number validation for GravityForms.
+
+
 ## 2.4.0 - 30/01/2025 ## 
 * Announcement - In this version we made some improvements to reduce false positives. read more in the [announcement page](https://wpmaspik.com/maspik-2-4-0-smarter-spam-blocking-fewer-false-positives/?readme-file)
 * Improved - Text and textarea field blacklist's now match exact words only, preventing false positives from partial word matches (e.g., "ad" won't block "shade", but "seo" will block "Seo expert").

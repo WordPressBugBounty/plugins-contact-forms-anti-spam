@@ -6,7 +6,7 @@ function maspik_validate_everest_forms($errors, $form_data) {
     $error_message = cfas_get_error_text();
     $spam = false;
     $reason = "";
-    $ip = efas_getRealIpAddr();
+    $ip = maspik_get_real_ip();
     $fields = $form_data['form_fields'];
     $form_id = $form_data['id'];
     $entry = $form_data['entry']['form_fields'];

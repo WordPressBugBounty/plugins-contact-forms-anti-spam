@@ -10,7 +10,7 @@ function maspik_validate_formidable_general($errors, $values){
     
   $spam = false;
   $reason ="";
-  $ip =  efas_getRealIpAddr();
+  $ip =  maspik_get_real_ip();
 
   // Country IP Check 
   $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"formidable");

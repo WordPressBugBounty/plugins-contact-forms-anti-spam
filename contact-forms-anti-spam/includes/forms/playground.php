@@ -40,7 +40,7 @@ function maspik_handle_playground_form() {
     }
     $spam = false;
     // ip
-    $ip = efas_getRealIpAddr();
+    $ip = maspik_get_real_ip();
     $reason = false;
     // Country IP Check 
     $GeneralCheck = GeneralCheck($ip,$spam,$reason,false,false);

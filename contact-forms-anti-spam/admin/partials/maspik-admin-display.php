@@ -1072,6 +1072,14 @@ $spamcounter = maspik_spam_count();
                                 <li><?php esc_html_e('Enter the complete phrase (e.g: Seo expert)', 'contact-forms-anti-spam'); ?></li>
                                 <li><?php esc_html_e('Enter specific word (e.g: Seo) to block all content that contain the word Seo, like Seo expert, but not Seoexpert (without space)', 'contact-forms-anti-spam'); ?></li>
                                 <li><?php esc_html_e('Be careful with this option, it can block a lot of false positives, dont add generic words like "hello" or "thank you"', 'contact-forms-anti-spam'); ?></li>
+                                <li><?php esc_html_e('For advanced users - Use wildcards for flexible matching:', 'contact-forms-anti-spam'); ?>
+                                    <ul>
+                                    <li><?php esc_html_e('Example: * matches any string: "seo*expert" will match "seo marketing expert", "seo agency expert"', 'contact-forms-anti-spam'); ?></li>
+                                    <li><?php esc_html_e('Example: * matches any string: "*Cripto*" will match "Cripto", "Criptography", "Cripto currency"', 'contact-forms-anti-spam'); ?></li>
+                                    <li><?php esc_html_e('Example: ? matches single character: "se?o" will match "seo", "se0o"', 'contact-forms-anti-spam'); ?></li>
+                                    </ul>
+                                </li>
+
                             </ul>
                         </div>
 

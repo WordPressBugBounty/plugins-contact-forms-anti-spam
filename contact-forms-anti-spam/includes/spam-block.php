@@ -513,8 +513,25 @@ function checkTextareaForSpam($field_value) {
     }
     
     foreach ($textarea_blacklist as $bad_string) {
-        if ( maspik_is_field_value_exist_in_string($bad_string, $field_value) ) {
-            return array('spam' => "field value includes *$bad_string*", 'message' => "textarea_field" , 'option_value' => $bad_string, 'label' => "textarea_blacklist"  );
+        if (strpbrk($bad_string, '*?') !== false) {
+            // If there are special characters, use fnmatch
+            if (fnmatch($bad_string, $field_value, FNM_CASEFOLD)) {
+                return array(
+                    'spam' => "field value matches pattern *$bad_string*", 
+                    'message' => "textarea_field",
+                    'option_value' => $bad_string,
+                    'label' => "textarea_blacklist"
+                );
+            }
+        } 
+        elseif (maspik_is_field_value_exist_in_string($bad_string, $field_value)) {
+            // Regular word check
+            return array(
+                'spam' => "field value includes *$bad_string*",
+                'message' => "textarea_field",
+                'option_value' => $bad_string,
+                'label' => "textarea_blacklist"
+            );
         }
     }
 

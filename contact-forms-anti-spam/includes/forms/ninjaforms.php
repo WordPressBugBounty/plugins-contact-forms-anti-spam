@@ -32,7 +32,7 @@ function my_ninja_forms_submit_data( $form_data ) {
     $spam = false;
     $reason ="";
     // ip
-    $ip =  efas_getRealIpAddr();
+    $ip =  maspik_get_real_ip();
 
     // Country IP Check 
     $GeneralCheck = GeneralCheck($ip,$spam,$reason,false,"ninjaforms");

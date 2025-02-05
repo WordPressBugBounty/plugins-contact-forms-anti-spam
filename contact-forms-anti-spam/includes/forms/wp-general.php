@@ -25,7 +25,7 @@ function maspik_comments_checker(array $data) {
     }
 
     $spam = false;
-    $ip = efas_getRealIpAddr();
+    $ip = maspik_get_real_ip();
     $reason = '';
 
     // Country IP + HP Check
@@ -121,7 +121,7 @@ function maspik_check_wp_registration_form($errors) {
         $user_login = isset($_POST['user_login']) ? sanitize_text_field($_POST['user_login']) : sanitize_text_field($_POST['username']);
         
         $spam = false;
-        $ip = efas_getRealIpAddr();
+        $ip = maspik_get_real_ip();
         $reason = "";
         $message = "";
 
@@ -179,7 +179,7 @@ function maspik_register_form_honeypot_check_in_woocommerce_registration($errors
         $user_email = sanitize_email($email);
         $user_login = sanitize_text_field($username);
         $spam = false;
-        $ip = efas_getRealIpAddr();
+        $ip = maspik_get_real_ip();
         $reason = "";
 
         // Country IP Check

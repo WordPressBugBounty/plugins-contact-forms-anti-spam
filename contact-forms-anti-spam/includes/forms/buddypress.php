@@ -16,7 +16,7 @@ function maspik_check_bp_registration_form() {
     $spam_lbl        = '';
     $spam_val        = '';
   //  $user_email      = isset($_POST['signup_email']) ? sanitize_email($_POST['signup_email']) : '';
-    $ip = efas_getRealIpAddr();
+    $ip = maspik_get_real_ip();
     global $bp;
 
     $user_email = sanitize_email($bp->signup->email);

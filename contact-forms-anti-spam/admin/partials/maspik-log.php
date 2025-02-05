@@ -190,7 +190,7 @@ function cfes_build_table() {
                 
   <h2 class='maspik-header maspik-spam-header'><?php _e('Spam Log', 'contact-forms-anti-spam'); ?></h2>
     <p>
-      <?php _e('Whenever a bot/person tries to spam your contact forms and MASPIK blocks the spam, you will see a new line below showing the details.<br>The log containing these details resides on your database and you can reset it at any time.<br>Resetting the log doesn’t change anything – it just removes the history.', 'contact-forms-anti-spam' ); ?>
+      <?php _e("Whenever a bot/person tries to spam your contact forms and MASPIK blocks the spam, you will see a new line below showing the details.<br>The log containing these details resides on your database and you can reset it at any time.<br>Resetting the log doesn’t change anything – it just removes the history.", 'contact-forms-anti-spam' ); ?>
     </p>
 
     <div class='spam-log-button-wrapper'>
@@ -324,6 +324,7 @@ toggleAllBtn.addEventListener("click", function() {
 // Replace asterisks with proper opening and closing <u> tags
 document.querySelectorAll('.spam-value-text').forEach(element => {
     let text = element.innerHTML;
+
     // Replace pairs of asterisks with opening and closing <u> tags
     text = text.replace(/\*(.*?)\*/g, '<u>$1</u>');
     element.innerHTML = text;

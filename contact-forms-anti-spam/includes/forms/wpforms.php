@@ -20,7 +20,7 @@ add_action('wpforms_process_before', function( $entry, $form_data ) {
   $last = $reversed[0];
 
   // ip
-  $ip = efas_getRealIpAddr();
+  $ip = maspik_get_real_ip();
   $reason = "";
 
 

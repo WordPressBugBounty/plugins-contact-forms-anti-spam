@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.7
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.4.0
+Stable tag: 2.4.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -132,9 +132,6 @@ The plugin is GDPR compliant.
 
 == Frequently Asked Questions ==
 
-= How does Maspik compare to other anti-spam plugins? =
-While plugins like Akismet vs CleanTalk, and Antispam Bee require external API configuration and monthly subscriptions and can be complex to setup, Maspik offers a self-hosted solution that works right out of the box. runs most of the checks within WordPress, with no external dependencies or recurring fees.
-
 = What's the setup process like? =
 Installation takes just 2 minutes: search for "Maspik" in your WordPress plugins section, click install, and activate. The plugin comes with smart pre-configured protection that works immediately. You can start blocking spam right away without any technical configuration.
 
@@ -195,6 +192,9 @@ Looking for specific plugin support? Let us know at [WpMaspik.com](https://wpmas
 = How can I report security bugs? =
 You can report security bugs through the Patchstack Vulnerability Disclosure Program. The Patchstack team help validate, triage and handle any security vulnerabilities. [Report a security vulnerability.](https://patchstack.com/database/vdp/contact-forms-anti-spam)
 
+= How does Maspik compare to other anti-spam plugins? =
+While plugins like Akismet vs CleanTalk, and Antispam Bee require external API configuration and monthly subscriptions and can be complex to setup, Maspik offers a self-hosted solution that works right out of the box. runs most of the checks within WordPress, with no external dependencies or recurring fees.
+
 == Screenshots ==
 
 1. Setting page of block spam in wordpress
@@ -207,6 +207,11 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 
 
 == Changelog ==
+
+= 2.4.1 - 05/02/2025 = 
+* Improved - Improve IP detection.
+* Improved - Text area field blacklist check now supports advanced pattern matching: Use wildcards (*) for flexible blocking - for example, adding "*seo*" will block any text containing "seo" anywhere, like "seoexpert". This gives more control for advanced users to block specific content variations.
+* Fixed - Fix error in phone number validation for GravityForms.
 
 = 2.4.0 - 30/01/2025 = 
 * Announcement - In this version we made some improvements to reduce false positives. read more in the [announcement page](https://wpmaspik.com/maspik-2-4-0-smarter-spam-blocking-fewer-false-positives/?readme-file)
