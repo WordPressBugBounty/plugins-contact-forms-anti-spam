@@ -26,7 +26,8 @@ function maspik_var_value_convert($var) {
         "ip_blacklist" => "IP",
         "maspikHoneypot" => "Honeypot",
         "maspikTimeCheck" => "Time Check",
-        "maspikYearCheck" => "Year Check"
+        "maspikYearCheck" => "Year Check",
+        "emoji_check" => "Emoji Check"
     ];
 
     return isset($value_map[$var]) ? $value_map[$var] : $var;
@@ -1324,6 +1325,7 @@ function efas_array_supports_plugin(){
   return array(
     'Contact form 7' => 0,
     'Elementor pro' => 0,
+    'Hello Plus' => 0,
     'Wordpress Comments' => 0,
     'Wordpress Registration' => 0,
     'Formidable' => 0,
@@ -1370,6 +1372,8 @@ function maspik_if_plugin_is_active($plugin){
       return efas_if_plugin_is_active('elementor-pro') ;
     }else if($plugin == 'Buddypress'){
       return efas_if_plugin_is_active('buddypress');
+    }else if($plugin == 'Hello Plus'){
+      return efas_if_plugin_is_active('hello-plus');
     }else if($plugin == 'Contact form 7'){
       return  efas_if_plugin_is_active('contact-form-7');
     }else if($plugin == 'Woocommerce Review'){
@@ -1411,6 +1415,8 @@ function efas_if_plugin_is_affective($plugin , $status = "no"){
       return efas_if_plugin_is_active('elementor-pro') && maspik_get_settings( "maspik_support_Elementor_forms", 'form-toggle' ) != $status ;
     }else if($plugin == 'Contact form 7'){
       return  efas_if_plugin_is_active('contact-form-7') && maspik_get_settings( "maspik_support_cf7", 'form-toggle' ) != $status ;
+    }else if($plugin == 'Hello Plus'){
+      return efas_if_plugin_is_active('hello-plus') && maspik_get_settings( "maspik_support_helloplus_forms", 'form-toggle' ) != $status ;
     }else if($plugin == 'Buddypress'){
       return efas_if_plugin_is_active('buddypress') && maspik_get_settings( "maspik_support_buddypress_forms", 'form-toggle' ) != $status ;
     }else if($plugin == 'Woocommerce Review'){
@@ -1449,6 +1455,8 @@ function efas_if_plugin_is_active($plugin){
       return class_exists( '\ElementorPro\Plugin' );
     }else if($plugin == 'contact-form-7'){
       return maspik_is_plugin_active( 'contact-form-7/wp-contact-form-7.php' );
+    }else if($plugin == 'hello-plus'){
+      return maspik_is_plugin_active( 'hello-plus/hello-plus.php' );
     }else if($plugin == 'woocommerce'){
       return maspik_is_plugin_active( 'woocommerce/woocommerce.php');
     }else if($plugin == 'buddypress'){
@@ -1509,7 +1517,7 @@ add_action( 'admin_notices', 'contact_forms_anti_spam_plugin_admin_notice' );
 
 function maspik_change_footer_admin () {
     echo '<p id="footer-left" class="alignleft">
-		Enjoyed <strong>Maspik</strong>? Please leave us a <a href="https://wordpress.org/support/plugin/contact-forms-anti-spam/reviews/#new-post" target="_blank">★★★★★</a> rating. We really appreciate your support!</p>';
+		<strong>Maspik</strong> is helping you block spam? Please leave us a <a href="https://wordpress.org/support/plugin/contact-forms-anti-spam/reviews/#new-post" target="_blank">★★★★★</a> rating. We really appreciate your support!</p>';
 }
 
 
@@ -1649,7 +1657,8 @@ function maspik_toggle_match($data){
         return "textarea_link_limit_toggle";
     }elseif($data == "custom_error_message_MaxCharactersInTextAreaField"){
         return "textarea_custom_message_toggle";
-
+    }elseif($data == "emoji_check"){
+        return "emoji_custom_message_toggle";
     //phone
     }elseif($data == "MaxCharactersInPhoneField"){
         return "tel_limit_toggle";
@@ -1701,7 +1710,7 @@ function cfas_get_error_text($field = "error_message") {
 function get_maspik_footer(){
     ?> 
     <footer class="maspik-footer">
-        <h3><?php esc_html_e('Enjoyed Maspik?', 'contact-forms-anti-spam'); ?></h3>
+        <h3><?php esc_html_e('Is Maspik helping you block spam?', 'contact-forms-anti-spam'); ?></h3>
         <p><?php echo esc_html__('We would be incredibly grateful if you could ', 'contact-forms-anti-spam') . '<a href="https://wordpress.org/support/plugin/contact-forms-anti-spam/reviews/#new-post" target="_blank">' . esc_html__('leave us a 5-star review', 'contact-forms-anti-spam') . '</a>. ' . esc_html__('Your feedback not only helps others discover our plugin but also fuels our passion to keep enhancing it. It helps us grow and continue improving. Thank you for your support!', 'contact-forms-anti-spam'); ?></p>
         <h4><?php esc_html_e('Join Our Facebook Community!', 'contact-forms-anti-spam'); ?></h4>
         <p><?php echo esc_html__('Ask questions, share spam examples, get ideas on how to block them, share feedback, and suggest new features. Join us at ', 'contact-forms-anti-spam') . '<a href="https://www.facebook.com/groups/maspik" target="_blank">' . esc_html__('WP Maspik Community - Stopping Spam Together', 'contact-forms-anti-spam') . '</a>.'; ?></p>
@@ -2156,7 +2165,7 @@ function Maspik_spamlog_download_csv() {
 
 function maspik_is_reach_limit_and_increment_api_requests() {
 
-    $max_requests = cfes_is_supporting("ip_verification") ? 1000 : 100;
+    $max_requests = cfes_is_supporting("ip_verification") ? 10000 : 100;
     
     $api_data = get_option("maspik_api_requests", array(
         'months' => array()
@@ -2314,6 +2323,7 @@ function maspik_make_default_values() {
     maspik_save_settings("maspik_support_fluentforms_forms", "yes");
     maspik_save_settings("maspik_support_bricks_forms", "yes");
     maspik_save_settings("maspik_support_Elementor_forms", "yes");
+    maspik_save_settings("maspik_support_hello_plus_forms", "yes");
     maspik_save_settings("maspik_support_registration", "yes");
     maspik_save_settings("maspik_support_ninjaforms", "yes");
     maspik_save_settings("maspik_support_jetforms", "yes");
@@ -2323,6 +2333,7 @@ function maspik_make_default_values() {
     maspik_save_settings("maspik_support_woocommerce_review", "yes");
     maspik_save_settings("maspik_support_Woocommerce_registration", "yes");
     maspik_save_settings("maspik_support_buddypress_forms", "yes");
+    maspik_save_settings("maspik_support_helloplus_forms", "yes");
 }
 
 function maspik_pointer_scripts() {
@@ -2420,7 +2431,7 @@ function IP_Verification_popup_content() {
                     // Sort the months in descending order
                     krsort($api_data['months']);
                     $months_displayed = 0;
-                    $max_requests = cfes_is_supporting("ip_verification") ? 1000 : 100;
+                    $max_requests = cfes_is_supporting("ip_verification") ? 10000 : 100;
                     foreach ($api_data['months'] as $month => $data) {
                         if ($months_displayed >= 6) break; // Limit to last 12 months
                         // Convert $month from 'YYYYMM' to a readable format
@@ -2457,7 +2468,7 @@ function IP_Verification_popup_content() {
         <?php if ( !cfes_is_supporting("ip_verification") ) { ?>
             <hr>
             <h4><?php esc_html_e('Need More API Requests?', 'contact-forms-anti-spam'); ?></h4>
-            <p><?php esc_html_e('Upgrade to Maspik Pro to get up to 1,000 API requests per month and improve your site\'s spam protection!', 'contact-forms-anti-spam'); ?></p>
+            <p><?php esc_html_e('Upgrade to Maspik Pro to get up to 10,000 API requests per month and improve your site\'s spam protection!', 'contact-forms-anti-spam'); ?></p>
             <?php maspik_get_pro(); ?>
         <?php } ?>
     </div>
@@ -2764,4 +2775,9 @@ function maspik_get_browser_name($user_agent) {
 
     // If no match found, return the first 50 characters of the UA
     return '[Unknown] ' . substr($user_agent, 0, 50);
+}
+
+function maspik_is_contains_emoji($text) {
+    $pattern = '/[\x{1F600}-\x{1F64F}\x{1F300}-\x{1F5FF}\x{1F680}-\x{1F6FF}\x{1F700}-\x{1F77F}\x{1F780}-\x{1F7FF}\x{1F800}-\x{1F8FF}\x{1F900}-\x{1F9FF}\x{1FA70}-\x{1FAFF}\x{2600}-\x{26FF}\x{2700}-\x{27BF}]/u';
+    return preg_match($pattern, $text) === 1;
 }

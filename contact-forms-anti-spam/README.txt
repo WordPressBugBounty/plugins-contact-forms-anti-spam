@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.7
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.4.1
+Stable tag: 2.4.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -20,6 +20,8 @@ The most efficient spam protection for WordPress forms and comments, with 95%+ s
 * 🔍 **Smart Detection**: Identifies spam patterns automatically
 * 🌐 **Wide Compatibility**: Works with all major form plugins
 * 🛠️ **Fully Customizable**: Adapt to your specific needs you can block any spam you want with Blacklist system
+* 👥 **Excellent Support**: We are committed to help you to block spam, sent us any spam you receive and we will help you to block it.
+
 
 ## Key Features
 ✅ Works instantly with popular form plugins and registration forms
@@ -49,12 +51,12 @@ The most efficient spam protection for WordPress forms and comments, with 95%+ s
   * Review blocked submissions
 * **Advance Blocking:**
   * Honeypot
-  * IP verification
+  * IP verification (100 checks/month)
   * Block submissions without source URLs (Elementor)
 * **API Integrations:**
   * Proxycheck.io (check IP address against proxy/VPN/TOR)
   * AbuseIPDB.com (check IP address against abuse/spam/malicious/proxy/VPN/TOR)
-  * Numverify.com (validate phone number)
+  * Numverify.com (validate phone number to block spam phone numbers)
 
 ## Supported Forms ##
 
@@ -62,6 +64,7 @@ Maspik integrates seamlessly with a wide range of popular contact forms and comm
 
 * Elementor forms
 * Contact Form 7
+* Hello Plus
 * NinjaForms
 * Everest Forms
 * Formidable forms
@@ -82,9 +85,9 @@ Maspik integrates seamlessly with a wide range of popular contact forms and comm
 ### We offer also a Pro version! ###
 
 ## Pro Version Features 🌟
-⭐ Advanced IP verification (1,000 checks/month)
-⭐ Custom spam API for multiple sites
-⭐ Country-based filtering
+⭐ Advanced IP verification (10,000 checks/month)
+⭐ Custom spam dashboard for multiple sites, manage your spam settings from one place
+⭐ Country-based filtering for advanced spam protection
 ⭐ Language detection & blocking
 ⭐ Settings Import/Export
 ⭐ Premium support
@@ -170,6 +173,7 @@ Maspik currently supports:
 <ul>
 <li>Elementor forms</li>
 <li>Contact form 7</li>
+<li>Hello Plus</li>
 <li>NinjaForms</li>
 <li>Everest Forms</li>
 <li>JetFormBuilder</li>
@@ -193,7 +197,9 @@ Looking for specific plugin support? Let us know at [WpMaspik.com](https://wpmas
 You can report security bugs through the Patchstack Vulnerability Disclosure Program. The Patchstack team help validate, triage and handle any security vulnerabilities. [Report a security vulnerability.](https://patchstack.com/database/vdp/contact-forms-anti-spam)
 
 = How does Maspik compare to other anti-spam plugins? =
-While plugins like Akismet vs CleanTalk, and Antispam Bee require external API configuration and monthly subscriptions and can be complex to setup, Maspik offers a self-hosted solution that works right out of the box. runs most of the checks within WordPress, with no external dependencies or recurring fees.
+While plugins like Akismet anti spam vs CleanTalk, require external API configuration and monthly subscriptions and can be complex to setup, Maspik offers a self-hosted solution that works right out of the box. runs most of the checks within WordPress, with no external dependencies or recurring fees.
+Antispam Bee is a great plugin, that support only comments and woth only limited features.
+So if you need advanced spam protection, that works with all forms and has a lot of features, Maspik is the best spam protection plugin for you.
 
 == Screenshots ==
 
@@ -208,10 +214,9 @@ While plugins like Akismet vs CleanTalk, and Antispam Bee require external API c
 
 == Changelog ==
 
-= 2.4.1 - 05/02/2025 = 
-* Improved - Improve IP detection.
-* Improved - Text area field blacklist check now supports advanced pattern matching: Use wildcards (*) for flexible blocking - for example, adding "*seo*" will block any text containing "seo" anywhere, like "seoexpert". This gives more control for advanced users to block specific content variations.
-* Fixed - Fix error in phone number validation for GravityForms.
+= 2.4.2 - 18/02/2025 = 
+* New feature - Add option to block submissions with emojis in textarea fields.
+* New feature - Added support for Hello Plus form builder plugin.
 
 = 2.4.0 - 30/01/2025 = 
 * Announcement - In this version we made some improvements to reduce false positives. read more in the [announcement page](https://wpmaspik.com/maspik-2-4-0-smarter-spam-blocking-fewer-false-positives/?readme-file)

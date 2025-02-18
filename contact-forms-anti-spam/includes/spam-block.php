@@ -535,6 +535,18 @@ function checkTextareaForSpam($field_value) {
         }
     }
 
+    // Check for emojis
+    if(maspik_get_settings('emoji_check')){
+        if (maspik_is_contains_emoji($field_value)) {
+            return array(
+                'spam' => "Emoji found in the field",
+                'message' => "emoji_check",
+                'option_value' => $field_value,
+                'label' => "emoji_check"
+            );
+        }
+    }
+
     // only if pro user
     if ( cfes_is_supporting("country_location") ) {
         // Check for required language
@@ -768,6 +780,8 @@ function Maspik_add_hp_js_to_footer() {
             //formidable
             addHiddenFields('form.frm-show-form', 'frm_form_field');
             addHiddenFields('form.elementor-form', 'elementor-field-textual');
+            //hello plus
+            addHiddenFields('form.ehp-form', 'hello-plus-field-text');
 
             // Function to set the current year and exact time in the appropriate fields
             function setDateFields() {

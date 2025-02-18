@@ -3,7 +3,6 @@
 if ( ! defined( 'WPINC' ) ) {
     die;
 }
-
 /**
  * Main HelloPlus validation functions
  *
@@ -18,25 +17,9 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
     $NeedPageurl = maspik_get_settings( 'NeedPageurl' );   
     // Get all form fields
     $form_fields = $record->get( 'fields' );
-    $keys = array_keys($form_fields);
-    $lastKeyId = end($keys);
+    /*$keys = array_keys($form_fields);
+    $lastKeyId = end($keys);*/
     
-    if ( efas_get_spam_api( 'NeedPageurl' ) ) {
-        $NeedPageurl = $NeedPageurl ? $NeedPageurl : efas_get_spam_api( 'NeedPageurl', 'bool' );
-    }
-
-    if ( ! isset( $_POST['referrer'] ) && $NeedPageurl ) {
-        $is_spam = true;
-        $reason = 'Page source url is empty';
-        $message_key = 'block_empty_source';
-        $error_message = cfas_get_error_text( $message_key );
-        $spam_val = $reason;
-        
-        efas_add_to_log( 'General', $reason, $form_data, 'Hello Plus', $message_key, $spam_val );
-        $ajax_handler->add_error( $lastKeyId, $error_message );
-        return;
-    }
-
     
     
     // Loop through all fields
@@ -61,7 +44,7 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
                 if ( $spam ) {
                     $error_message = cfas_get_error_text( $validateTextField['message'] );
                     efas_add_to_log( 'text', $validateTextField['spam'], $form_data, 'Hello Plus', $validateTextField['label'], $validateTextField['option_value'] );
-                    $ajax_handler->add_error( $field_id, $error_message );
+                    $ajax_handler->add_error($field_id, $error_message);
                     return;
                 }
                 break;
@@ -79,7 +62,7 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
                 }
                 break;
 
-            case 'tel':
+            case 'ehp-tel':
                 // Tel Field Validation
                 $checkTelForSpam = checkTelForSpam($field_value);
                 $valid = isset($checkTelForSpam['valid']) ? $checkTelForSpam['valid'] : true;
@@ -107,7 +90,7 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
             
                 if ( $spam ) {
                       efas_add_to_log($type = "textarea",$spam, $form_data,"Hello Plus", $spam_lbl, $spam_val);
-                      $ajax_handler->add_error( $field_id, $error_message );
+                      $ajax_handler->add_error($field_id, $error_message);
                       return;
                 }
                 break;
@@ -116,22 +99,39 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
         }
     }
 
-    // General Check
-  if(!$spam ){
-    $meta = $record->get_form_meta( [ 'page_url', 'remote_ip' ] );
-    $ip =  $meta['remote_ip']['value'] ? $meta['remote_ip']['value'] : maspik_get_real_ip();
-    // Country IP Check 
-    $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"HelloPlus");
-    $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
-    $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
-    $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
-    $error_message = cfas_get_error_text($message);
-    $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
-    if($spam){
-      efas_add_to_log($type = "General",$reason, $form_data,"Hello Plus", $message,  $spam_val);
-      $ajax_handler->add_error( $lastKeyId, $error_message );
-      return;
+        // General Check
+    if(!$spam ){
+        $meta = $record->get_form_meta( [ 'page_url', 'remote_ip' ] );
+        $ip =  $meta['remote_ip']['value'] ? $meta['remote_ip']['value'] : maspik_get_real_ip();
+        // Country IP Check 
+        $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"HelloPlus");
+        $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
+        $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
+        $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
+        $error_message = cfas_get_error_text($message);
+        $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
+        if($spam){
+        efas_add_to_log($type = "General",$reason, $form_data,"Hello Plus", $message,  $spam_val);
+        $ajax_handler->add_error_message( $error_message );
+        return;
+        }
     }
-  }
+
+    if ( efas_get_spam_api( 'NeedPageurl' ) ) {
+        $NeedPageurl = $NeedPageurl ? $NeedPageurl : efas_get_spam_api( 'NeedPageurl', 'bool' );
+    }
+
+    if ( ! isset( $_POST['referrer'] ) && $NeedPageurl ) {
+        $is_spam = true;
+        $reason = 'Page source url is empty';
+        $message_key = 'block_empty_source';
+        $error_message = cfas_get_error_text( $message_key );
+        $spam_val = $reason;
+        
+        efas_add_to_log( 'General', $reason, $form_data, 'Hello Plus', $message_key, $spam_val );
+        $ajax_handler->add_error_message( $error_message );        
+        return;
+    }
+
 
 }

@@ -169,12 +169,11 @@ class Maspik {
       }
 
 	  // Hello Plus
-	  /* Not yet supported
       if( maspik_get_settings( "maspik_support_helloplus_forms" ) != "no" ){ 
         if ( maspik_is_plugin_active( 'hello-plus/hello-plus.php' ) ) {
 			  require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/helloplus.php';
         }
-      }*/
+      }
 
 
 		
