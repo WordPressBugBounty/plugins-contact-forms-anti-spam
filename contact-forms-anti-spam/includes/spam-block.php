@@ -514,8 +514,11 @@ function checkTextareaForSpam($field_value) {
     
     foreach ($textarea_blacklist as $bad_string) {
         if (strpbrk($bad_string, '*?') !== false) {
-            // If there are special characters, use fnmatch
-            if (fnmatch($bad_string, $field_value, FNM_CASEFOLD)) {
+            // If there are special characters, ensure wildcards on both sides
+            $pattern = trim($bad_string, '*'); // Remove existing asterisks from each side
+            $pattern = "*$pattern*";           // Add asterisks on both sides
+            
+            if (fnmatch($pattern, $field_value, FNM_CASEFOLD)) {
                 return array(
                     'spam' => "field value matches pattern *$bad_string*", 
                     'message' => "textarea_field",

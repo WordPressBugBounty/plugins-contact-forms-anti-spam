@@ -17,8 +17,8 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
     $NeedPageurl = maspik_get_settings( 'NeedPageurl' );   
     // Get all form fields
     $form_fields = $record->get( 'fields' );
-    /*$keys = array_keys($form_fields);
-    $lastKeyId = end($keys);*/
+    $keys = array_keys($form_fields);
+    $lastKeyId = end($keys);
     
     
     
@@ -112,7 +112,7 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
         $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
         if($spam){
         efas_add_to_log($type = "General",$reason, $form_data,"Hello Plus", $message,  $spam_val);
-        $ajax_handler->add_error_message( $error_message );
+        $ajax_handler->add_error( $lastKeyId, $error_message );
         return;
         }
     }
@@ -129,7 +129,7 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
         $spam_val = $reason;
         
         efas_add_to_log( 'General', $reason, $form_data, 'Hello Plus', $message_key, $spam_val );
-        $ajax_handler->add_error_message( $error_message );        
+        $ajax_handler->add_error( $lastKeyId, $error_message );
         return;
     }
 

@@ -720,18 +720,22 @@ function efas_makeArray($string,$type="") {
 
 // Check if field value exists in string
 function maspik_is_field_value_exist_in_string($bad_string, $field_value, $make_space = 1) {
+    // Return false if either string is empty
     if (!$bad_string || !$field_value) {
         return false;
     }
+
+    // Convert both strings to lowercase and trim whitespace
     $bad_string_lower = strtolower(trim($bad_string));
     $field_value_lower = strtolower(trim($field_value));
     
-    if($make_space == 1){
-        // Add spaces to both strings to ensure word boundaries
-        $bad_string_lower = " " . $bad_string_lower . " ";
-        $field_value_lower = " " . $field_value_lower . " ";
+    // If make_space is 1, check for word boundaries and optional punctuation
+    if ($make_space == 1) {
+        $bad_string_lower = preg_quote($bad_string_lower, '/');
+        return preg_match("/(?:^|\s)" . $bad_string_lower . "[.,!?]?(?:$|\s)/i", $field_value_lower);
     }
     
+    // Otherwise, check if string exists anywhere in the text
     return strpos($field_value_lower, $bad_string_lower) !== false;
 }
 

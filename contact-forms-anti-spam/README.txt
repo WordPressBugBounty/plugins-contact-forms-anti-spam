@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.7
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.4.2
+Stable tag: 2.4.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -47,12 +47,13 @@ The most efficient spam protection for WordPress forms and comments, with 95%+ s
 * **Blocking:**
   * Specific IP addresses
   * Spam submissions in WordPress comments and subscription forms
+  * Option to block submissions with emojis in textarea fields
 * **Spam Log:**
   * Review blocked submissions
 * **Advance Blocking:**
   * Honeypot
   * IP verification (100 checks/month)
-  * Block submissions without source URLs (Elementor)
+  * Block submissions without source URLs (Elementor and Hello Plus)
 * **API Integrations:**
   * Proxycheck.io (check IP address against proxy/VPN/TOR)
   * AbuseIPDB.com (check IP address against abuse/spam/malicious/proxy/VPN/TOR)
@@ -126,7 +127,7 @@ The plugin is GDPR compliant.
 
 3. **Advanced Configuration** (Optional)
    * Add custom spam phrases
-   * Configure IP blocking
+   * Toggle relevant settings for each field type
    * Set up phone validation
 
 4. **Playground**
@@ -168,7 +169,8 @@ Maspik features include:
 
 
 = Does the plugin work with all Wordpress forms? =
-Maspik currently supports:
+Maspik protects contact forms, comments, registration forms, and more.
+Currently supports the following forms:
 
 <ul>
 <li>Elementor forms</li>
@@ -213,6 +215,11 @@ So if you need advanced spam protection, that works with all forms and has a lot
 
 
 == Changelog ==
+
+= 2.4.3 - 19/02/2025 = 
+* Fixed - Fix Elementor Bot detector option not working wall (When page source url is empty).
+* Fixed - Fix detection string in Textarea field with regex/wildcard format.
+* Improve - Improve detection string in Textarea field: Now ignore ,!?. at the end of the string for better detection.
 
 = 2.4.2 - 18/02/2025 = 
 * New feature - Add option to block submissions with emojis in textarea fields.

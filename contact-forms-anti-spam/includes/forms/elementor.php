@@ -11,14 +11,16 @@ if ( ! defined( 'WPINC' ) ) {
 
 add_action( 'elementor_pro/forms/validation', 'maspik_validation_process_elementor', 10, 2 );
 function maspik_validation_process_elementor( $record, $ajax_handler ) {
-    $is_spam = false;
-    $error_fields = array();
-    $form_data = array_map('sanitize_text_field', $_POST['form_fields'] ?? []);
+    $spam = false;
+    $reason = '';
+    $form_data = array_map('sanitize_text_field', isset($_POST['form_fields']) ? $_POST['form_fields'] : array());
     
-      // Get all form fields
+    // Get all form fields
     $form_fields = $record->get( 'fields' );
+    $keys = array_keys($form_fields);
+    $lastKeyId = end($keys);
 
-
+    
     // Loop through all fields
     foreach ( $form_fields as $field_id => $field ) {
         $field_id = $field['id']; // Custom ID of the field
@@ -96,42 +98,32 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
         }
     }
 
-  // General Check
-  if(!$spam){
+    // General Check
     $meta = $record->get_form_meta( [ 'page_url', 'remote_ip' ] );
-    $ip =  $meta['remote_ip']['value'] ? $meta['remote_ip']['value'] : maspik_get_real_ip();
+    $ip = isset($meta['remote_ip']['value']) && $meta['remote_ip']['value'] ? $meta['remote_ip']['value'] : maspik_get_real_ip();
     // Country IP Check 
-    $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"elementor");
+    $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST, "elementor");
     $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false;
     $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false;
     $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false;
     $error_message = cfas_get_error_text($message);
-    $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false;
+    $spam_val = isset($GeneralCheck['value']) && $GeneralCheck['value'] ? $GeneralCheck['value'] : false;
     if($spam){
-      efas_add_to_log($type = "General",$reason, $form_data,"Elementor forms", $message,  $spam_val);
-      $ajax_handler->add_error_message( $error_message );
-      return;
+        efas_add_to_log($type = "General",$reason, $form_data,"Elementor forms", $message,  $spam_val);
+        $ajax_handler->add_error( $lastKeyId, $error_message );
+        return;
     }
-  }
 
-  // Page URL Check
-  $NeedPageurl = maspik_get_settings( 'NeedPageurl' );   
-  
-  if ( efas_get_spam_api( 'NeedPageurl' ) ) {
-      $NeedPageurl = $NeedPageurl ? $NeedPageurl : efas_get_spam_api( 'NeedPageurl', 'bool' );
-  }
+    // Page URL Check
+    $NeedPageurl = maspik_get_settings('NeedPageurl') ? maspik_get_settings('NeedPageurl') : efas_get_spam_api('NeedPageurl', 'bool');
 
-  if ( ! isset( $_POST['referrer'] ) && $NeedPageurl ) {
-      $is_spam = true;
-      $reason = 'Page source url is empty';
-      $message_key = 'block_empty_source';
-      $error_message = cfas_get_error_text( $message_key );
-      $spam_val = $reason;
-      
-      efas_add_to_log( 'General', $reason, $form_data, 'Elementor forms', $message_key, $spam_val );
-      $ajax_handler->add_error_message( $error_message );
-      return;
-  }
-
-
+    if (!isset($_POST['referrer']) && $NeedPageurl) {
+        $reason = 'Page source url is empty';
+        $message_key = 'block_empty_source';
+        $error_message = cfas_get_error_text($message_key);
+        
+        efas_add_to_log('General', $reason, $form_data, 'Elementor forms', $message_key, $reason);
+        $ajax_handler->add_error( $lastKeyId, $error_message );
+        return;
+    }
 }
