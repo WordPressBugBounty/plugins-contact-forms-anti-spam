@@ -7,6 +7,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Provide a admin area view for the plugin
  */
+
+global $MASPIK_REQUIRED_LANGUAGES;
+global $MASPIK_FORBIDDEN_LANGUAGES;
+global $MASPIK_COUNTRIES_LIST_FOR_PHONE;
+global $MASPIK_FIELD_DISPLAY_NAMES;
+global $MASPIK_COUNTRIES_LIST;
+
+
 $spamcounter = maspik_spam_count();
 ?>
 <div class="wrap maspik-mainpage">
@@ -29,474 +37,150 @@ $spamcounter = maspik_spam_count();
 
     //Save Commands
         
-        function maspik_save_command($error = ''){
+    function maspik_save_command($error_message = ''){
 
-            //Check if the user has the permission to save the settings
-            if (!current_user_can('manage_options')) {
-                return;
+        //Check if the user has the permission to save the settings
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        
+        // מערך של הגדרות לשמירה
+        $settings_to_save = [
+            'text_blacklist' => sanitize_textarea_field(stripslashes($_POST['text_blacklist'] ?? '')),
+            'text_limit_toggle' => isset($_POST['text_limit_toggle']) ? 1 : 0,
+            'MinCharactersInTextField' => sanitize_text_field($_POST['MinCharactersInTextField'] ?? ''),
+            'MaxCharactersInTextField' => sanitize_text_field($_POST['MaxCharactersInTextField'] ?? ''),
+            'text_custom_message_toggle' => isset($_POST['text_custom_message_toggle']) ? 1 : 0,
+            'custom_error_message_MaxCharactersInTextField' => sanitize_text_field(stripslashes($_POST['custom_error_message_MaxCharactersInTextField'] ?? '')),
+            'emails_blacklist' => sanitize_textarea_field(stripslashes($_POST['emails_blacklist'] ?? '')),
+            'textarea_blacklist' => sanitize_textarea_field(stripslashes($_POST['textarea_blacklist'] ?? '')),
+            'textarea_link_limit_toggle' => isset($_POST['textarea_link_limit_toggle']) ? 1 : 0,
+            'contain_links' => sanitize_text_field($_POST['contain_links'] ?? ''),
+            'textarea_limit_toggle' => isset($_POST['textarea_limit_toggle']) ? 1 : 0,
+            'emoji_check' => isset($_POST['emoji_check']) ? 1 : 0,
+            'emoji_custom_message_toggle' => isset($_POST['emoji_custom_message_toggle']) ? 1 : 0,
+            'custom_error_message_emoji_check' => sanitize_text_field(stripslashes($_POST['custom_error_message_emoji_check'] ?? '')),
+            'MinCharactersInTextAreaField' => sanitize_text_field($_POST['MinCharactersInTextAreaField'] ?? ''),
+            'MaxCharactersInTextAreaField' => sanitize_text_field($_POST['MaxCharactersInTextAreaField'] ?? ''),
+            'textarea_custom_message_toggle' => isset($_POST['textarea_custom_message_toggle']) ? 1 : 0,
+            'custom_error_message_MaxCharactersInTextAreaField' => sanitize_text_field(stripslashes($_POST['custom_error_message_MaxCharactersInTextAreaField'] ?? '')),
+            'tel_formats' => sanitize_textarea_field(stripslashes($_POST['tel_formats'] ?? '')),
+            'tel_limit_toggle' => isset($_POST['tel_limit_toggle']) ? 1 : 0,
+            'MinCharactersInPhoneField' => sanitize_text_field($_POST['MinCharactersInPhoneField'] ?? ''),
+            'MaxCharactersInPhoneField' => sanitize_text_field($_POST['MaxCharactersInPhoneField'] ?? ''),
+            'phone_limit_custom_message_toggle' => isset($_POST['phone_limit_custom_message_toggle']) ? 1 : 0,
+            'custom_error_message_MaxCharactersInPhoneField' => sanitize_text_field(stripslashes($_POST['custom_error_message_MaxCharactersInPhoneField'] ?? '')),
+            'phone_custom_message_toggle' => isset($_POST['phone_custom_message_toggle']) ? 1 : 0,
+            'custom_error_message_tel_formats' => sanitize_text_field(stripslashes($_POST['custom_error_message_tel_formats'] ?? '')),
+            'lang_need_custom_message_toggle' => isset($_POST['lang_need_custom_message_toggle']) ? 1 : 0,
+            'custom_error_message_lang_needed' => sanitize_text_field(stripslashes($_POST['custom_error_message_lang_needed'] ?? '')),
+            'lang_forbidden_custom_message_toggle' => isset($_POST['lang_forbidden_custom_message_toggle']) ? 1 : 0,
+            'custom_error_message_lang_forbidden' => sanitize_text_field(stripslashes($_POST['custom_error_message_lang_forbidden'] ?? '')),
+            'AllowedOrBlockCountries' => sanitize_text_field($_POST['AllowedOrBlockCountries'] ?? 'block'),
+            'country_custom_message_toggle' => isset($_POST['country_custom_message_toggle']) ? 1 : 0,
+            'custom_error_message_country_blacklist' => sanitize_text_field(stripslashes($_POST['custom_error_message_country_blacklist'] ?? '')),
+            'private_file_id' => absint($_POST['private_file_id']) == 0 ? '' : absint($_POST['private_file_id']),
+            'popular_spam' => isset($_POST['popular_spam']) ? 1 : 0,
+            'maspikDbCheck' => isset($_POST['maspikDbCheck']) ? 1 : 0,
+            'maspikHoneypot' => isset($_POST['maspikHoneypot']) ? 1 : 0,
+            'maspikYearCheck' => isset($_POST['maspikYearCheck']) ? 1 : 0,
+            'maspikTimeCheck' => isset($_POST['maspikTimeCheck']) ? 1 : 0,
+            'NeedPageurl' => isset($_POST['NeedPageurl']) ? 1 : 0,
+            'ip_blacklist' => sanitize_textarea_field(stripslashes($_POST['ip_blacklist'] ?? '')),
+            'error_message' => sanitize_text_field(stripslashes($_POST['error_message'] ?? '')),
+            'abuseipdb_api' => sanitize_text_field(stripslashes($_POST['abuseipdb_api'] ?? '')),
+            'abuseipdb_score' => sanitize_text_field($_POST['abuseipdb_score'] ?? ''),
+            'proxycheck_io_api' => sanitize_text_field(stripslashes($_POST['proxycheck_io_api'] ?? '')),
+            'proxycheck_io_risk' => sanitize_text_field($_POST['proxycheck_io_risk'] ?? ''),
+            'numverify_api' => sanitize_text_field(stripslashes($_POST['numverify_api'] ?? '')),
+            'maspik_support_Elementor_forms' => sanitize_text_field(isset($_POST['maspik_support_Elementor_forms']) ? "yes" : "no"),
+            'maspik_support_cf7' => sanitize_text_field(isset($_POST['maspik_support_cf7']) ? "yes" : "no"),
+            'maspik_support_wp_comment' => sanitize_text_field(isset($_POST['maspik_support_wp_comment']) ? "yes" : "no"),
+            'maspik_support_registration' => sanitize_text_field(isset($_POST['maspik_support_registration']) ? "yes" : "no"),
+            'maspik_support_woocommerce_review' => sanitize_text_field(isset($_POST['maspik_support_woocommerce_review']) ? "yes" : "no"),
+            'maspik_support_Woocommerce_registration' => sanitize_text_field(isset($_POST['maspik_support_Woocommerce_registration']) ? "yes" : "no"),
+            'maspik_support_Wpforms' => sanitize_text_field(isset($_POST['maspik_support_Wpforms']) ? "yes" : "no"),
+            'maspik_support_formidable_forms' => sanitize_text_field(isset($_POST['maspik_support_formidable_forms']) ? "yes" : "no"),
+            'maspik_support_forminator_forms' => sanitize_text_field(isset($_POST['maspik_support_forminator_forms']) ? "yes" : "no"),
+            'maspik_support_fluentforms_forms' => sanitize_text_field(isset($_POST['maspik_support_fluentforms_forms']) ? "yes" : "no"),
+            'maspik_support_gravity_forms' => sanitize_text_field(isset($_POST['maspik_support_gravity_forms']) ? "yes" : "no"),
+            'maspik_support_bricks_forms' => sanitize_text_field(isset($_POST['maspik_support_bricks_forms']) ? "yes" : "no"),
+            'maspik_support_ninjaforms' => sanitize_text_field(isset($_POST['maspik_support_ninjaforms']) ? "yes" : "no"),
+            'maspik_support_jetforms' => sanitize_text_field(isset($_POST['maspik_support_jetforms']) ? "yes" : "no"),
+            'maspik_support_everestforms' => sanitize_text_field(isset($_POST['maspik_support_everestforms']) ? "yes" : "no"),
+            'maspik_support_buddypress_forms' => sanitize_text_field(isset($_POST['maspik_support_buddypress_forms']) ? "yes" : "no"),
+            'maspik_support_helloplus_forms' => sanitize_text_field(isset($_POST['maspik_support_helloplus_forms']) ? "yes" : "no"),
+            'maspik_Store_log' => sanitize_text_field(isset($_POST['maspik_Store_log']) ? 'yes' : 'no'),
+            'spam_log_limit' => sanitize_text_field($_POST['spam_log_limit'] ?? ''),
+            'shere_data' => isset($_POST['shere_data']) ? 1 : 0,
+        ];
+
+
+        // שמירה על ההגדרות
+        foreach ($settings_to_save as $key => $value) {
+            if (maspik_save_settings($key, $value) != "success") {
+                $error_message .= "Failed to save $key. ";
             }
+        }
+        // Save Options END --
 
-            global $wpdb;
-            $error_message = $error;
-            $result_check= "";
+        // מערך של שדות בחירה לעיבוד
+        $select_fields = [
+            'lang_needed',
+            'numverify_country',
+            'country_blacklist',
+            'lang_forbidden'
+        ];
 
+        // עיבוד ושמירה של שדות בחירה
+        foreach ($select_fields as $field_key ) {
+            $processedValues = '';
             
-            //Text field
-
-                if( maspik_save_settings( 'text_blacklist' , ((sanitize_textarea_field(stripslashes($_POST['text_blacklist']))  ))) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //main list
-
+            if (isset($_POST[$field_key]) && !empty($_POST[$field_key])) {
+                $selectedValues = (array)$_POST[$field_key];
                 
-                if( maspik_save_settings( 'text_limit_toggle' , sanitize_text_field(isset( $_POST['text_limit_toggle'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //text limit toggle
-
-
-                if( maspik_save_settings( 'MinCharactersInTextField' , sanitize_text_field($_POST['MinCharactersInTextField'])) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //text min character limit
-
-                
-                if( maspik_save_settings( 'MaxCharactersInTextField' , sanitize_text_field($_POST['MaxCharactersInTextField'])) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //text max character limit
-
-
-                if( maspik_save_settings( 'text_custom_message_toggle' , sanitize_text_field(isset( $_POST['text_custom_message_toggle'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //custom error message toggle
-
-
-                if( maspik_save_settings( 'custom_error_message_MaxCharactersInTextField' , sanitize_text_field( stripslashes($_POST['custom_error_message_MaxCharactersInTextField']) )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //custom error message
-
-                
-
-
-            //Text field END --
-
-            //Email field
-
-                if( maspik_save_settings( 'emails_blacklist' , sanitize_textarea_field( stripslashes($_POST['emails_blacklist']) )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //main list
-
-            //Email field END --
-
-            //Textarea field
-
-                if( maspik_save_settings( 'textarea_blacklist' , sanitize_textarea_field( stripslashes($_POST['textarea_blacklist']) )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //main list
-
-                if( maspik_save_settings( 'textarea_link_limit_toggle' , sanitize_text_field(isset( $_POST['textarea_link_limit_toggle'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //text limit toggle
-
-
-                if( maspik_save_settings( 'contain_links' , sanitize_text_field($_POST['contain_links'])) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //max link limit
-
-                
-                if( maspik_save_settings( 'textarea_limit_toggle' , sanitize_text_field(isset( $_POST['textarea_limit_toggle'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //text limit toggle
-                
-                //Emoji Check
-                if( maspik_save_settings( 'emoji_check' , sanitize_text_field(isset( $_POST['emoji_check'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //text limit toggle
-
-                if( maspik_save_settings( 'emoji_custom_message_toggle' , sanitize_text_field(isset( $_POST['emoji_custom_message_toggle'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //emoji_custom_message_toggle
-
-                if( maspik_save_settings( 'custom_error_message_emoji_check' , sanitize_text_field( stripslashes($_POST['custom_error_message_emoji_check']) )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //custom_error_message_emoji_check
-
-                if( maspik_save_settings( 'MinCharactersInTextAreaField' , sanitize_text_field($_POST['MinCharactersInTextAreaField'])) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //text min character limit
-
-                
-                if( maspik_save_settings( 'MaxCharactersInTextAreaField' , sanitize_text_field($_POST['MaxCharactersInTextAreaField'])) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //text max character limit
-
-
-                if( maspik_save_settings( 'textarea_custom_message_toggle' , sanitize_text_field(isset( $_POST['textarea_custom_message_toggle'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //custom error message toggle
-
-
-                if( maspik_save_settings( 'custom_error_message_MaxCharactersInTextAreaField' , sanitize_text_field( stripslashes($_POST['custom_error_message_MaxCharactersInTextAreaField']) )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //custom error message
-
-
-            //Textarea field END --
-
-            //Phone field
-
-                if( maspik_save_settings( 'tel_formats' , sanitize_textarea_field( stripslashes($_POST['tel_formats']) )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //main list
-
-                if( maspik_save_settings( 'tel_limit_toggle' , sanitize_text_field(isset( $_POST['tel_limit_toggle'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //phone limit toggle
-
-
-                if( maspik_save_settings( 'MinCharactersInPhoneField' , sanitize_text_field($_POST['MinCharactersInPhoneField'])) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //phone min character limit
-
-                
-                if( maspik_save_settings( 'MaxCharactersInPhoneField' , sanitize_text_field($_POST['MaxCharactersInPhoneField'])) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //phone max character limit
-
-                if( maspik_save_settings( 'phone_limit_custom_message_toggle' , sanitize_text_field(isset( $_POST['phone_limit_custom_message_toggle'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //custom limit message toggle
-
-                if( maspik_save_settings( 'custom_error_message_MaxCharactersInPhoneField' , sanitize_text_field( stripslashes($_POST['custom_error_message_MaxCharactersInPhoneField']) )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //custom error message for limit
-
-                if( maspik_save_settings( 'phone_custom_message_toggle' , sanitize_text_field(isset( $_POST['phone_custom_message_toggle'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //custom error message toggle
-
-
-                if( maspik_save_settings( 'custom_error_message_tel_formats' , sanitize_text_field( stripslashes($_POST['custom_error_message_tel_formats']) )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //custom error message
-
-
-            //Phone field END --
-
-            //Language Needed field
-                if (isset($_POST['lang_needed']) && !empty($_POST['lang_needed'])) {
-                    $selectedLangNeeded = $_POST['lang_needed'];
-                    $selectedLangNeededVal = "";
-
-                    foreach ($selectedLangNeeded as $langNeedValue) {
-                        $escapedValue =  $langNeedValue;
-                        $selectedLangNeededVal .= $escapedValue . " ";
-                    }
-                    $selectedLangNeededVal = str_replace("\\p", "p", $selectedLangNeededVal);
-
-                    if( maspik_save_settings( 'lang_needed' , $selectedLangNeededVal ) != "success" ){ 
-                        $error_message .= $result_check . " ";
-                    }
-                }else{
-                    if( maspik_save_settings( 'lang_needed' , '' ) != "success" ){ 
-                        $error_message .= $result_check . " ";
-                    }
-                } //main list
-
-
-                if( maspik_save_settings( 'lang_need_custom_message_toggle' , sanitize_text_field(isset( $_POST['lang_need_custom_message_toggle'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //custom error message toggle
-
-
-                if( maspik_save_settings( 'custom_error_message_lang_needed' , sanitize_text_field( stripslashes($_POST['custom_error_message_lang_needed']) )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //custom error message
-
-
-            //Language Needed field END --
-
-            //Language Forbidden field
-                if (isset($_POST['lang_forbidden']) && !empty($_POST['lang_forbidden'])) {
-                    $selectedLangForbidden = $_POST['lang_forbidden'];
-                    $selectedLangForbiddenVal = "";
-
-                    foreach ($selectedLangForbidden as $langForbiddenValue) {
-                        $escapedFValue =  $langForbiddenValue;
-                        $selectedLangForbiddenVal .= $escapedFValue . " ";
-                        }
-                        $selectedLangForbiddenVal = str_replace("\\p", "p", $selectedLangForbiddenVal);
-
-
-                    if( maspik_save_settings( 'lang_forbidden' , $selectedLangForbiddenVal ) != "success" ){ 
-                        $error_message .= $result_check . " ";
-                    } 
-                }else{
-                    if( maspik_save_settings( 'lang_forbidden' , '' ) != "success" ){ 
-                        $error_message .= $result_check . " ";
-                    } 
-                }//main list
-
-
-                if( maspik_save_settings( 'lang_forbidden_custom_message_toggle' , sanitize_text_field(isset( $_POST['lang_forbidden_custom_message_toggle'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //custom error message toggle
-
-
-                if( maspik_save_settings( 'custom_error_message_lang_forbidden' , sanitize_text_field( stripslashes($_POST['custom_error_message_lang_forbidden'])) ) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //custom error message
-
-
-            //Language Forbidden field END --
-
-            //Country field
-
-                if (isset($_POST['country_blacklist']) && !empty($_POST['country_blacklist'])) {
-                    $selectedCountry = $_POST['country_blacklist'];
-                    $selectedCountryVal = "";
-
-                    foreach ($selectedCountry as $countryValue) {
-                        $escapedCValue =  $countryValue;
-                        $selectedCountryVal .= $escapedCValue . " ";
-                    }
-                    $selectedCountryVal = str_replace("\\p", "p", $selectedCountryVal);
-
-
-                    if( maspik_save_settings( 'country_blacklist' , $selectedCountryVal ) != "success" ){ 
-                        $error_message .= $result_check . " ";
-                    }
-                }else{
-                    if( maspik_save_settings( 'country_blacklist' , '' ) != "success" ){ 
-                        $error_message .= $result_check . " ";
-                    }
-
-                } //main list
-                
-
-                if( maspik_save_settings( 'AllowedOrBlockCountries' , sanitize_text_field( isset( $_POST['AllowedOrBlockCountries'] ) ?  $_POST['AllowedOrBlockCountries'] : "block") ) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //Allow or block dropdown
-
-
-                if( maspik_save_settings( 'country_custom_message_toggle' , sanitize_text_field(sanitize_text_field(isset( $_POST['country_custom_message_toggle'] ))) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //custom error message toggle
-
-
-                if( maspik_save_settings( 'custom_error_message_country_blacklist' , sanitize_text_field( stripslashes($_POST['custom_error_message_country_blacklist'])) ) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //custom error message
-
-
-            //Country field END --
-
-            //MASPIK API field
-
-                if( maspik_save_settings( 'private_file_id' , absint($_POST['private_file_id']) == 0 ? '' : absint($_POST['private_file_id'])) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //main list
-
-                
-                if( maspik_save_settings( 'popular_spam' ,sanitize_text_field( isset( $_POST['popular_spam'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //popular spam toggle
-
-
-
-            //MASPIK API field END --
-
-            //General field
-                if( maspik_save_settings( 'maspikDbCheck' , sanitize_text_field(isset( $_POST['maspikDbCheck'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //maspikDbCheck
-
-                if( maspik_save_settings( 'maspikHoneypot' , sanitize_text_field(isset( $_POST['maspikHoneypot'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //honeypot
-                if( maspik_save_settings( 'maspikYearCheck' , sanitize_text_field(isset( $_POST['maspikYearCheck'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //honeypot
-                if( maspik_save_settings( 'maspikTimeCheck' , sanitize_text_field(isset( $_POST['maspikTimeCheck'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //honeypot
-
-                if( maspik_save_settings( 'NeedPageurl' , sanitize_text_field(isset( $_POST['NeedPageurl'] )) ? 1 : 0) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //require url
-
-                if( maspik_save_settings( 'ip_blacklist' , sanitize_textarea_field( stripslashes($_POST['ip_blacklist']) )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //IP blacklist
-
-                if( maspik_save_settings( 'error_message' , sanitize_text_field( stripslashes($_POST['error_message']) )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //General error message
-
-                if( maspik_save_settings( 'abuseipdb_api' , sanitize_text_field( stripslashes($_POST['abuseipdb_api']) )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //Abuse API code
-
-                if( maspik_save_settings( 'abuseipdb_score' , sanitize_text_field( $_POST['abuseipdb_score'] )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //Abuse API threshold
-
-                if( maspik_save_settings( 'proxycheck_io_api' , sanitize_text_field( stripslashes($_POST['proxycheck_io_api']) )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //ProxycheckIO API code
-
-                if( maspik_save_settings( 'proxycheck_io_risk' , sanitize_text_field( $_POST['proxycheck_io_risk'] )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //ProxycheckIO API threshold
-
-                if( maspik_save_settings( 'numverify_api' , sanitize_text_field( stripslashes($_POST['numverify_api']) )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //numverify_api API code
-
-                if( maspik_save_settings( 'numverify_country' , sanitize_text_field( $_POST['numverify_country'] )) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //numverify_country API threshold
-                if (isset($_POST['numverify_country']) && !empty($_POST['numverify_country'])) {
-                    $selectedCountry = $_POST['numverify_country'];
-                    $selectedCountryVal = "";
-
-                    foreach ($selectedCountry as $countryValue) {
-                        $escapedCValue =  $countryValue;
-                        $selectedCountryVal .= $escapedCValue . " ";
-                    }
-                    $selectedCountryVal = str_replace("\\p", "p", $selectedCountryVal);
-
-
-                    if( maspik_save_settings( 'numverify_country' , $selectedCountryVal ) != "success" ){ 
-                        $error_message .= $result_check . " ";
-                    }
-                }else{
-                    if( maspik_save_settings( 'numverify_country' , '' ) != "success" ){ 
-                        $error_message .= $result_check . " ";
-                    }
-
-                } //main list
-
-
-
-
-            //General field END --
-             
-            //Form option field
-
-                if( maspik_save_settings( 'maspik_support_Elementor_forms' , sanitize_text_field(isset( $_POST['maspik_support_Elementor_forms'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //elementor
-
-                if( maspik_save_settings( 'maspik_support_cf7' , sanitize_text_field(isset( $_POST['maspik_support_cf7'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //Contact form 7
-
-                if( maspik_save_settings( 'maspik_support_wp_comment' , sanitize_text_field(isset( $_POST['maspik_support_wp_comment'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //WP Comment
-                
-                if( maspik_save_settings( 'maspik_support_registration' , sanitize_text_field(isset( $_POST['maspik_support_registration'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //maspik_support_registration
-
-                if( maspik_save_settings( 'maspik_support_woocommerce_review' , sanitize_text_field(isset( $_POST['maspik_support_woocommerce_review'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //maspik_support_woocommerce_review
-
-                if( maspik_save_settings( 'maspik_support_Woocommerce_registration' , sanitize_text_field(isset( $_POST['maspik_support_Woocommerce_registration'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //maspik_support_Woocommerce_registration
-
-                if( maspik_save_settings( 'maspik_support_Wpforms' , sanitize_text_field(isset( $_POST['maspik_support_Wpforms'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //maspik_support_Wpforms
-
-                if( maspik_save_settings( 'maspik_support_formidable_forms' , sanitize_text_field(isset( $_POST['maspik_support_formidable_forms'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //maspik_support_formidable_forms
-
-                if( maspik_save_settings( 'maspik_support_forminator_forms' , sanitize_text_field(isset( $_POST['maspik_support_forminator_forms'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //maspik_support_forminator_forms
-
-                if( maspik_save_settings( 'maspik_support_fluentforms_forms' , sanitize_text_field(isset( $_POST['maspik_support_fluentforms_forms'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //maspik_support_fluentforms_forms
-
-                if( maspik_save_settings( 'maspik_support_gravity_forms' , sanitize_text_field(isset( $_POST['maspik_support_gravity_forms'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //maspik_support_gravity_forms
-
-                if( maspik_save_settings( 'maspik_support_bricks_forms' , sanitize_text_field(isset( $_POST['maspik_support_bricks_forms'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //maspik_support_bricks_forms
-
-
-                if( maspik_save_settings( 'maspik_support_ninjaforms' , sanitize_text_field(isset( $_POST['maspik_support_ninjaforms'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //maspik_support_ninja_forms
-
-                if( maspik_save_settings( 'maspik_support_jetforms' , sanitize_text_field(isset( $_POST['maspik_support_jetforms'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //maspik_support_jet_forms
-
-                if( maspik_save_settings( 'maspik_support_everestforms' , sanitize_text_field(isset( $_POST['maspik_support_everestforms'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //maspik_support_everest_forms
-
-                if( maspik_save_settings( 'maspik_support_buddypress_forms' , sanitize_text_field(isset( $_POST['maspik_support_buddypress_forms'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //maspik_support_buddypress_forms
-
-                if( maspik_save_settings( 'maspik_support_helloplus_forms' , sanitize_text_field(isset( $_POST['maspik_support_helloplus_forms'] )) ? "yes" : "no") != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //maspik_support_helloplus_forms
-
-
-            //Form option field END --
-
-            //Other Options
-
-                
-                if( maspik_save_settings( 'maspik_Store_log' , sanitize_text_field(isset( $_POST['maspik_Store_log'] )) ? 'yes' : 'no') != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //spam log toggle
-
-                
-                if( maspik_save_settings( 'spam_log_limit' , sanitize_text_field($_POST['spam_log_limit'])) != "success" ){ 
-                    $error_message .= $result_check . " ";
-                } //spam log entity limit
-
-                if( update_option( 'shere_data' , sanitize_text_field(isset( $_POST['shere_data'] )) ? "yes" : "no")){ 
-                    $error_message .= $result_check . " ";
-                } //shere_data old
-
-                if( maspik_save_settings( 'shere_data' , sanitize_text_field(isset( $_POST['shere_data'] )) ? 1 : 0)){ 
-                    $error_message .= $result_check . " ";
-                } //shere_data new
-
-                
-
-
-            //Other Options END --
+                foreach ($selectedValues as $value) {
+                    // סניטציה של הערך
+                    $escapedValue = sanitize_text_field($value);
+                    $processedValues .= $escapedValue . " ";
+                }
+                $processedValues = trim(str_replace("\\p", "p", $processedValues));
+            }
+            
+            try {
+                if (maspik_save_settings($field_key, $processedValues) !== "success") {
+                    $error_message .= sprintf(__('Failed to save %s settings. ', 'contact-forms-anti-spam'), $field_key);
+                    error_log("Maspik: Failed to save {$field_key} settings");
+                }
+            } catch (Exception $e) {
+                $error_message .= sprintf(__('Error occurred while saving %s: %s ', 'contact-forms-anti-spam'), 
+                    $field_key, 
+                    $e->getMessage()
+                );
+                error_log("Maspik: Error saving {$field_key}: " . $e->getMessage());
+            }
         }
 
-    //Save Commands - END
+        
+    }
+
 
     //Refresh Maspik API button Command
 
-        if ( (isset( $_POST['maspik-api-refresh-btn'] ) || isset( $_POST['maspik-api-save-btn'] ) ) && cfes_is_supporting("api") ) {
-            
-            // Verify nonce
-            if (isset($_POST['maspik_save_settings_nonce']) && wp_verify_nonce($_POST['maspik_save_settings_nonce'], 'maspik_save_settings_action')) {
-                // Nonce is valid, proceed with refreshing API
-                cfas_refresh_api();
-                //$current_page = esc_url(admin_url("admin.php?page=maspik"));
-                // Redirect to avoid resubmission on page refresh
-                //echo "<script>window.location.replace('" . esc_js($current_page) . "');</script>";
-            } else {
-                // Nonce verification failed, handle accordingly
-                echo "<p>Error: Nonce verification failed.</p>";
-            }
+    if ( (isset( $_POST['maspik-api-refresh-btn'] ) || isset( $_POST['maspik-api-save-btn'] ) ) && cfes_is_supporting("api") ) {
+        
+        // Verify nonce
+        if (isset($_POST['maspik_save_settings_nonce']) && wp_verify_nonce($_POST['maspik_save_settings_nonce'], 'maspik_save_settings_action')) {
+            // Nonce is valid, proceed with refreshing API
+            cfas_refresh_api();
+            //$current_page = esc_url(admin_url("admin.php?page=maspik"));
+            // Redirect to avoid resubmission on page refresh
+            //echo "<script>window.location.replace('" . esc_js($current_page) . "');</script>";
+        } else {
+            // Nonce verification failed, handle accordingly
+            echo "<p>Error: Nonce verification failed.</p>";
         }
+    }
 
     //Refresh Maspik API button Command - END
 
@@ -636,8 +320,20 @@ $spamcounter = maspik_spam_count();
                                             <span><?php esc_html_e('In this option we block bots from sending spam automatically, its mostly succeed to catch about 30% of the spam', 'contact-forms-anti-spam'); ?></span>
                                     </div>  
                                 </div><!-- end of maspik-block-inquiry-wrap -->
-                            <?php  } 
-                            maspik_save_button_show() ?>
+                            <?php  } ?>
+
+                            <!-- Advance key check start -->
+                            <div class="maspik-txt-custom-msg-head togglewrap maspik-honeypot-wrap">
+                                <?php echo maspik_toggle_button('maspikTimeCheck', 'maspikTimeCheck', 'maspikTimeCheck', 'maspik-honeypot togglebutton',"",""); ?>
+                                <div>
+                                    <h4> <?php esc_html_e('Advance key check', 'contact-forms-anti-spam'); ?>
+                                    </h4>
+                                    <span><?php esc_html_e('Advanced key check - This feature adds a hidden field that is automatically filled with a unique key. If the submitted key does not match the expected key, it likely means the form was submitted by a bot or automated script. The submission will be blocked as a security measure.', 'contact-forms-anti-spam'); ?></span>
+                                </div>  
+                            </div><!-- end of Advance key check -->
+
+
+                            <?php maspik_save_button_show() ?>
                         </div>
 
                         <!-- Accordion Item - End main check -->
@@ -671,8 +367,8 @@ $spamcounter = maspik_spam_count();
                                     <div class="maspik-main-list-wrap maspik-select-list">
 
                                         <?php 
-                                            echo create_maspik_select("lang_needed", "maspik-lang-need", efas_array_of_lang_needed());                                 
-                                            maspik_spam_api_list('lang_needed', efas_array_of_lang_needed());
+                                            echo create_maspik_select("lang_needed", "maspik-lang-need", $MASPIK_REQUIRED_LANGUAGES);                                 
+                                            maspik_spam_api_list('lang_needed', $MASPIK_REQUIRED_LANGUAGES);
                                         ?>    
 
                                     </div> <!-- end of maspik-main-list-wrap -->
@@ -714,8 +410,8 @@ $spamcounter = maspik_spam_count();
                                     <div class="maspik-main-list-wrap maspik-select-list">
 
                                         <?php 
-                                            echo create_maspik_select("lang_forbidden", "maspik-lang-forbidden", efas_array_of_lang_forbidden());
-                                            maspik_spam_api_list('lang_forbidden', efas_array_of_lang_forbidden());                           
+                                            echo create_maspik_select("lang_forbidden", "maspik-lang-forbidden", $MASPIK_FORBIDDEN_LANGUAGES);
+                                            maspik_spam_api_list('lang_forbidden', $MASPIK_FORBIDDEN_LANGUAGES);                           
                                         ?>      
 
                                     </div> <!-- end of maspik-main-list-wrap -->
@@ -776,8 +472,8 @@ $spamcounter = maspik_spam_count();
                                     <div class="maspik-select-list">
                                         <?php 
                                         $is_spi_stronger = efas_get_spam_api('country_blacklist') && 
-                                                        efas_get_spam_api('AllowedOrBlockCountries') && 
-                                                        efas_get_spam_api('AllowedOrBlockCountries',"string") != 'ignore';
+                                        efas_get_spam_api('AllowedOrBlockCountries') && 
+                                        efas_get_spam_api('AllowedOrBlockCountries',"string") != 'ignore';
                                     
                                         $attr = $is_spi_stronger ? "disabled='disabled'" : false;
                                         echo $is_spi_stronger ? "<span><b>Setting disabled and managed by Maspik deshbord</b></span>" : "";
@@ -791,13 +487,13 @@ $spamcounter = maspik_spam_count();
                                                     'Block' => 'block'
 
                                                 ),$attr);
-                                                echo create_maspik_select("country_blacklist", "country_blacklist", efas_array_of_countries(),$attr);                                 
+                                                echo create_maspik_select("country_blacklist", "country_blacklist", $MASPIK_COUNTRIES_LIST ,$attr);                                 
                                             ?> 
                                         </div>
                                             <?php
                                             if($is_spi_stronger){ 
                                                 maspik_spam_api_list('AllowedOrBlockCountries'); 
-                                                maspik_spam_api_list('country_blacklist', efas_array_of_countries());
+                                                maspik_spam_api_list('country_blacklist', $MASPIK_COUNTRIES_LIST);
                                             }
                                         ?>
                                     </div> <!-- end of maspik-main-list-wrap -->
@@ -990,7 +686,7 @@ $spamcounter = maspik_spam_count();
 
                                             <div class="maspik-custom-msg-wrap">
                                                 <div class="maspik-txt-custom-msg-head togglewrap">
-                                                    <?php echo maspik_toggle_button('text_custom_message_toggle', 'text_custom_message_toggle', 'text_custom_message_toggle', 'maspik-toggle-custom-message togglebutton',"","",['custom_error_message_MaxCharactersInTextField']); ?>       
+                                                    <?php echo maspik_toggle_button('text_custom_message_toggle', 'text_custom_message_toggle', 'text_custom_message_toggle', 'maspik-toggle-custom-message togglebutton',"","",['custom_error_message_MaxCharactersInTextField']); ?>      
                                                     <h4> <?php esc_html_e('Character limit custom validation error message', 'contact-forms-anti-spam'); ?> </h4>
                                                 </div>
 
@@ -1314,17 +1010,8 @@ $spamcounter = maspik_spam_count();
                                     </span>
                                 </div>
                             </div>
-                                
-                            <div class="maspik-accordion-content">
+                        <div class="maspik-accordion-content">
                                 <div class="maspik-accordion-content-wrap hide-form-title">
-                                    <div class="maspik-txt-custom-msg-head togglewrap maspik-honeypot-wrap">
-                                        <?php echo maspik_toggle_button('maspikTimeCheck', 'maspikTimeCheck', 'maspikTimeCheck', 'maspik-honeypot togglebutton',"",""); ?>
-                                        <div>
-                                            <h4> <?php esc_html_e('Advance key check', 'contact-forms-anti-spam'); ?>
-                                            </h4>
-                                            <span><?php esc_html_e('Advanced key check - This feature adds a hidden field that is automatically filled with a unique key. If the submitted key does not match the expected key, it likely means the form was submitted by a bot or automated script. The submission will be blocked as a security measure.', 'contact-forms-anti-spam'); ?></span>
-                                        </div>  
-                                    </div><!-- end of maspik-maspikTimeCheck -->
                                     <div class="maspik-txt-custom-msg-head togglewrap maspik-honeypot-wrap">
                                         <?php echo maspik_toggle_button('maspikYearCheck', 'maspikYearCheck', 'maspikYearCheck', 'maspik-honeypot togglebutton',"",""); ?>
                                         <div>
@@ -1447,7 +1134,7 @@ $spamcounter = maspik_spam_count();
                                         <div class="maspik-main-list-wrap">
                                             
                                             <?php 
-                                                echo create_maspik_select("numverify_country", "numverify_country", maspik_countries_code_for_phone_number() , "", false);                                 
+                                                echo create_maspik_select("numverify_country", "numverify_country", $MASPIK_COUNTRIES_LIST_FOR_PHONE , "", false);                                 
                                             ?> 
                                         </div>
                                             

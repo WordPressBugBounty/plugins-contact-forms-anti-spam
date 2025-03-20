@@ -90,14 +90,14 @@ function add_custom_html_to_comment_form( $submit_button, $args ) {
         if (maspik_get_settings('maspikHoneypot')) {
             $custom_html .= '<div class="comment-form maspik-field" style="display: none;">
                 <label for="full-name-maspik-hp" class="comment-form-label">Leave this field empty</label>
-                <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="full-name-maspik-hp" id="full-name-maspik-hp" class="comment-form-input" placeholder="Leave this field empty">
+                <input size="1" type="text" autocomplete="off" autocomplete="new-password" autocomplete="false" aria-hidden="true" tabindex="-1" name="full-name-maspik-hp" id="full-name-maspik-hp" class="comment-form-input" placeholder="Leave this field empty" data-form-type="other" data-lpignore="true">
             </div>';
         }
 
         if (maspik_get_settings('maspikYearCheck')) {
             $custom_html .= '<div class="comment-form maspik-field" style="display: none;">
                 <label for="Maspik-currentYear" class="comment-form-label">Leave this field with corrent year</label>
-                <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="comment-form-input" placeholder="">
+                <input size="1" type="text" autocomplete="off" autocomplete="new-password" autocomplete="false" aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="comment-form-input" placeholder="" data-form-type="other" data-lpignore="true">
             </div>';
         }
 
@@ -233,14 +233,36 @@ function maspik_add_honeypot_to_register_form() {
         return;
     }
     ?>
-        <p class="form-row maspik-field" style="display: none;">
+        <p class="form-row maspik-field" style="display: none;" aria-hidden="true">
             <label for="full-name-maspik-hp">Leave this field unfilled</label>
-            <input type="text" name="full-name-maspik-hp" value="" tabindex="-1" autocomplete="off">
+            <input type="text" 
+                   name="full-name-maspik-hp" 
+                   id="full-name-maspik-hp"
+                   value="" 
+                   tabindex="-1" 
+                   autocomplete="off"
+                   autocorrect="off"
+                   autocapitalize="off"
+                   spellcheck="false"
+                   data-form-type="other"
+                   aria-hidden="true">
         </p>
-        <p class="form-row maspik-field" style="display: none;">
+        <p class="form-row maspik-field" style="display: none;" aria-hidden="true">
             <label for="Maspik-currentYear">Leave this field unfilled</label>
-            <input type="text" name="Maspik-currentYear" value="<?php echo intval(date('Y')); ?>" tabindex="-1" autocomplete="off">
+            <input type="text" 
+                   name="Maspik-currentYear" 
+                   id="Maspik-currentYear"
+                   value="<?php echo intval(date('Y')); // adding current year for admin area ?>"
+                   tabindex="-1" 
+                   autocomplete="off"
+                   autocorrect="off"
+                   autocapitalize="off"
+                   spellcheck="false"
+                   data-form-type="other"
+                   aria-hidden="true">
         </p>
+
+
     <?php
 }
 /**

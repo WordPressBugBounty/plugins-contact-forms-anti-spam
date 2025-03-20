@@ -93,7 +93,7 @@ function cfes_build_table() {
         $spam_value = esc_html($row['spamsrc_val']);
         $spam_type = esc_html($row['spam_type']);
         $spam_date = $row['spam_date'] ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($row['spam_date'])) : esc_html($row['spam_date']);
-        $spam_val_intext =  esc_html(maspik_var_value_convert($row['spamsrc_label']));
+        $spam_val_intext =  esc_html(maspik_get_field_display_name($row['spamsrc_label']));
         $not_spam_tag = esc_html($row['spam_tag']) == "not spam" ? " not-a-spam" : "" ;
         $form_data_raw = $row['spam_detail'];
         $unserialize_array = @unserialize($form_data_raw);

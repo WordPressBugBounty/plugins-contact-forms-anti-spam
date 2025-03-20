@@ -34,7 +34,7 @@ if ( ! defined( 'WPINC' ) ) {
                 create_maspik_log_table();
                 create_maspik_table();
             }    
-            maspik_make_default_values();
+            maspik_save_default_values();
             update_option('maspik_run_once', ++$maspik_run_once); // update to 2 to prevent reruns
         }
 
@@ -269,30 +269,30 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
     // Generate Elements - END ---
 
     //Check if DB has toggle rows, if none, make them
-        function toggle_ready_check($name){
-            global $wpdb;
-                
-            $table = maspik_get_dbtable();
-            $setting_label = maspik_get_dblabel();
-            $setting_value = maspik_get_dbvalue();
+    function toggle_ready_check($name){
+        global $wpdb;
+            
+        $table = maspik_get_dbtable();
+        $setting_label = maspik_get_dblabel();
+        $setting_value = maspik_get_dbvalue();
 
-            // Check DB if data exists
-            $toggle_lim_exists = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table WHERE $setting_label = %s", $name ) );
+        // Check DB if data exists
+        $toggle_lim_exists = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table WHERE $setting_label = %s", $name ) );
 
-            if ( $toggle_lim_exists == 0 ) {
-                // If the row doesn't exist, insert a new row
-                $wpdb->insert(
-                    $table,
-                    array(
-                        $setting_label => $name, 
-                        $setting_value => 0,
-                    )
-                );
-        
-            }
-
-
+        if ( $toggle_lim_exists == 0 ) {
+            // If the row doesn't exist, insert a new row
+            $wpdb->insert(
+                $table,
+                array(
+                    $setting_label => $name, 
+                    $setting_value => 0,
+                )
+            );
+    
         }
+
+
+    }
     //Check if DB has toggle rows, if none, make them - END --
 
     //Maspik API

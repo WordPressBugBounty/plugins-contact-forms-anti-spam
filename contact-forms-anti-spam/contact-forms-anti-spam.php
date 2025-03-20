@@ -4,7 +4,7 @@
  * Plugin Name:       Maspik - Advanced Spam Protection
  * Plugin URI:        https://wpmaspik.com/
  * Description:       The best spam protection plugin. Block spam using advanced filters, blacklists, and IP verification...
- * Version:           2.4.3
+ * Version:           2.4.4
  * Author:            WpMaspik
  * Author URI:        https://wpmaspik.com/?readme
  * Text Domain:       contact-forms-anti-spam
@@ -32,7 +32,7 @@ if (!defined('ABSPATH')) exit;
 /**
  * Currently plugin version.
  */
-define( 'MASPIK_VERSION', '2.4.3' );
+define( 'MASPIK_VERSION', '2.4.4' );
 /**
  * The code that runs during plugin activation.
  * This action is documented in includes/class-settings-page-activator.php
@@ -43,7 +43,7 @@ function maspik_on_plugin_activation() {
 	maspik_auto_update_db(); // Run the auto create database function
     if ( ! get_option( 'maspik_run_once' ) ) {
 		maspik_auto_update_db();
-        maspik_make_default_values();
+        maspik_save_default_values();
         update_option( 'maspik_run_once', 1 ); // 1 means the function has run
     }
 }
@@ -66,6 +66,7 @@ function deactivate_maspik() {
  * The core plugin class that is used to define internationalization,
  * admin-specific hooks, and public-facing site hooks.
  */
+require_once plugin_dir_path(__FILE__) . 'includes/consts.php';
 require plugin_dir_path( __FILE__ ) . 'includes/class-maspik.php';
 
 

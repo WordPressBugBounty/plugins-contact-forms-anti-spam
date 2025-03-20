@@ -909,7 +909,7 @@ function maspik_numverify_validate_number($phone_number, $api_key) {
     // Check if country code is enabled in the settings
     $country_code_kye = trim(maspik_get_settings('numverify_country')) === 'none' ? '' : sanitize_text_field(maspik_get_settings('numverify_country')); // country code from the settings
     if ( !empty($country_code_kye) ) {
-        $country_phone_code_array = maspik_countries_code_for_phone_number();
+        $country_phone_code_array = $MASPIK_COUNTRIES_LIST_FOR_PHONE;
         $country_phone_code_from_country_code = $country_phone_code_array[$country_code_kye];
         $country_phone_code_clean = preg_replace('/[^0-9]/', '', $country_phone_code_from_country_code);
         if (strpos($phone_number_clean, $country_phone_code_clean) === 0) {

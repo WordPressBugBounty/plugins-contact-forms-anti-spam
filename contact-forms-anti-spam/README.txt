@@ -5,23 +5,22 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.7
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.4.3
+Stable tag: 2.4.4
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-🛡️ **Block Spam in 2 Minutes** - No CAPTCHA Required!
-The most efficient spam protection for WordPress forms and comments, with 95%+ success rate.
+🛡️ **Intelegent Spam Protection** - Powerful Security Without CAPTCHA
+The most efficient spam protection for WordPress forms and comments.
 
 == Description ==
 
-## Why Maspik?
+## Why to block spam with Maspik?
 * 🚀 **Quick Setup**: Ready in 2 minutes
 * 🎯 **High Success Rate**: Better protection than traditional CAPTCHA
 * 🔍 **Smart Detection**: Identifies spam patterns automatically
 * 🌐 **Wide Compatibility**: Works with all major form plugins
 * 🛠️ **Fully Customizable**: Adapt to your specific needs you can block any spam you want with Blacklist system
 * 👥 **Excellent Support**: We are committed to help you to block spam, sent us any spam you receive and we will help you to block it.
-
 
 ## Key Features
 ✅ Works instantly with popular form plugins and registration forms
@@ -54,6 +53,7 @@ The most efficient spam protection for WordPress forms and comments, with 95%+ s
   * Honeypot
   * IP verification (100 checks/month)
   * Block submissions without source URLs (Elementor and Hello Plus)
+  * Advance key check 
 * **API Integrations:**
   * Proxycheck.io (check IP address against proxy/VPN/TOR)
   * AbuseIPDB.com (check IP address against abuse/spam/malicious/proxy/VPN/TOR)
@@ -138,15 +138,17 @@ The plugin is GDPR compliant.
 
 = What's the setup process like? =
 Installation takes just 2 minutes: search for "Maspik" in your WordPress plugins section, click install, and activate. The plugin comes with smart pre-configured protection that works immediately. You can start blocking spam right away without any technical configuration.
+But if you need more advanced settings, you can check the [documentation](https://wpmaspik.com/documentation/getting-started/?readme-file) for more information.
 
 = How effective is Maspik at blocking spam? =
 Maspik uses multiple detection methods including smart pattern recognition, honeypot fields, and blacklist systems to achieve a 95%+ success rate in blocking spam. Unlike traditional CAPTCHA solutions, it works silently without disrupting your real users.
+So, Maspik is highly effective at blocking spam.
 
 = Will Maspik affect my site's performance? =
-No. Maspik is designed for optimal performance, using server-side processing. All spam checking is done efficiently without impacting your front-end page load times.
+No. Maspik is designed for optimal performance, using mostly server-side processing. All spam checking is done efficiently without impacting your front-end page load times.
 
 = What kind of customization options are available? =
-You can customize text blacklists, email patterns, character limits, link restrictions, IP blocking rules, and country-based filtering. Each form type can have its own specific settings, letting you create the perfect balance of protection for your needs.
+You can customize text blacklists, email patterns, character limits, link restrictions, IP blocking rules, and country-based filtering. Each field type can have its own specific settings, letting you create the perfect balance of protection for your needs.
 
 = Does Maspik protect all types of forms? =
 Yes! Maspik protects contact forms, comments, registration forms, and more. It works with all major form plugins including Contact Form 7, Elementor Forms, Ninja Forms, and many others. Premium users also get protection for WooCommerce forms, WPForms, and Gravity Forms.
@@ -216,6 +218,12 @@ So if you need advanced spam protection, that works with all forms and has a lot
 
 == Changelog ==
 
+= 2.4.4 - 20/03/2025 = 
+* Announcement - Advance key check is now officialy released and not anymore in ongoing exprement.
+* Improved - Enhanced security by hiding passwords in Spam log
+* Improved - Disabled autocomplete functionality in WooCommerce registration forms for better security
+
+
 = 2.4.3 - 19/02/2025 = 
 * Fixed - Fix Elementor Bot detector option not working wall (When page source url is empty).
 * Fixed - Fix detection string in Textarea field with regex/wildcard format.
@@ -246,7 +254,7 @@ So if you need advanced spam protection, that works with all forms and has a lot
 
 
 = 2.2.14 - 05/01/2025 = 
-* New feature! - Enhanced Advanced Key Check system
+* New exprement! - Enhanced Advanced Key Check system - Under ongoing exprement.
 * Improved database performance
 * Optimized code execution
 
