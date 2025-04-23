@@ -41,7 +41,6 @@ class Maspik {
 		$this->plugin_name = 'maspik';
 
 		$this->load_dependencies();
-		$this->set_locale();
 		$this->define_admin_hooks();
 
 	}
@@ -57,21 +56,14 @@ class Maspik {
 		 * core plugin.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-maspik-loader.php';
-
-		/**
-		 * The class responsible for defining internationalization functionality
-		 * of the plugin.
-		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-maspik-i18n.php';
-
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-maspik-admin.php';
       
-     // functions
+		// functions
       	require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/functions.php';
-     // spam block functions
+     	// spam block functions
       	require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/spam-block.php';
 
       /**
@@ -175,26 +167,20 @@ class Maspik {
         }
       }
 
+	   // Custom Forms
+		if( maspik_get_settings( "maspik_support_custom_forms" ) != "no" ){ 
+			require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/custom.php';
+      	}
+
 
 		
       // If agree to shere Non sensitive information 
-      if( maspik_get_settings("shere_data", '', 'old') || maspik_get_settings("shere_data") ){ 
-          require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/statistics-data.php';
-      }
+       if( maspik_get_settings("shere_data", '', 'old') || maspik_get_settings("shere_data") ){ 
+        	require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/statistics-data.php';
+        }
+
 
 		$this->loader = new Maspik_Spam_Blacklist_Loader();
-
-	}
-
-	/**
-	 * Define the locale for this plugin for internationalization.
-	 *
-	 */
-	private function set_locale() {
-
-		$plugin_i18n = new Maspik_i18n();
-
-		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
 
 	}
 

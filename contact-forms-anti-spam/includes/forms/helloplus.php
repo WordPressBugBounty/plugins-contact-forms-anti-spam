@@ -56,7 +56,7 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
 
                 if ($spam) {
                     $error_message = cfas_get_error_text("emails_blacklist");
-                    efas_add_to_log($type = "email", "Email $field_value is block $spam", $form_data,"Hello Plus", "emails_blacklist", $spam_val);
+                    efas_add_to_log($type = "email", $spam, $form_data,"Hello Plus", "emails_blacklist", $spam_val);
                     $ajax_handler->add_error($field_id, $error_message);
                     return;
                 }

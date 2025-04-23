@@ -86,7 +86,7 @@ function my_ninja_forms_submit_data( $form_data ) {
             $spam = checkEmailForSpam($field_value);
             $spam_val = $field_value;
             if($spam) {
-                efas_add_to_log($type = "email","Email $field_value is block $spam" , $fields, "Ninja Forms", "emails_blacklist", $spam_val);
+                efas_add_to_log($type = "email", $spam, $fields, "Ninja Forms", "emails_blacklist", $spam_val);
                 $form_data['errors']['fields'][$field_id] = cfas_get_error_text();
                 return $form_data;
             }
@@ -147,13 +147,6 @@ function add_custom_html_to_ninja_forms( $form_id, $settings, $form_fields ) {
             $custom_html .= '<div class="ninja-forms-field maspik-field">
                 <label for="Maspik-currentYear" class="ninja-forms-field-label">Leave this field empty</label>
                 <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="ninja-forms-field-element" placeholder="">
-            </div>';
-        }
-
-        if (maspik_get_settings('maspikTimeCheck')) {
-            $custom_html .= '<div class="ninja-forms-field maspik-field">
-                <label for="Maspik-exactTime" class="ninja-forms-field-label">Leave this field empty</label>
-                <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="Maspik-exactTime" id="Maspik-exactTime" class="ninja-forms-field-element" placeholder="">
             </div>';
         }
 

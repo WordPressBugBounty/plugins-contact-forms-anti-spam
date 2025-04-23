@@ -51,7 +51,7 @@ function maspik_comments_checker(array $data) {
     if (!empty($email) && !$spam) {
         $spam = checkEmailForSpam($email);
         if ($spam) {
-            $reason = "Email $email is blocked";
+            $reason = $spam;
             $spam_lbl = 'emails_blacklist';
             $spam_val = $email;
             $type = "Email";
@@ -140,7 +140,7 @@ function maspik_check_wp_registration_form($errors) {
         if ($user_email && !$spam) {
             $spam = checkEmailForSpam($user_email);
             if ($spam && !$reason) {
-                $reason = "Email $user_email is blocked";
+                $reason = $spam;
                 $spam_lbl = 'emails_blacklist';
                 $spam_val = $user_email;
                 $type = "Email";
@@ -188,6 +188,7 @@ function maspik_register_form_honeypot_check_in_woocommerce_registration($errors
         $reason = $GeneralCheck['reason'] ?? '';
         $message = $GeneralCheck['message'] ?? '';
         $spam_val = $GeneralCheck['message'] ?? '';
+        $spam_lbl = $GeneralCheck['message'] ?? '';
         $error_message = cfas_get_error_text($message);
         $type = "General";
         if ($user_email && !$spam) {

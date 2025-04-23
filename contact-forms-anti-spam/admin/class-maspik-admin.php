@@ -40,7 +40,7 @@ if ( ! defined( 'WPINC' ) ) {
 
         $already_run = true;
     }
-    add_action( 'plugins_loaded', 'maspik_check_if_need_to_run_once' , 20);
+    add_action( 'init', 'maspik_check_if_need_to_run_once' , 20);
 
      //Check for PRO -addclass- 
         function maspik_add_pro_class($type = ""){
@@ -194,40 +194,44 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
         }
 
         function create_maspik_numbox($id, $name, $class, $label, $default = '', $min = 2, $max = 10000) {      
-            
             $data = maspik_get_settings($name);
-            if(is_array(efas_get_spam_api($name))){
-                $api_value = efas_get_spam_api($name)[0];
-            }else{
-                $api_value = efas_get_spam_api($name);
+            // Check the API value
+            $api_value = null;
+            if(is_array(efas_get_spam_api($name,"bool"))){
+                $api_value = efas_get_spam_api($name, "bool")[0];
+            } else {
+                $api_value = efas_get_spam_api($name, "bool");
+            }
+            // Check the original value
+            $value = '';
+            if ($data === '' || $data === null) {  // If the value is completely empty
+                if ($default > 0) {
+                    $value = intval($default);    
+                }
+            } else {  // If there is a value (including 0)
+                $value = intval($data);
             }
 
-           
+            $numbox = "<div class='maspik-numbox-wrap'>
+                <label for='" . esc_attr($id) . "'>" . esc_html($label) . ":</label>
+                <input type='number' 
+                    id='" . esc_attr($id) . "' 
+                    name='" . esc_attr($name) . "' 
+                    class='" . esc_attr($class) . "' 
+                    min='" . esc_attr($min) . "' 
+                    max='" . esc_attr($max) . "' 
+                    step='1' 
+                    value='" . esc_attr($value) . "'>";
 
-            $class_attr = !empty($class) ? ' class="' . esc_attr($class) . '"' : '';
-
-            $numbox = "";
-            $numbox .= "<div class='maspik-numbox-wrap'><label for=". esc_attr($id) .">". esc_html($label) .":</label>
-            <input type='number' id=". esc_attr($id) ." name=". esc_attr($name) ." ". $class_attr ." min='".  esc_attr($min) ."' max='" . esc_attr($max) . "' step='1' value='";
-
-
-            if($data != ''){
-                $numbox .=  esc_attr($data);
-
-            }else{
-                $numbox .= esc_attr($default);
-
+            // Add API value if it exists and has a value (including 0)
+            if($api_value !== null && $api_value !== '' && trim($api_value) !== '') {
+                $numbox .= "<div class='limit-api-wrap'>
+                    <span class='limit-api-label'>API: </span>
+                    <span class='limit-api-value'>" . esc_html($api_value) . "</span>
+                </div>";
             }
-
-            $numbox .= "'>";
             
-             if($api_value){
-                $numbox .= " <div class='limit-api-wrap'><span class='limit-api-label'>API: </span><span class='limit-api-value'>" . esc_html($api_value) . "</span></div>";
-            }
-
-            
-            
-            $numbox.= "</div>";
+            $numbox .= "</div>";
                     
             return $numbox;
         }
@@ -296,35 +300,51 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
     //Check if DB has toggle rows, if none, make them - END --
 
     //Maspik API
-        function maspik_spam_api_list($name, $array = ""){
+        function maspik_spam_api_list($name, $array = "") {
             $api = efas_get_spam_api($name);
  
-            $apitext = '';
-
-            if ($api) { 
-                echo "<div class='maspik-form-api-list'><h5 class='maspik-api-title'>From Maspik Dashboard & Auto-populate</h5>";
-                if (!is_array($api)) {
-                    $api =  explode( "\n", str_replace("\r", "", $api) );
-                }
-                if (is_array($api)) { 
-                    foreach ($api as $line){
-                        if( is_array($array) ){
-                           
-                            foreach ($array as $key => $value) {
-                               if ($key == preg_replace('/\s+/', '', $line)) {
-                                    $apitext .='<span class="api-entry">' . esc_html($value) . '</span> ';
-                                }
-                            }
-                        } else $apitext .= esc_html($line) . '<br>';
-                    }
-                } else { // else is_array $api
-                    $apitext = $api;
-                }
-
-                echo "<div class='maspik-api-text-wrap'><div class='maspik-api-text ";
-                if( !is_array($array) ) echo "maspik-custom-scroll";
-                echo "'>" . $apitext . "</div></div></div>";
+            if (!$api) {
+                return;
             }
+
+            echo '<div class="maspik-form-api-list">';
+            echo '<h5 class="maspik-api-title">' . esc_html__('From Maspik Dashboard & Auto-populate', 'contact-forms-anti-spam') . '</h5>';
+            
+            // Convert string to array if needed
+            if (!is_array($api)) {
+                $api = explode("\n", str_replace("\r", "", $api));
+            }
+
+            echo '<div class="maspik-api-text-wrap">';
+            echo '<div class="maspik-api-text' . (!is_array($array) ? ' maspik-custom-scroll' : '') . '">';
+
+            if (is_array($api)) {
+                if (is_array($array)) {
+                    // Handle associative array case
+                    foreach ($api as $line) {
+                        $key = preg_replace('/\s+/', '', $line);
+                        if (isset($array[$key])) {
+                            echo '<span class="api-entry">' . esc_html($array[$key]) . '</span>';
+                        }
+                    }
+                } else {
+                    // Handle simple array case
+                    echo '<ul class="api-entries-list">';
+                    foreach ($api as $line) {
+                        if (!empty(trim($line))) {
+                            echo '<li>' . esc_html($line) . '</li>';
+                        }
+                    }
+                    echo '</ul>';
+                }
+            } else {
+                // Handle string case
+                echo '<p>' . esc_html($api) . '</p>';
+            }
+
+            echo '</div>'; // Close maspik-api-text
+            echo '</div>'; // Close maspik-api-text-wrap
+            echo '</div>'; // Close maspik-form-api-list
         }
     //Maspik API - END
 
@@ -405,11 +425,11 @@ class Maspik_Admin {
 
         $numlogspam = maspik_spam_count() ? "(" . maspik_spam_count() . ")" : false;
 
-        add_submenu_page($this->plugin_name, 'Blacklist Option', 'Blacklist Options', 'administrator', $this->plugin_name, array($this, 'displayPluginAdminDashboard'));
+        add_submenu_page($this->plugin_name, 'Main settings', 'Main settings', 'administrator', $this->plugin_name, array($this, 'displayPluginAdminDashboard'), 10);
 
-        add_submenu_page($this->plugin_name, 'Spam Log', 'Spam Log ' . $numlogspam, 'edit_pages', $this->plugin_name . '-log.php', array($this, 'displayPluginAdminSettings'));
-
-        add_submenu_page($this->plugin_name, 'Import/Export Settings', 'Import/Export Settings', 'administrator', $this->plugin_name . '-import-export.php', array($this, 'Maspik_import_export_settings_page'));
+        add_submenu_page($this->plugin_name, 'Spam Log', 'Spam Log ' . $numlogspam, 'edit_pages', $this->plugin_name . '-log.php', array($this, 'displayPluginAdminSettings'), 20);
+        
+        add_submenu_page($this->plugin_name, 'Import/Export', 'Import/Export', 'administrator', $this->plugin_name . '-import-export.php', array($this, 'Maspik_import_export_settings_page'), 40);
 
         if ( cfes_is_supporting()) {
             $first_maspik_api_id = maspik_get_settings('private_file_id');
@@ -427,7 +447,7 @@ class Maspik_Admin {
             'edit_pages',
             $url,
             '',
-            null
+            60
         );
 
 
@@ -445,6 +465,8 @@ class Maspik_Admin {
         }
         require_once 'partials/' . $this->plugin_name . '-log.php';
     }
+
+    
 
     public function displayPluginAdminPro() {
         $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'general';

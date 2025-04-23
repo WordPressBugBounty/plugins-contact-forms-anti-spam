@@ -61,7 +61,7 @@ function maspik_validate_formidable_email($errors, $posted_field, $posted_value,
 
    if( $spam ) {
       $error_message = cfas_get_error_text();
-      efas_add_to_log($type = "email","Email $field_value is block $spam" , $_POST['item_meta'], "Formidable", "emails_blacklist", $spam_val);
+      efas_add_to_log($type = "email", $spam, $_POST['item_meta'], "Formidable", "emails_blacklist", $spam_val);
       $errors[ 'field'. $posted_field->id ] = $error_message;
    }
    return $errors;

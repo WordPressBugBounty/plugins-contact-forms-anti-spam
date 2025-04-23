@@ -37,7 +37,7 @@ function maspik_check_bp_registration_form() {
     if ($user_email && !$spam) {
         $spam = checkEmailForSpam($user_email);
         if ($spam && !$reason) {
-            $reason     = "Email $user_email is blocked";
+            $reason     = $spam;
             $spam_lbl   = 'emails_blacklist';
             $spam_val   = $user_email;
             $type       = "Email";

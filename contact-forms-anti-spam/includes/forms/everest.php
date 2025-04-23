@@ -65,7 +65,7 @@ function maspik_validate_everest_forms($errors, $form_data) {
             $spam_val = $field_value;
 
             if ($spam) {
-                efas_add_to_log("email", "Email $field_value is blocked", $entry, "Everest Forms", "emails_blacklist", $spam_val);
+                efas_add_to_log("email", $spam, $entry, "Everest Forms", "emails_blacklist", $spam_val);
                 $errors[$form_id][$field_id] = cfas_get_error_text($message);
                 return $errors;
             }
@@ -125,13 +125,6 @@ function add_maspikhp_html_to_everest($form_data) {
         $addhtml .= '<div class="evf-honeypot-container evf-field-hp maspik-field">
             <label for="Maspik-currentYear" class="evf-field-label">Leave this field empty</label>
             <input type="text" name="Maspik-currentYear" id="Maspik-currentYear" class="input-text">
-        </div>';
-    }
-
-    if (maspik_get_settings('maspikTimeCheck')) {
-        $addhtml .= '<div class="evf-honeypot-container evf-field-hp maspik-field">
-            <label for="Maspik-exactTime" class="evf-field-label">Leave this field empty</label>
-            <input type="text" name="Maspik-exactTime" id="Maspik-exactTime" class="input-text">
         </div>';
     }
 

@@ -17,7 +17,6 @@ function maspik_validate_fluentform_general( $errors, $formData, $form, $fields)
 // For HP
 parse_str($_POST['data'], $parsed_data);
 $extracted_data = array(
-    'Maspik-exactTime' => isset($parsed_data['Maspik-exactTime']) ? $parsed_data['Maspik-exactTime'] : false,
     'Maspik-currentYear' => isset($parsed_data['Maspik-currentYear']) ? $parsed_data['Maspik-currentYear'] : false,
     'maspik_spam_key' => isset($parsed_data['maspik_spam_key']) ? $parsed_data['maspik_spam_key'] : false,
     'full-name-maspik-hp' => isset($parsed_data['full-name-maspik-hp']) ? $parsed_data['full-name-maspik-hp'] : false
@@ -78,7 +77,7 @@ function maspik_validate_fluentforms_email($errorMessage, $field, $formData, $fi
 
    if( $spam ) {
       $error_message = cfas_get_error_text();
-      efas_add_to_log($type = "email","Email $field_value is block $spam" , $formData, "Fluent Forms", "emails_blacklist", $spam_val);
+      efas_add_to_log($type = "email", $spam, $formData, "Fluent Forms", "emails_blacklist", $spam_val);
       $errorMessage = $error_message;
    }
    return $errorMessage;
@@ -163,12 +162,6 @@ add_filter('fluentform/rendering_form', function($form){
                 </div>';
             }
 
-            if (maspik_get_settings('maspikTimeCheck')) {
-                $custom_html .= '<div class="ff-el-group maspik-field">
-                    <label for="Maspik-exactTime" class="ff-el-input--label">Leave this field empty</label>
-                    <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="Maspik-exactTime" id="Maspik-exactTime" class="ff-el-form-control" placeholder="">
-                </div>';
-            }
          return   $html . $custom_html;
            
         }

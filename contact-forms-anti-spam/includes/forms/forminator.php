@@ -39,7 +39,7 @@ function maspik_validate_forminator_general($submit_errors, $form_id, $field_dat
             $spam = checkEmailForSpam($field_value);
             $spam_val = $field_value;
             if($spam) {
-                efas_add_to_log($type = "email","Email $field_value is block $spam" , $_POST, "Forminator", "emails_blacklist", $spam_val);
+                efas_add_to_log($type = "email", $spam, $_POST, "Forminator", "emails_blacklist", $spam_val);
                 $submit_errors[][$field_id] = cfas_get_error_text();
                 return $submit_errors;
             }
@@ -124,12 +124,7 @@ add_action( 'forminator_render_form_submit_markup', function( $html, $form_id, $
                 <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="forminator-input" placeholder="">
             </div>';
         }
-        if (maspik_get_settings('maspikTimeCheck')) {
-            $custom_html .= '<div class="forminator-row maspik-field">
-                <label for="Maspik-exactTime" class="forminator-label">Leave this field empty</label>
-                <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="Maspik-exactTime" id="Maspik-exactTime" class="forminator-input" placeholder="">
-            </div>';
-        }
+
      return   $custom_html . $html  ;
 
     }

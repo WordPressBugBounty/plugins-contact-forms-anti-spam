@@ -63,7 +63,7 @@ function maspik_validation_process_gravity($result, $value, $form, $field) {
         case 'email':
             $spam = checkEmailForSpam($field_value);
             if ($spam) {
-                efas_add_to_log("email", "Email $field_value is blocked", $_POST, "GravityForms", "emails_blacklist", $field_value);
+                efas_add_to_log("email", $spam, $_POST, "GravityForms", "emails_blacklist", $field_value);
                 $result['is_valid'] = false;
                 $result['message'] = cfas_get_error_text();
                 $spam_check_done = true;

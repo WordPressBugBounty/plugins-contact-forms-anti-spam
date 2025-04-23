@@ -58,7 +58,7 @@ function maspik_validate_cf7_process( $result, $tags ) {
                     $post_entries = array_filter( $_POST, function( $key ) {
                         return strpos( $key, '_wpcf7' ) === false;
                     }, ARRAY_FILTER_USE_KEY );
-                    efas_add_to_log( "email", "Email $field_value is blocked", $post_entries, "Contact Form 7", "emails_blacklist", $spam_val );
+                    efas_add_to_log( "email", $spam, $post_entries, "Contact Form 7", "emails_blacklist", $spam_val );
                     $result->invalidate( $tag, $error_message );
                     return $result;
                 }
@@ -141,13 +141,6 @@ function maspik_honeypot_to_cf7_form( $form_content ) {
             $custom_html .= '<div class="wpcf7-form-control-wrap maspik-field">
                 <label for="Maspik-currentYear" class="wpcf7-form-control-label"></label>
                 <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="wpcf7-form-control wpcf7-text" placeholder="">
-            </div>';
-        }
-
-        if ( maspik_get_settings( 'maspikTimeCheck' ) ) {
-            $custom_html .= '<div class="wpcf7-form-control-wrap maspik-field">
-                <label for="Maspik-exactTime" class="wpcf7-form-control-label"></label>
-                <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" name="Maspik-exactTime" id="Maspik-exactTime" class="wpcf7-form-control wpcf7-text" placeholder="">
             </div>';
         }
 

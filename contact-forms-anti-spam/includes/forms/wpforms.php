@@ -81,7 +81,7 @@ add_action( 'wpforms_process_validate_email', function( $field_id, $field_submit
   $spam_val = $field_value;
     if( $spam) {
       $error_message = cfas_get_error_text();
-      efas_add_to_log($type = "email","Email $field_value is block $spam", $_POST, "Wpforms", "emails_blacklist", $spam_val);
+      efas_add_to_log($type = "email", $spam, $_POST, "Wpforms", "emails_blacklist", $spam_val);
       wpforms()->process->errors[ $form_data['id'] ][ $field_id ] = $error_message;
     }
 }, 10, 3 );
@@ -149,14 +149,6 @@ function add_maspikhp_html_to_wpforms() {
                 <input size="1" type="text" autocomplete="off"  aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="wpforms-field-medium" placeholder="">
             </div>';
         }
-
-        if (maspik_get_settings('maspikTimeCheck')) {
-            echo  '<div class="wpforms-field wpforms-field-name maspik-field">
-                <label for="Maspik-exactTime" class="wpforms-field-label">Leave this field empty</label>
-                <input size="1" type="text" autocomplete="off"  aria-hidden="true" tabindex="-1" name="Maspik-exactTime" id="Maspik-exactTime" class="wpforms-field-medium" placeholder="">
-            </div>';
-        }
-
     }
 }
 

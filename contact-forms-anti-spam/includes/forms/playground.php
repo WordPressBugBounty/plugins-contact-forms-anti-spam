@@ -53,7 +53,7 @@ function maspik_handle_playground_form() {
     }
     if($email){
          $email_spam = checkEmailForSpam($email);
-         $email_spam = $email_spam ? "SPAM - Email $email is block $email_spam" : "";
+         $email_spam = $email_spam ? $email_spam : "";
     }
     if($tel){
          $tel_spam = checkTelForSpam($tel);  

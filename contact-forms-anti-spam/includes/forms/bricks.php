@@ -54,7 +54,7 @@ function maspik_validate_bricks_form($errors, $form) {
             $spam_val = $field_value;
 
             if ($spam) {
-                efas_add_to_log($type = "email","Email $field_value is block $spam" , $values, "Bricks", "emails_blacklist", $spam_val);
+                efas_add_to_log($type = "email",$spam , $values, "Bricks", "emails_blacklist", $spam_val);
                 $errors[] = $error_message;
                 return $errors;
             }

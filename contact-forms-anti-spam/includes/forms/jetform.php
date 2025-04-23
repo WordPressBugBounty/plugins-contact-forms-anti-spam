@@ -54,7 +54,7 @@ function validate_jet_form_for_spam($form_handler) {
                         $spam = checkEmailForSpam($field_value);
                         $spam_val = $field_value;
                         if ($spam) {
-                            efas_add_to_log("email", "Email $field_value is block $spam", $_POST, "JetFormBuilder", "emails_blacklist", $spam_val);
+                            efas_add_to_log("email", $spam, $_POST, "JetFormBuilder", "emails_blacklist", $spam_val);
                             throw new \Jet_Form_Builder\Exceptions\Request_Exception(
                                 $error_message,
                                 array($field_key => $error_message)
@@ -123,13 +123,6 @@ function add_maspikhp_html_to_jet_form($content, $field_name, $attrs) {
             $addhtml .= '<div class="jet-form-builder__field-wrap maspik-field">
                 <label for="Maspik-currentYear" class="jet-form-builder__label">Leave this field empty</label>
                 <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="jet-form-builder__field jet-form-builder__field-text" placeholder="">
-            </div>';
-        }
-
-        if (maspik_get_settings('maspikTimeCheck')) {
-            $addhtml .= '<div class="jet-form-builder__field-wrap maspik-field">
-                <label for="Maspik-exactTime" class="jet-form-builder__label">Leave this field empty</label>
-                <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="Maspik-exactTime" id="Maspik-exactTime" class="jet-form-builder__field jet-form-builder__field-text" placeholder="">
             </div>';
         }
 

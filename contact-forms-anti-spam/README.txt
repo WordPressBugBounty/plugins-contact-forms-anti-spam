@@ -1,18 +1,20 @@
-=== Maspik - Advanced Spam Protection ===
-Contributors: yonifre
+=== Maspik - Ultimate Spam Solution ===
+Contributors: maspik,yonifre
 Donate link: https://paypal.me/yonifre
 Tags: spam, blacklist, anti spam, Honeypot, antispam 
-Tested up to: 6.7
+Tested up to: 6.8
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.4.4
+Stable tag: 2.5.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-🛡️ **Intelegent Spam Protection** - Powerful Security Without CAPTCHA
-The most efficient spam protection for WordPress forms and comments.
+🛡️ Contact-forms, comments and registration forms - No more fake leads, and unwanted spam - Every email will be real and valuable. 
 
 == Description ==
+
+No more fake leads, bot submissions, and unwanted spam - Every email will be real and valuable, Spam block guarantee!
+**Lets bring back the excitement** of getting new leads.
 
 ## Why to block spam with Maspik?
 * 🚀 **Quick Setup**: Ready in 2 minutes
@@ -20,15 +22,15 @@ The most efficient spam protection for WordPress forms and comments.
 * 🔍 **Smart Detection**: Identifies spam patterns automatically
 * 🌐 **Wide Compatibility**: Works with all major form plugins
 * 🛠️ **Fully Customizable**: Adapt to your specific needs you can block any spam you want with Blacklist system
-* 👥 **Excellent Support**: We are committed to help you to block spam, sent us any spam you receive and we will help you to block it.
+* 👥 **Spam Block Guarantee**: We are committed to help you to block spam, See [Spam Block Guarantee](#spam-block-guarantee) paragraph.
 
 ## Key Features
 ✅ Works instantly with popular form plugins and registration forms
 ✅ No CAPTCHA needed
-✅ Smart blacklist system
-✅ IP & country blocking
+✅ Smart blacklist system, block any word that you want, if exist in the submission, it will be blocked.
+✅ IP blacklist & API integrations
 ✅ Phone number validation
-✅ Several ways to block spam with advanced honeypot fields
+✅ Several methods to block spam with advanced honeypot fields
 ✅ Multi-language support
 
 ## Detailed Features: Our Advanced Spam Protection & Filtering ##
@@ -38,26 +40,32 @@ The most efficient spam protection for WordPress forms and comments.
   * Email fields (supports regex/wildcard patterns)
   * Text area fields
   * Phone number verification with regex/wildcard format
+* **Blocking:**
+  * Specific IP addresses
+  * Spam submissions in WordPress comments/registration/contact forms
+  * Option to block submissions with emojis in textarea fields
+* **Advance Blocking:**
+  * Honeypot
+  * IP verification (100 checks/month)
+  * Block submissions post by bot
+  * Advance key check 
 * **Character Control:**
   * Maximum number of characters in text fields
   * Maximum number of characters in text area fields
 * **Link Limitation:**
   * Limit the number of links allowed in text areas (ideally 0)
-* **Blocking:**
-  * Specific IP addresses
-  * Spam submissions in WordPress comments and subscription forms
-  * Option to block submissions with emojis in textarea fields
-* **Spam Log:**
-  * Review blocked submissions
-* **Advance Blocking:**
-  * Honeypot
-  * IP verification (100 checks/month)
-  * Block submissions without source URLs (Elementor and Hello Plus)
-  * Advance key check 
 * **API Integrations:**
   * Proxycheck.io (check IP address against proxy/VPN/TOR)
   * AbuseIPDB.com (check IP address against abuse/spam/malicious/proxy/VPN/TOR)
   * Numverify.com (validate phone number to block spam phone numbers)
+* **Spam Log:**
+  * Review blocked submissions
+  * understand way spam being blocked
+* **Detailed Statistics:**
+  * Track blocked spam
+  * Analyze patterns
+  * Monitor protection
+  * Advanced spam statistics dashboard
 
 ## Supported Forms ##
 
@@ -76,6 +84,7 @@ Maspik integrates seamlessly with a wide range of popular contact forms and comm
 * BuddyPress
 * WordPress comments
 * WordPress registration form
+* Custom PHP forms
 * WPForms*
 * GravityForms*
 * WooCommerce registration form*
@@ -88,11 +97,10 @@ Maspik integrates seamlessly with a wide range of popular contact forms and comm
 ## Pro Version Features 🌟
 ⭐ Advanced IP verification (10,000 checks/month)
 ⭐ Custom spam dashboard for multiple sites, manage your spam settings from one place
-⭐ Country-based filtering for advanced spam protection
-⭐ Language detection & blocking
+⭐ Country-based filtering, allow you to block spam by country, or allow only specific country
+⭐ Language-based filtering, allow you to block spam by language, or allow only specific language
 ⭐ Settings Import/Export
 ⭐ Premium support
-
 ##Important Note##
 
 Be cautious when selecting words to blacklist as each website has different needs. For example, if you're a digital marketing agency and blacklist the word "SEO," you may lose some valid leads.
@@ -111,6 +119,20 @@ The plugin is GDPR compliant.
 * 💖 [Support us with 5 stars review](https://wordpress.org/support/plugin/contact-forms-anti-spam/reviews/#new-post)
 * 💎 [Donate to support our work](https://paypal.me/yonifre)
 * ✨ [WP Maspik](https://wpmaspik.com/?readme-file)
+
+## 🛡️ Spam Block Guarantee - for all users!
+
+We stand behind our protection! If spam is getting through your forms, Our team is here to help and guide you to block the spam.
+### Getting Help is Easy:
+
+1. Join our [Community Forum](https://www.facebook.com/groups/maspik)
+2. Create a new post with:
+   * Your website URL and form page URL (optional)
+   * Description of the spam you're receiving, attach the spam submission screenshot or text
+   * Your Maspik version
+   * Screenshot or export of your current spam settings
+
+Our team will guide you to block the spam effectively!
 
 
 == Installation ==
@@ -186,6 +208,7 @@ Currently supports the following forms:
 <li>Fluentforms</li>
 <li>Bricksbuilder forms</li>
 <li>BuddyPress</li>
+<li>Custom PHP forms</li>
 <li>Wpforms (Maspik Pro license required)</li>
 <li>Gravityforms (Maspik Pro license required)</li>
 <li>Wordpress comments</li>
@@ -217,6 +240,22 @@ So if you need advanced spam protection, that works with all forms and has a lot
 
 
 == Changelog ==
+
+= 2.5.0 - 22/04/2025 = 
+* Improve - Improved UI/UX of the entire plugin.
+* New feature! - Add Spam statistics dashboard page.
+* New feature - Add spam statistics data to admin dashboard.
+* New feature - Add reset all settings to default (Factory reset).
+* We want to grow and improve the experience! so we need your help! please:
+  * Share your feedback and suggestions to our [Suggestion Box](https://wpmaspik.com/#suggestions?readme-file).
+  * Give as 5 stars review on [WordPress.org](https://wordpress.org/support/plugin/contact-forms-anti-spam/reviews/#new-post).
+  * Spread the word and write a Guide/Vlog/Post about Maspik, and receive a Pro license on us.
+* New feature - Adding support for Custom PHP forms by using the [filter](https://wpmaspik.com/documentation/custom-php-form/?readme-file).
+* Bug fix - Fixed form validation issues that occurred when forms were placed inside popups and WP Rocket caching was enabled with strict settings.
+* Bug fix - Fix translation issue with WP version 6.7, load too early.
+* Bug fix - Fixed issue where maximum links limit was not being set through the Dashboard API.
+* Improvement - Compatibility with WP version 6.8
+
 
 = 2.4.4 - 20/03/2025 = 
 * Announcement - Advance key check is now officialy released and not anymore in ongoing exprement.

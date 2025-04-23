@@ -54,7 +54,7 @@ function maspik_make_extra_spam_check($post) {
     // Year check
 
     if (maspik_get_settings('maspikYearCheck')) {
-        $serverYear = intval(date('Y'));
+        $serverYear = intval(gmdate('Y'));
         $submittedYear = sanitize_text_field($post['Maspik-currentYear']);
         if ($post['Maspik-currentYear'] != $serverYear) {
             return [
@@ -294,14 +294,14 @@ function validateTextField($field_value) {
  			if (strpos($bad_string, '*') !== false) {
                 // Handle wildcard pattern using fnmatch
                 if (fnmatch($bad_string, $field_value, FNM_CASEFOLD)) {
-                    $spam = "Input *$field_value* is blocked by wildcard pattern";
+                    $spam = "Input *!$field_value!* is blocked by wildcard pattern";
                     return array('spam' => $spam, 'message' => "text_blacklist");
                   	break;
                 }
             } else {
                 // Check if exist in string 
                 if (maspik_is_field_value_exist_in_string($bad_string, $field_value) ) {
-                    $spam =  "Forbidden input *$field_value*, because *$bad_string* is blocked";
+                    $spam =  "Forbidden input *!$field_value!*, because *!$bad_string!* is blocked";
                     return array('spam' => $spam, 'message' => "text_blacklist", "option_value" => $bad_string,  'label' => "text_blacklist");
                    	break;
                 }
@@ -323,12 +323,12 @@ function validateTextField($field_value) {
         if (is_numeric($MaxCharacters) && $MaxCharacters > 3) {
             $CountCharacters = mb_strlen($field_value); // Use mb_strlen for multibyte characters
             if ($CountCharacters > $MaxCharacters ) {
-                $spam = "More than *$MaxCharacters* characters";
+                $spam = "More than *!$MaxCharacters!* characters";
                 return array('spam' => $spam, 'message' => $message,"option_value" =>$MaxCharacters , 'label' => "MaxCharactersInTextField");
             }
 
             if ($CountCharacters < $MinCharacters ) {
-                $spam = "Less than *$MinCharacters* characters";
+                $spam = "Less than *!$MinCharacters!* characters";
                 return array('spam' => $spam, 'message' => $message,"option_value" =>$MinCharacters, 'label' => "MinCharactersInTextField");
             }
         }
@@ -392,17 +392,17 @@ function checkEmailForSpam($field_value) {
             }
 
             if (preg_match($bad_string_lower, $field_value_lower)) {
-                return "because regular expression pattern *'$bad_string'* is in the blacklist";
+                return "Email *!$field_value_lower!* is blocked because regular expression pattern *!$bad_string!* is in the blacklist";
             }
         }
         // Check for wildcard pattern using fnmatch
         elseif (strpbrk($bad_string_lower, '*?') !== false) {
             if (fnmatch($bad_string_lower, $field_value_lower, FNM_CASEFOLD)) {
-                return "because wildcard pattern *'$bad_string'* is in the blacklist";
+                return "Email *!$field_value_lower!* is blocked because wildcard pattern *!$bad_string!* is in the blacklist";
             }
         }else {
             if (maspik_is_field_value_exist_in_string($bad_string_lower, $field_value_lower,$make_space = 0)) {
-                return "because email *'$bad_string'* is in the blacklist";
+                return "Email *!$field_value_lower!* is blocked because email *!$bad_string!* is in the blacklist";
             }
         }
     }
@@ -434,11 +434,11 @@ function checkTelForSpam($field_value) {
         $CountCharacters = mb_strlen(strval($field_value)); // Use mb_strlen for multibyte characters
         if (maspik_get_settings(maspik_toggle_match('MaxCharactersInPhoneField')) == 1) {
             if ($CountCharacters > $MaxCharacters) {
-                $reason = "More than $MaxCharacters characters in Phone Number";
+                $reason = "More than *!$MaxCharacters!* characters in Phone Number";
                 return array('valid' => false, 'reason' => $reason, 'message' => $message, "option_value" =>$MaxCharacters , 'label' => "MaxCharactersInPhoneField");
                 
             } elseif ($CountCharacters < $MinCharacters) {
-                $reason = "Less than $MinCharacters characters in Phone Number";
+                $reason = "Less than *!$MinCharacters!* characters in Phone Number";
                 return array('valid' => false, 'reason' => $reason, 'message' => $message,"option_value" =>$MinCharacters , 'label' => "MinCharactersInPhoneField");
             }
         }
@@ -467,7 +467,7 @@ function checkTelForSpam($field_value) {
         return array('valid' => true, 'reason' => 'Empty formats', 'message' => 'Empty formats');
     }
     
-    $reason = "Phone number *$field_value* does not meet the given format. ";
+    $reason = "Phone number *!$field_value!* does not meet the given format. ";
 
     foreach ($tel_formats as $format) {
         $format = trim($format);
@@ -482,13 +482,13 @@ function checkTelForSpam($field_value) {
             }
 
             if (preg_match($format, $field_value)) {
-                return array('valid' => true, 'reason' => "Regular expression match: *$format*", 'message' => 'tel_formats');
+                return array('valid' => true, 'reason' => "Regular expression match: *!$format!*", 'message' => 'tel_formats');
             }
         } 
         // Wildcard pattern
         elseif (strpbrk($format, '*?') !== false) {
             if (fnmatch($format, $field_value, FNM_CASEFOLD)) {
-                return array('valid' => true, 'reason' => "Wildcard pattern match: *$format*", 'message' => 'tel_formats');
+                return array('valid' => true, 'reason' => "Wildcard pattern match: *!$format!*", 'message' => 'tel_formats');
             }
         } 
     }    
@@ -520,7 +520,7 @@ function checkTextareaForSpam($field_value) {
             
             if (fnmatch($pattern, $field_value, FNM_CASEFOLD)) {
                 return array(
-                    'spam' => "field value matches pattern *$bad_string*", 
+                    'spam' => "field value matches pattern *!$bad_string!*", 
                     'message' => "textarea_field",
                     'option_value' => $bad_string,
                     'label' => "textarea_blacklist"
@@ -530,7 +530,7 @@ function checkTextareaForSpam($field_value) {
         elseif (maspik_is_field_value_exist_in_string($bad_string, $field_value)) {
             // Regular word check
             return array(
-                'spam' => "field value includes *$bad_string*",
+                'spam' => "field value includes *!$bad_string!*",
                 'message' => "textarea_field",
                 'option_value' => $bad_string,
                 'label' => "textarea_blacklist"
@@ -606,7 +606,7 @@ function checkTextareaForSpam($field_value) {
             $detected_forbidden_lang = maspik_detect_language_in_string($lang_forbidden, $field_value);
 
             if (!empty($detected_forbidden_lang)) {
-                return array('spam' => "Forbidden language '$detected_forbidden_lang' exists", 'message' => "lang_forbidden", 'option_value' => $detected_forbidden_lang, 'label' => "lang_forbidden");
+                return array('spam' => "Forbidden language *!$detected_forbidden_lang!* exists", 'message' => "lang_forbidden", 'option_value' => $detected_forbidden_lang, 'label' => "lang_forbidden");
             }
         }
             
@@ -638,7 +638,7 @@ function checkTextareaForSpam($field_value) {
         if (($max_links === 0 && $num_links > 0) || ($max_links > 0 && $num_links > $max_links)) {
             $message = $max_links === 0 ? 
                 "Links are not allowed" : 
-                "Contains <u>more than $max_links links</u>";
+                "Contains *!more than $max_links links!*";
             
             return array(
                 'spam' => $message,
@@ -666,13 +666,13 @@ function checkTextareaForSpam($field_value) {
         
         // Check maximum characters if set, and if the character limit is greater than 2 (to)
         if (is_numeric($MaxCharacters) && $MaxCharacters > 2 && $CountCharacters > $MaxCharacters) {
-            $spam = "More than $MaxCharacters characters in Text Area field.";
+            $spam = "More than *!$MaxCharacters!* characters in Text Area field.";
             return array('spam' => $spam, 'message' =>  $message, "option_value" => $MaxCharacters , 'label' => "MaxCharactersInTextAreaField");
         }
         
         // Check minimum characters if set
         if (is_numeric($MinCharacters) && $MinCharacters > 0 && $CountCharacters < $MinCharacters) {
-            $spam = "Less than $MinCharacters characters in Text Area field.";
+            $spam = "Less than *!$MinCharacters!* characters in Text Area field.";
             return array('spam' => $spam, 'message' =>  $message, "option_value" => $MinCharacters , 'label' => "MinCharactersInTextAreaField");
         }
     }
@@ -687,213 +687,162 @@ function checkTextareaForSpam($field_value) {
 function Maspik_add_hp_js_to_footer() {
     // Check if any of the settings are enabled
     $maspikHoneypot = maspik_get_settings('maspikHoneypot');
-    $maspikTimeCheck = maspik_get_settings('maspikTimeCheck');
     $maspikYearCheck = maspik_get_settings('maspikYearCheck');
 
     // Only add the code if at least one of the settings is enabled
-    if ($maspikHoneypot || $maspikTimeCheck || $maspikYearCheck) {
+    if ($maspikHoneypot  || $maspikYearCheck) {
         ?>
         <script type="text/javascript">
-        document.addEventListener("DOMContentLoaded", function() {
+        // Check if the plugin is loaded only once
+        if (typeof window.maspikLoaded === "undefined") {
+            window.maspikLoaded = true;
+            
+            // Function to add the hidden fields
+            function addMaspikHiddenFields(form) {
+                // Check if the fields already exist
+                if (form.querySelector(".maspik-field")) return;
 
-            // Function to check if localStorage is available
-            function localStorageAvailable() {
-                try {
-                    var test = "__localStorage_test__";
-                    localStorage.setItem(test, test);
-                    localStorage.removeItem(test);
-                    return true;
-                } catch (e) {
-                    return false;
-                }
-            }
+                // Check if the form is already submitted
+                if (form.dataset.maspikProcessed) return;
+                form.dataset.maspikProcessed = true;
 
-            var exactTimeGlobal = null;
-            if (localStorageAvailable()) {
-                // Check if exactTimeGlobal is already stored in localStorage
-                exactTimeGlobal = localStorage.getItem('exactTimeGlobal');
-            }
+                // Common attributes for the fields
+                var commonAttributes = {
+                    "aria-hidden": "true",
+                    tabindex: "-1",
+                    autocomplete: "off",
+                    class: "maspik-field"
+                };
 
-            // Common attributes and styles for hidden fields
-            var commonAttributes = {
-                'aria-hidden': "true", // Accessibility
-                tabindex: "-1", // Accessibility
-                autocomplete: "off", // Prevent browser autofill
-                class: "maspik-field"
-            };
+                var hiddenFieldStyles = {
+                    position: "absolute",
+                    left: "-99999px"
+                };
 
-            var hiddenFieldStyles = {
-                position: "absolute",
-                left: "-99999px"
-            };
-
-            // Function to create a hidden field
-            function createHiddenField(attributes, styles) {
-                var field = document.createElement("input");
-                for (var attr in attributes) {
-                    field.setAttribute(attr, attributes[attr]);
-                }
-                for (var style in styles) {
-                    field.style[style] = styles[style];
-                }
-                return field;
-            }
-
-            // Function to add hidden fields to the form if they do not already exist
-            function addHiddenFields(formSelector, fieldClass) {
-                document.querySelectorAll(formSelector).forEach(function(form) {
-                    if (!form.querySelector('.maspik-field')) {
-                        if (<?php echo json_encode($maspikHoneypot); ?>) {
-                            var honeypot = createHiddenField({
-                                type: "text",
-                                name: "<?php echo maspik_HP_name(); ?>",
-                                id: "<?php echo maspik_HP_name(); ?>",
-                                class: fieldClass + " maspik-field",
-                                placeholder: "Leave this field empty"
-                            }, hiddenFieldStyles);
-                            form.appendChild(honeypot);
-                        }
-
-                        if (<?php echo json_encode($maspikYearCheck); ?>) {
-                            var currentYearField = createHiddenField({
-                                type: "text",
-                                name: "Maspik-currentYear",
-                                id: "Maspik-currentYear",
-                                class: fieldClass + " maspik-field"
-                            }, hiddenFieldStyles);
-                            form.appendChild(currentYearField);
-                        }
-
-                        if (<?php echo json_encode($maspikTimeCheck); ?>) {
-                            var exactTimeField = createHiddenField({
-                                type: "text",
-                                name: "Maspik-exactTime",
-                                id: "Maspik-exactTime",
-                                class: fieldClass + " maspik-field"
-                            }, hiddenFieldStyles);
-                            form.appendChild(exactTimeField);
-                        }
+                // Function to create a hidden field
+                function createHiddenField(attributes, styles) {
+                    var field = document.createElement("input");
+                    for (var attr in attributes) {
+                        field.setAttribute(attr, attributes[attr]);
                     }
-                });
-            }
-
-            // Add hidden fields to various form types
-            //Not suported ninja form
-            addHiddenFields('form.brxe-brf-pro-forms', 'brxe-brf-pro-forms-field-text');
-            //formidable
-            addHiddenFields('form.frm-show-form', 'frm_form_field');
-            addHiddenFields('form.elementor-form', 'elementor-field-textual');
-            //hello plus
-            addHiddenFields('form.ehp-form', 'hello-plus-field-text');
-
-            // Function to set the current year and exact time in the appropriate fields
-            function setDateFields() {
-                var currentYear = new Date().getFullYear();
-
-                if (!exactTimeGlobal) {
-                    exactTimeGlobal = Math.floor(Date.now() / 1000);
-                    if (localStorageAvailable()) {
-                        localStorage.setItem('exactTimeGlobal', exactTimeGlobal);
+                    for (var style in styles) {
+                        field.style[style] = styles[style];
                     }
+                    return field;
                 }
 
-                document.querySelectorAll('input[name="Maspik-currentYear"]').forEach(function(input) {
-                    input.value = currentYear;
-                });
+                // Add Honeypot field if enabled
+                if (<?php echo json_encode($maspikHoneypot); ?>) {
+                    var honeypot = createHiddenField({
+                        type: "text",
+                        name: "<?php echo maspik_HP_name(); ?>",
+                        id: "<?php echo maspik_HP_name(); ?>",
+                        class: form.className + " maspik-field",
+                        placeholder: "Leave this field empty"
+                    }, hiddenFieldStyles);
+                    form.appendChild(honeypot);
+                }
 
-                document.querySelectorAll('input[name="Maspik-exactTime"]').forEach(function(input) {
-                    input.value = exactTimeGlobal;
-                });
+                // Add Year Check field if enabled
+                if (<?php echo json_encode($maspikYearCheck); ?>) {
+                    var currentYearField = createHiddenField({
+                        type: "text",
+                        name: "Maspik-currentYear",
+                        id: "Maspik-currentYear",
+                        class: form.className + " maspik-field"
+                    }, hiddenFieldStyles);
+                    form.appendChild(currentYearField);
+
+                    // Set the current year
+                    currentYearField.value = new Date().getFullYear();
+                }
             }
 
-            // Initial call to set date fields
-            setDateFields();
-
-            // Use MutationObserver to detect AJAX form reloads and reset hidden fields
-            var observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.type === 'childList' && mutation.addedNodes.length) {
-                        setTimeout(function() {
-                            setDateFields();
-                        }, 500);
-                    }
+            //on load
+            document.addEventListener("DOMContentLoaded", function() {
+                var forms = document.querySelectorAll("form");
+                forms.forEach(function(form) {
+                    addMaspikHiddenFields(form);
                 });
             });
 
-            observer.observe(document.body, { childList: true, subtree: true });
-        });
+            // Add the fields when the form is submitted
+            document.addEventListener("submit", function(e) {
+                if (e.target.tagName === "FORM") {
+                    addMaspikHiddenFields(e.target);
+                    //if exists in the e.target.tagName === "FORM" the field id Maspik-currentYear, add the current year to it
+                    if (e.target.querySelector("#Maspik-currentYear")) {
+                        e.target.querySelector("#Maspik-currentYear").value = new Date().getFullYear();
+                    }
+                }
+            }, true);
+        }
         </script>
         <style>
-        .maspik-field { display: none !important; }
+        .maspik-field { 
+            display: none !important; 
+            pointer-events: none !important;
+            opacity: 0 !important;
+            position: absolute !important;
+            left: -99999px !important;
+        }
         </style>
         <?php
     }
+
+    if (maspik_get_settings("maspikTimeCheck") ) { 
+        // if the Key check is enabled
+        $spam_key = maspik_get_spam_key(); // Get the unique spam key
+        // Add a script that adds the hidden field dynamically via JavaScript when the form is submitted
+        echo '
+        <script type="text/javascript">
+                // Maspik add key to forms
+                    document.addEventListener("DOMContentLoaded", function() {
+                        var spamKey = "' . esc_js( $spam_key ) . '";
+                        var input = document.createElement("input");
+                        input.type = "hidden";
+                        input.name = "maspik_spam_key";
+                        input.value = spamKey;
+            input.setAttribute("autocomplete", "off");
+            
+            // Select all forms with the specified classes
+            var forms = document.querySelectorAll("form");
+            forms.forEach(function(form) {
+                // Only add the spam key if its not already added
+                if (!form.querySelector("input[name=maspik_spam_key]")) {
+                        form.appendChild(input.cloneNode(true));
+                    }
+                });
+            });
+            // add in other way, if the first way not working
+                document.addEventListener("submit", function(e) {
+                    var spamKey = "' . esc_js( $spam_key ) . '";
+                    var input = document.createElement("input");
+                    input.type = "hidden";
+                    input.name = "maspik_spam_key";
+                    input.value = spamKey;
+                    input.setAttribute("autocomplete", "off");
+                    
+                    // Check if the field already exists
+                    if (!e.target.querySelector("input[name=maspik_spam_key]")) {
+                        e.target.appendChild(input);
+                    }
+                }, true);
+        </script>';             
+
+    }
 }
 add_action('wp_footer', 'Maspik_add_hp_js_to_footer');
+add_action('register_form', 'Maspik_add_hp_js_to_footer' , 99);
 
 /**
  * Injects the spam key field dynamically into forms with specific classes using JavaScript.
  */
 function maspik_add_spam_key_field_js() {
-    if (!maspik_get_settings("maspikTimeCheck") ) {
-        return;
-    }
-    // Define an array of classes for the forms you want to target
-    $target_classes = array(
-       /* 'wpcf7-form', // Add the class for Contact Form 7
-        'elementor-form',  // Add the class for Elementor Forms
-        'gform_wrapper',   // Add the class for Gravity Forms
-        'wpforms-form',    // Add the class for WPForms
-        'frm_forms form', // Add the class for formidable
-        'forminator-ui', // Add the class for Forminator option 1
-        'forminator_ajax', // Add the class for Forminator option 2
-        'forminator-custom-form', // Add the class for Forminator option 3  
-        'fluentform form', // Add the class for FluentForms
-        'everest-forms', // Add the class for Everest Forms
-        'jet-form-builder', // Add the class for Jet Form Builder
-        'nf-form-layout form', // Add the class for Ninja Forms
-        'nf-form-wrap form', // Add the class for Ninja Forms
-        '.nf-after-form-content', // Add the class for Ninja Forms
-        'gravityform', // Add the class for Gravity Forms
-        'woocommerce-review', // Add the class for WooCommerce Reviews
-        'woocommerce-registration', // Add the class for WooCommerce Registration
-        'bricks-form', // Add the class for Bricks Forms
-        'buddypress', // Add the class for BuddyPress
-        'buddyforms', // Add the class for BuddyForms
-        'wp-block-form', // Add the class for Gutenberg Forms */
-        'form' // for any form
-        // Add other form classes as needed
+   
 
-    );
-
-    $spam_key = maspik_get_spam_key(); // Get the unique spam key
-
-    // Convert the classes array to a string for JavaScript
-    $target_classes_js = implode('", "', $target_classes);
-
-    // Add a script that adds the hidden field dynamically via JavaScript when the form is submitted
-    echo '
-        <script type="text/javascript">
-        // Maspik add key to forms
-            document.addEventListener("DOMContentLoaded", function() {
-                var spamKey = "' . esc_js( $spam_key ) . '";
-                var input = document.createElement("input");
-                input.type = "hidden";
-                input.name = "maspik_spam_key";
-                input.value = spamKey;
-                input.setAttribute("autocomplete", "off");
-                
-                // Select all forms with the specified classes
-                var forms = document.querySelectorAll("form");
-                forms.forEach(function(form) {
-                    // Only add the spam key if its not already added
-                    if (!form.querySelector("input[name=maspik_spam_key]")) {
-                        form.appendChild(input.cloneNode(true));
-                    }
-                });
-            });
-        </script>';
 }
+
 // add to all forms
 add_action('wp_footer', 'maspik_add_spam_key_field_js' , 99); // Add to wp_footer()
 // add to user registration form on admin side

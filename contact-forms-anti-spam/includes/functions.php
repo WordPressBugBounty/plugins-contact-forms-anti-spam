@@ -121,116 +121,59 @@ function maspik_delete_filter() {
 
     function maspik_delete_row() {
         global $wpdb;
-    
+
         // Add nonce verification
         if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'maspik_delete_action')) {
-            wp_send_json_error('Invalid security token.');
+            wp_send_json_error([
+                'message' => 'Invalid security token.',
+                'code' => 'invalid_nonce'
+            ]);
             return;
         }
-    
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error('You do not have permission to perform this action.');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error([
+                'message' => 'You do not have permission to perform this action.',
+                'code' => 'insufficient_permissions'
+            ]);
             return;
         }
-    
-        $row_id = intval($_POST['row_id']);
+
+        $row_id = isset($_POST['row_id']) ? absint($_POST['row_id']) : 0;
+        if (!$row_id) {
+            wp_send_json_error([
+                'message' => 'Invalid row ID.',
+                'code' => 'invalid_row_id'
+            ]);
+            return;
+        }
+
         $table = maspik_get_logtable();
+        $result = $wpdb->delete(
+            $table,
+            ['id' => $row_id],
+            ['%d']
+        );
 
-        $spam_tag = $wpdb->get_var( $wpdb->prepare(
-            "SELECT spam_tag FROM $table WHERE id = %d",
-            $row_id
-        ));
-    
-        // Update the is_deleted column instead of deleting the row
-        $update_data = array('spam_tag' => 'spam');
-        $where = array('id' => $row_id);
-
-        if($spam_tag == "not spam"){
-            $spam_action = $wpdb->delete($table, array('id' => $row_id));
-        }else{
-            $spam_action = $wpdb->update($table, $update_data, $where);
-        }     
-    
-        if ($spam_action !== false) {
-            wp_send_json_success();
-        } else {
-            wp_send_json_error('Failed to update row.');
+        if ($result === false) {
+            wp_send_json_error([
+                'message' => 'Failed to delete row from database.',
+                'code' => 'delete_failed',
+                'wpdb_last_error' => $wpdb->last_error
+            ]);
+            return;
         }
+
+        wp_send_json_success([
+            'message' => 'Row deleted successfully.',
+            'row_id' => $row_id
+        ]);
     }
-    add_action('wp_ajax_delete_row', 'maspik_delete_row');
+    add_action('wp_ajax_maspik_delete_row', 'maspik_delete_row');
 
 //Spam log delete functions -- END
 
-function maspik_insert_to_table() {
-    static $already_run = false;
-    
-    // Run only once per request
-    if ($already_run) {
-        return;
-    }
-    
-    // Check if we already checked the columns today (saved in options)
-    $last_check = get_option('maspik_insert_last_check');
-    if ($last_check && $last_check > strtotime('-48 hours')) {
-        $already_run = true;
-        return;
-    }
-
-    global $wpdb;
-    $table = maspik_get_dbtable();
-    $setting_value = maspik_get_dbvalue();
-    $setting_label = maspik_get_dblabel();
-
-    // Rows to be inserted if they don't exist
-    $rows = [
-        ['MaspikHoneypot', 1], // Honeypot ver 2.1.2
-        ['maspik_support_jetforms', 'yes'], // jetforms ver 2.1.2
-        ['maspik_support_everestforms', 'yes'], // everestforms ver 2.1.2
-        ['maspikDbCheck', 1], // maspikDbCheck ver 2.1.6
-        ['maspik_support_buddypress_forms', 'yes'] // buddypress ver 2.2.7
-    ];
-
-    // Check if the rows already exist
-    $existing_rows = $wpdb->get_col("
-        SELECT $setting_label 
-        FROM $table 
-        WHERE $setting_label IN ('" . implode("','", array_column($rows, 0)) . "')
-    ");
-
-    // Prepare rows to add
-    $rows_to_insert = [];
-    foreach ($rows as [$name, $value]) {
-        if (!in_array($name, $existing_rows)) {
-            $rows_to_insert[] = $wpdb->prepare(
-                "(%s, %s)",
-                $name,
-                $value
-            );
-        }
-    }
-
-    // Insert all new rows in one query
-    if (!empty($rows_to_insert)) {
-        $wpdb->query("
-            INSERT INTO $table ($setting_label, $setting_value) 
-            VALUES " . implode(',', $rows_to_insert)
-        );
-    }
-
-    // Update the last check time
-    update_option('maspik_insert_last_check', time());
-    $already_run = true;
-}
-
-// Hook the function on load
-// this function is not needed anymore, TODO next: remove it from the code completely
-//add_action('init', 'maspik_insert_to_table');
-
-
-
-
 //check if table exists
-
     function maspik_table_exists($rowtocheck = false) {
         static $table_exists = null;     
         static $row_exists = array();    
@@ -242,28 +185,35 @@ function maspik_insert_to_table() {
             // Check and save the result
             $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") == $table_name;
         }
-        // In the next times, use the saved value
         
+        // if the table doesn't exist, return false
         if (!$table_exists) {
             return false;
         }
         
-        if ($rowtocheck == 'text_blacklist') {
-            // Check if we already checked this row
+        // if we want to check text_blacklist
+        if ($rowtocheck === 'text_blacklist') {
+            // if we didn't check this row yet
             if (!isset($row_exists['text_blacklist'])) {
                 global $wpdb; 
-                $table_name = $wpdb->prefix . 'maspik_options'; 
-                // If we didn't check this row, check and save the result
-                $row_exists['text_blacklist'] = $wpdb->get_var($wpdb->prepare(
+                $table_name = $wpdb->prefix . 'maspik_options';
+                
+                // check if the row exists
+                $exists = $wpdb->get_var($wpdb->prepare(
                     "SELECT COUNT(*) FROM {$table_name} WHERE option_name = %s",
-                    $rowtocheck
-                )) > 0;
+                    'text_blacklist'
+                ));
+                
+                // save the result
+                $row_exists['text_blacklist'] = ($exists > 0);
             }
-            // In the next times, use the saved value
+            
+            // return the saved result
             return $row_exists['text_blacklist'];
         }
         
-        return true;
+        // if we didn't ask to check a specific row, return if the table exists
+        return $table_exists;
     }
 
     function maspik_logtable_exists() {
@@ -283,9 +233,14 @@ function maspik_insert_to_table() {
 // Save to DB Function 
     function maspik_save_settings($col_name, $new_value) {
         // check if the values are valid
-        if (empty($col_name) || $col_name === '0' || $col_name === 0) {
+        if (empty($col_name) || $col_name === '0' || $col_name === 0 ) {
             return ;
         }
+        if (empty(trim($new_value)) && $new_value !== 0) {
+            // make value empty
+            $new_value = '';
+        }
+
 
         global $wpdb;
         $table = maspik_get_dbtable();
@@ -368,7 +323,7 @@ function maspik_get_settings($data_name, $type = '', $table_var = 'new'){
 
     global $wpdb;
     if($table_var == 'old'){
-        $table = $wpdb->prefix . 'options'; // old table
+        $table = $wpdb->prefix . 'options';
         $setting_label = 'option_name';
         $setting_value = 'option_value';
     } else {
@@ -383,31 +338,31 @@ function maspik_get_settings($data_name, $type = '', $table_var = 'new'){
 
     // Check if there are any results
     if ($results) {
-        $data = ''; // clean variable
-        if($type == "toggle"){// data for toggles
-            foreach ($results as $result) {
-                $data = $result->$setting_value  == 1 ? 'checked' : '';
+        $result = $results[0];
+        $value = $result->$setting_value;
+    
+        if($type == "toggle"){
+            return $value == 1 ? 'checked' : '';
+        } 
+        elseif($type == "form-toggle"){
+            if (!$value){
+                return 1;
             }
-        } elseif($type == "form-toggle"){// data for toggles
-            foreach ($results as $result) {
-                if (!$result->$setting_value){
-                    $data = 1;
-                } else {
-                    $data = $result->$setting_value  == 'yes' ? 'yes' : 'no';
-                }
+            return $value == 'yes' ? 'yes' : 'no';
+        } 
+        elseif($type == "select"){
+            return $results;
+        } 
+        else {
+            // for everything else
+            if ($value === null || $value == '') {
+                return '';
             }
-        } elseif($type == "select"){// just return raw for select
-            $data = $results;
-        } else {// for everything else
-            foreach ($results as $result) {
-                $data .= $result->$setting_value; 
-            }
+            return $value;
         }
-    } else { 
-        $data = null; 
     }
     
-    return $data;
+    return null;
 }
 //Get data from DB - END
 
@@ -500,7 +455,7 @@ function maspik_limit_log_size() {
 
     if ($current_count > $max_logs) {
         // Calculate the number of records to delete
-        $entries_to_delete = $current_count - $max_logs;
+        $entries_to_delete = $current_count - $max_logs + intval($max_logs * 0.1); // 10% more to avoid deleting too many times
 
         // Delete the oldest records
         $wpdb->query("
@@ -741,7 +696,12 @@ function efas_get_spam_api($field = "text_field",$type = "array") {
     if ($type != "array") {
             // Keep the field value if it's not an array
             $api_field = is_array($spamapi_option[$field]) ? $spamapi_option[$field][0] : $spamapi_option[$field] ;
+            // If the value is 0, return it as a number
+            if ($api_field === "0" || $api_field === 0) {
+                return 0;
+            }
             $clean = sanitize_text_field($api_field);
+            return $clean;
     } else {
         // Convert non-array fields to an array using efas_makeArray 
         $api_field = efas_makeArray($spamapi_option[$field],$type);
@@ -813,6 +773,7 @@ function efas_array_supports_plugin(){
     'Jetforms'=> 0,
     'Everestforms'=> 0,
     'Buddypress' => 0,
+    'Custom PHP Forms' => 0,
     'Woocommerce Review' => $info,
     'Woocommerce Registration' => $info,
     'Wpforms' => $info,
@@ -859,9 +820,6 @@ function maspik_if_plugin_is_active($plugin) {
 }
 
 function efas_if_plugin_is_affective($plugin , $status = "no"){
-
-   
-
 	if($plugin == 'Elementor pro'){
       return efas_if_plugin_is_active('elementor-pro') && maspik_get_settings( "maspik_support_Elementor_forms", 'form-toggle' ) != $status ;
     }else if($plugin == 'Contact form 7'){
@@ -896,6 +854,8 @@ function efas_if_plugin_is_affective($plugin , $status = "no"){
         return efas_if_plugin_is_active('everestforms') && maspik_get_settings( "maspik_support_everestforms", 'form-toggle' ) != $status ;
     }else if($plugin == 'Wordpress Comments'){
       return maspik_get_settings( "maspik_support_wp_comment", 'form-toggle' ) != $status ;
+    }else if($plugin == 'Custom PHP Forms'){
+      return maspik_get_settings( "maspik_support_custom_forms", 'form-toggle' ) == "yes" ;
     }else{
       return 1;
     }
@@ -937,15 +897,27 @@ function efas_if_plugin_is_active($plugin){
     }
 }
 
-//Display admin notices 
-function contact_forms_anti_spam_plugin_admin_notice(){
-    $screen = get_current_screen()->id;
-    if ( strpos($screen, 'maspik') !== false ){
-        ?><div class="notice notice-warning is-dismissible">
-        <p><?php esc_html_e('Use this plugin with caution and only if you understand the risk, blacklisting some words can lead to the termination of valid leads.', 'contact-forms-anti-spam') ?></p>
-        </div><?php  
+//Display only on maspik pages
+function maspik_is_maspik_page() {
+    // Check if we're in admin and if the page parameter contains 'maspik'
+    if (!is_admin() || !isset($_GET['page'])) {
+        return;
+    }
+
+    // Check if we're on a Maspik page
+    if (strpos($_GET['page'], 'maspik') !== false) {
+        // Hide all admin notices
+        global $wp_filter;
+        remove_all_actions('user_admin_notices');
+        remove_all_actions('admin_notices');
+        if (isset($wp_filter['admin_notices'])) {
+            // Remove all actions hooked to the 'admin_notices' hook
+            unset($wp_filter['admin_notices']);
+        }
+
         // Change the footer text
         add_filter('admin_footer_text', 'maspik_change_footer_admin');
+        
         // Add script to footer admin to open external links in new tab
         add_action('admin_footer', function() {
             ?>
@@ -961,10 +933,9 @@ function contact_forms_anti_spam_plugin_admin_notice(){
             </script>
             <?php
         });
-     }
-   
+    }
 }
-add_action( 'admin_notices', 'contact_forms_anti_spam_plugin_admin_notice' );
+add_action('admin_init', 'maspik_is_maspik_page', 99999);
 
 function maspik_change_footer_admin () {
     echo '<p id="footer-left" class="alignleft">
@@ -2136,3 +2107,172 @@ function maspik_is_contains_emoji($text) {
     return preg_match($pattern, $text) === 1;
 }
 
+// Add this to your functions.php or relevant file
+function maspik_handle_reset_settings() {
+
+    // Verify nonce
+    if (!isset($_POST['nonce'])) {
+        //error_log('Maspik reset - Nonce not set in request');
+        wp_send_json_error(array('message' => __('Security check failed - nonce not set', 'contact-forms-anti-spam')));
+        return;
+    }
+
+    if (!wp_verify_nonce($_POST['nonce'], 'maspik_save_settings_action')) {
+        //error_log('Maspik reset - Nonce verification failed for action: maspik_save_settings_action');
+        wp_send_json_error(array('message' => __('Security check failed - invalid nonce', 'contact-forms-anti-spam')));
+        return;
+    }
+
+    // Check user capabilities
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(array('message' => __('You do not have permission to perform this action', 'contact-forms-anti-spam')));
+        return;
+    }
+
+    global $wpdb;
+    $tables = array(
+       // Only drop the maspik_options table, not the spam_logs table
+       // $wpdb->prefix . 'maspik_spam_logs',
+        $wpdb->prefix . 'maspik_options'
+    );
+
+    // Drop tables
+    foreach ($tables as $table) {
+        $wpdb->query("DROP TABLE IF EXISTS $table");
+    }
+
+    // Delete all plugin options
+    $options = array(
+        'maspik_run_once',
+        'maspik_spam_key',
+        'spamapi'
+    );
+
+    foreach ($options as $option) {
+        delete_option($option);
+    }
+
+    // Create tables first
+   // create_maspik_log_table();
+    create_maspik_table();
+
+    // Set default settings
+    maspik_save_default_values();
+
+    wp_send_json_success(array('message' => __('Settings reset successfully', 'contact-forms-anti-spam')));
+}
+add_action('wp_ajax_maspik_reset_settings', 'maspik_handle_reset_settings');
+
+
+function maspik_handle_load_template() {
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'maspik_save_settings_action')) {
+        wp_send_json_error(['message' => 'Security check failed']);
+        return;
+    }
+
+    // Verify user permissions
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Permission denied']);
+        return;
+    }
+    global $MASPIK_TEMPLATES;
+    $template_type = sanitize_text_field($_POST['template_type']);
+    $template_settings = isset(MASPIK_TEMPLATES[$template_type]) ? MASPIK_TEMPLATES[$template_type] : false;
+
+    if (!$template_settings) {
+        wp_send_json_error(['message' => 'Invalid template type']);
+        return;
+    }
+
+    global $wpdb;
+    $table = $wpdb->prefix . 'maspik_options';
+    $success = true;
+    $messages = [];
+
+    // Begin transaction
+    $wpdb->query('START TRANSACTION');
+
+    try {
+        // Delete existing settings
+        //$wpdb->query("DELETE FROM $table");
+
+        // Insert new template settings
+        foreach ($template_settings as $key => $value) {
+            $result = $wpdb->replace(
+                $table,
+                array(
+                    'option_name' => $key,
+                    'option_value' => $value
+                ),
+                array('%s', '%s')
+            );
+
+            if ($result === false) {
+                throw new Exception("Failed to replace setting: $key");
+            }
+        }
+
+        // Commit transaction
+        $wpdb->query('COMMIT');
+        wp_send_json_success(['message' => 'Template loaded successfully']);
+
+    } catch (Exception $e) {
+        // Rollback on error
+        $wpdb->query('ROLLBACK');
+        wp_send_json_error([
+            'message' => 'Failed to load template',
+            'error' => $e->getMessage()
+        ]);
+    }
+}
+add_action('wp_ajax_maspik_load_template', 'maspik_handle_load_template');
+
+function maspik_enqueue_admin_scripts() {
+    // Check if we're on the spam log page
+    if (isset($_GET['page']) && $_GET['page'] == 'maspik-log.php') {
+        wp_enqueue_script('maspik-spamlog', plugin_dir_url(__FILE__) . '../admin/js/maspik-spamlog.js', array('jquery'), MASPIK_VERSION, true);
+        
+        wp_localize_script('maspik-spamlog', 'maspikAdmin', array(
+        'nonce' => wp_create_nonce('maspik_delete_action'),
+        'ajaxurl' => admin_url('admin-post.php')
+        ));
+    }
+}
+add_action('admin_enqueue_scripts', 'maspik_enqueue_admin_scripts');
+
+// Check if the current version is the latest version
+function maspik_check_version_status() {
+    // Get the transient first
+    $version_info = get_transient('maspik_version_info');
+    
+    if (false === $version_info) {
+        // If no transient, check the WordPress.org API
+        $response = wp_remote_get(
+            'https://api.wordpress.org/plugins/info/1.0/contact-forms-anti-spam.json'
+        );
+
+        if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+            $data = json_decode(wp_remote_retrieve_body($response));
+            if ($data && isset($data->version)) {
+                $version_info = array(
+                    'latest_version' => $data->version,
+                    'is_latest' => version_compare(MASPIK_VERSION, $data->version, '>=')
+                    //'is_latest' => version_compare('2.2.2', $data->version, '>=')
+                );
+                // Cache for 12 hours
+                set_transient('maspik_version_info', $version_info, 12 * HOUR_IN_SECONDS);
+            }
+        }
+    }
+
+    // Default values if API check fails
+    if (!$version_info) {
+        $version_info = array(
+            'latest_version' => MASPIK_VERSION,
+            'is_latest' => true
+        );
+    }
+
+    return $version_info;
+}
