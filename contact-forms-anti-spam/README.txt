@@ -1,15 +1,15 @@
-=== Maspik - Ultimate Spam Solution ===
+=== Maspik - Ultimate Spam Protection ===
 Contributors: maspik,yonifre
 Donate link: https://paypal.me/yonifre
 Tags: spam, blacklist, anti spam, Honeypot, antispam 
 Tested up to: 6.8
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.5.0
+Stable tag: 2.5.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-🛡️ Contact-forms, comments and registration forms - No more fake leads, and unwanted spam - Every email will be real and valuable. 
+🛡️ No more fake leads, and unwanted spam - Every email will be real and valuable (Contact-forms/Comments and Registration forms). 
 
 == Description ==
 
@@ -241,15 +241,19 @@ So if you need advanced spam protection, that works with all forms and has a lot
 
 == Changelog ==
 
+= 2.5.1 - 30/04/2025 = 
+* Bug fix - Fixed an issue where search forms were not submitting properly in certain scenarios.
+* We want to grow and improve the experience! so we need your help! please:
+  * Share your feedback and suggestions to our [Suggestion Box](https://wpmaspik.com/#suggestions?readme-file).
+  * Give as 5 stars review on [WordPress.org](https://wordpress.org/support/plugin/contact-forms-anti-spam/reviews/#new-post).
+  * Spread the word and write a Guide/Vlog/Post about Maspik, and receive a Pro license on us.
+
+
 = 2.5.0 - 22/04/2025 = 
 * Improve - Improved UI/UX of the entire plugin.
 * New feature! - Add Spam statistics dashboard page.
 * New feature - Add spam statistics data to admin dashboard.
 * New feature - Add reset all settings to default (Factory reset).
-* We want to grow and improve the experience! so we need your help! please:
-  * Share your feedback and suggestions to our [Suggestion Box](https://wpmaspik.com/#suggestions?readme-file).
-  * Give as 5 stars review on [WordPress.org](https://wordpress.org/support/plugin/contact-forms-anti-spam/reviews/#new-post).
-  * Spread the word and write a Guide/Vlog/Post about Maspik, and receive a Pro license on us.
 * New feature - Adding support for Custom PHP forms by using the [filter](https://wpmaspik.com/documentation/custom-php-form/?readme-file).
 * Bug fix - Fixed form validation issues that occurred when forms were placed inside popups and WP Rocket caching was enabled with strict settings.
 * Bug fix - Fix translation issue with WP version 6.7, load too early.

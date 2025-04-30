@@ -688,51 +688,61 @@ function Maspik_add_hp_js_to_footer() {
     // Check if any of the settings are enabled
     $maspikHoneypot = maspik_get_settings('maspikHoneypot');
     $maspikYearCheck = maspik_get_settings('maspikYearCheck');
+    $maspikTimeCheck = maspik_get_settings('maspikTimeCheck');
 
     // Only add the code if at least one of the settings is enabled
-    if ($maspikHoneypot  || $maspikYearCheck) {
+    if ($maspikHoneypot || $maspikYearCheck || $maspikTimeCheck) {
         ?>
         <script type="text/javascript">
-        // Check if the plugin is loaded only once
-        if (typeof window.maspikLoaded === "undefined") {
-            window.maspikLoaded = true;
-            
-            // Function to add the hidden fields
-            function addMaspikHiddenFields(form) {
-                // Check if the fields already exist
-                if (form.querySelector(".maspik-field")) return;
-
-                // Check if the form is already submitted
-                if (form.dataset.maspikProcessed) return;
-                form.dataset.maspikProcessed = true;
-
-                // Common attributes for the fields
-                var commonAttributes = {
-                    "aria-hidden": "true",
-                    tabindex: "-1",
-                    autocomplete: "off",
-                    class: "maspik-field"
-                };
-
-                var hiddenFieldStyles = {
-                    position: "absolute",
-                    left: "-99999px"
-                };
-
-                // Function to create a hidden field
-                function createHiddenField(attributes, styles) {
-                    var field = document.createElement("input");
-                    for (var attr in attributes) {
-                        field.setAttribute(attr, attributes[attr]);
-                    }
-                    for (var style in styles) {
-                        field.style[style] = styles[style];
-                    }
-                    return field;
+            // Check if the plugin is loaded only once
+            if (typeof window.maspikLoaded === "undefined") {
+                window.maspikLoaded = true;
+                
+                // Function to check if form should be excluded
+                function shouldExcludeForm(form) {
+                    var classes = form.className.split(' ');
+                    return classes.some(function(className) {
+                        return className.toLowerCase().includes('search');
+                    });
                 }
+                
+                <?php if ($maspikHoneypot || $maspikYearCheck) { ?>
+                // Function to add the hidden fields
+                function addMaspikHiddenFields(form) {
+                    // Check if the fields already exist
+                    if (form.querySelector(".maspik-field")) return;
 
-                // Add Honeypot field if enabled
-                if (<?php echo json_encode($maspikHoneypot); ?>) {
+                    // Check if the form is already submitted
+                    if (form.dataset.maspikProcessed) return;
+                    form.dataset.maspikProcessed = true;
+
+                    // Common attributes for the fields
+                    var commonAttributes = {
+                        "aria-hidden": "true",
+                        tabindex: "-1",
+                        autocomplete: "off",
+                        class: "maspik-field"
+                    };
+
+                    var hiddenFieldStyles = {
+                        position: "absolute",
+                        left: "-99999px"
+                    };
+
+                    // Function to create a hidden field
+                    function createHiddenField(attributes, styles) {
+                        var field = document.createElement("input");
+                        for (var attr in attributes) {
+                            field.setAttribute(attr, attributes[attr]);
+                        }
+                        for (var style in styles) {
+                            field.style[style] = styles[style];
+                        }
+                        return field;
+                    }
+
+                    <?php if ($maspikHoneypot) { ?>
+                    // Add Honeypot field if enabled
                     var honeypot = createHiddenField({
                         type: "text",
                         name: "<?php echo maspik_HP_name(); ?>",
@@ -741,10 +751,10 @@ function Maspik_add_hp_js_to_footer() {
                         placeholder: "Leave this field empty"
                     }, hiddenFieldStyles);
                     form.appendChild(honeypot);
-                }
+                    <?php } ?>
 
-                // Add Year Check field if enabled
-                if (<?php echo json_encode($maspikYearCheck); ?>) {
+                    <?php if ($maspikYearCheck) { ?>
+                    // Add Year Check field if enabled
                     var currentYearField = createHiddenField({
                         type: "text",
                         name: "Maspik-currentYear",
@@ -755,81 +765,87 @@ function Maspik_add_hp_js_to_footer() {
 
                     // Set the current year
                     currentYearField.value = new Date().getFullYear();
+                    <?php } ?>
                 }
-            }
 
-            //on load
-            document.addEventListener("DOMContentLoaded", function() {
-                var forms = document.querySelectorAll("form");
-                forms.forEach(function(form) {
-                    addMaspikHiddenFields(form);
+                //on load
+                document.addEventListener("DOMContentLoaded", function() {
+                    var forms = document.querySelectorAll("form");
+                    forms.forEach(function(form) {
+                        // Only add fields if form is not excluded
+                        if (!shouldExcludeForm(form)) {
+                            addMaspikHiddenFields(form);
+                        }
+                    });
                 });
-            });
 
-            // Add the fields when the form is submitted
-            document.addEventListener("submit", function(e) {
-                if (e.target.tagName === "FORM") {
-                    addMaspikHiddenFields(e.target);
-                    //if exists in the e.target.tagName === "FORM" the field id Maspik-currentYear, add the current year to it
-                    if (e.target.querySelector("#Maspik-currentYear")) {
-                        e.target.querySelector("#Maspik-currentYear").value = new Date().getFullYear();
-                    }
-                }
-            }, true);
-        }
-        </script>
-        <style>
-        .maspik-field { 
-            display: none !important; 
-            pointer-events: none !important;
-            opacity: 0 !important;
-            position: absolute !important;
-            left: -99999px !important;
-        }
-        </style>
-        <?php
-    }
-
-    if (maspik_get_settings("maspikTimeCheck") ) { 
-        // if the Key check is enabled
-        $spam_key = maspik_get_spam_key(); // Get the unique spam key
-        // Add a script that adds the hidden field dynamically via JavaScript when the form is submitted
-        echo '
-        <script type="text/javascript">
-                // Maspik add key to forms
-                    document.addEventListener("DOMContentLoaded", function() {
-                        var spamKey = "' . esc_js( $spam_key ) . '";
-                        var input = document.createElement("input");
-                        input.type = "hidden";
-                        input.name = "maspik_spam_key";
-                        input.value = spamKey;
-            input.setAttribute("autocomplete", "off");
-            
-            // Select all forms with the specified classes
-            var forms = document.querySelectorAll("form");
-            forms.forEach(function(form) {
-                // Only add the spam key if its not already added
-                if (!form.querySelector("input[name=maspik_spam_key]")) {
-                        form.appendChild(input.cloneNode(true));
-                    }
-                });
-            });
-            // add in other way, if the first way not working
+                // Add the fields when the form is submitted
                 document.addEventListener("submit", function(e) {
-                    var spamKey = "' . esc_js( $spam_key ) . '";
+                    if (e.target.tagName === "FORM") {
+                        // Only add fields if form is not excluded
+                        if (!shouldExcludeForm(e.target)) {
+                            addMaspikHiddenFields(e.target);
+                            <?php if ($maspikYearCheck) { ?>
+                            //if exists in the e.target.tagName === "FORM" the field id Maspik-currentYear, add the current year to it
+                            if (e.target.querySelector("#Maspik-currentYear")) {
+                                e.target.querySelector("#Maspik-currentYear").value = new Date().getFullYear();
+                            }
+                            <?php } ?>
+                        }
+                    }
+                }, true);
+                <?php } ?>
+
+                <?php if ($maspikTimeCheck) { ?>
+                // spam key
+                <?php $spam_key = maspik_get_spam_key(); // Get the unique spam key ?>
+                // Maspik add key to forms
+                document.addEventListener("DOMContentLoaded", function() {
+                    var spamKey = "<?php echo esc_js($spam_key); ?>";
                     var input = document.createElement("input");
                     input.type = "hidden";
                     input.name = "maspik_spam_key";
                     input.value = spamKey;
                     input.setAttribute("autocomplete", "off");
-                    
-                    // Check if the field already exists
-                    if (!e.target.querySelector("input[name=maspik_spam_key]")) {
-                        e.target.appendChild(input);
+            
+                    // Select all forms
+                    var forms = document.querySelectorAll("form");
+                    forms.forEach(function(form) {
+                        // Only add the spam key if form is not excluded and key not already added
+                        if (!shouldExcludeForm(form) && !form.querySelector("input[name=maspik_spam_key]")) {
+                            form.appendChild(input.cloneNode(true));
+                        }
+                    });
+                });
+                
+                // add in other way, if the first way not working
+                document.addEventListener("submit", function(e) {
+                    if (e.target.tagName === "FORM") {
+                        // Only add the spam key if form is not excluded and key not already added
+                        if (!shouldExcludeForm(e.target) && !e.target.querySelector("input[name=maspik_spam_key]")) {
+                            var spamKey = "<?php echo esc_js($spam_key); ?>";
+                            var input = document.createElement("input");
+                            input.type = "hidden";
+                            input.name = "maspik_spam_key";
+                            input.value = spamKey;
+                            input.setAttribute("autocomplete", "off");
+                            e.target.appendChild(input);
+                        }
                     }
                 }, true);
-        </script>';             
-
+                <?php } ?>
+            }
+        </script>
+        <style>
+            .maspik-field { 
+                display: none !important; 
+                pointer-events: none !important;
+                opacity: 0 !important;
+                position: absolute !important;
+                left: -99999px !important;
+            }
+        </style>
+        <?php
     }
 }
 add_action('wp_footer', 'Maspik_add_hp_js_to_footer');
