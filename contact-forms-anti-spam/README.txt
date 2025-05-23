@@ -5,15 +5,15 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.8
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.5.1
+Stable tag: 2.5.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-🛡️ No more fake leads, and unwanted spam - Every email will be real and valuable (Contact-forms/Comments and Registration forms). 
+🛡️ No more fake leads, and unwanted spam - Every email will be real and valuable (For all Contact-forms/Comments and Registration forms). 
 
 == Description ==
 
-No more fake leads, bot submissions, and unwanted spam - Every email will be real and valuable, Spam block guarantee!
+No more fake leads and bot submissions - Every email will be real and valuable, Spam block guarantee!
 **Lets bring back the excitement** of getting new leads.
 
 ## Why to block spam with Maspik?
@@ -240,6 +240,12 @@ So if you need advanced spam protection, that works with all forms and has a lot
 
 
 == Changelog ==
+
+= 2.5.2 - 23/05/2025 = 
+* New feature - adding a feedback form to the settings page to help us improve the plugin.
+* Fixed an issue where some hidden fields had duplicate IDs.
+* Fixed database update issue when upgrading from version 1.x to version 2.0 or higher.
+* Improved - Enhanced handling and performance for processing lengthy textarea content.
 
 = 2.5.1 - 30/04/2025 = 
 * Bug fix - Fixed an issue where search forms were not submitting properly in certain scenarios.

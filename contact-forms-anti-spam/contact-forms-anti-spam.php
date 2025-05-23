@@ -4,7 +4,7 @@
  * Plugin Name:       Maspik - Ultimate Spam Protection
  * Plugin URI:        https://wpmaspik.com/
  * Description:       The best spam protection plugin. Block spam using advanced filters, blacklists, and IP verification...
- * Version:           2.5.1
+ * Version:           2.5.2
  * Author:            WpMaspik
  * Author URI:        https://wpmaspik.com/?readme
  * Text Domain:       contact-forms-anti-spam
@@ -32,7 +32,7 @@ if (!defined('ABSPATH')) exit;
 /**
  * Currently plugin version.
  */
-define( 'MASPIK_VERSION', '2.5.1' );
+define( 'MASPIK_VERSION', '2.5.2' );
 define('MASPIK_PLUGIN_FILE', __FILE__);
 
 
@@ -80,6 +80,117 @@ function maspik_plugin_row_meta( $links, $file ) {
 	
 	return $links;
 }
+
+
+function maspik_check_and_update_log_table($upgrader_object = null, $options = array()) {
+    // Check if this is our plugin being updated
+    if ($upgrader_object && !empty($options)) {
+        if (!isset($options['plugin']) || strpos($options['plugin'], 'contact-forms-anti-spam') === false) {
+            return;
+        }
+    }
+
+    // Check user capabilities if not during activation/update
+    if (!$upgrader_object && !current_user_can('manage_options')) {
+        return;
+    }
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'maspik_spam_logs';
+    $current_db_version = get_option('maspik_db_version', '1.0');
+    $required_db_version = '2.0'; // start at version 2.5.2
+
+    // Start transaction
+    $transaction_started = $wpdb->query('START TRANSACTION');
+    if ($transaction_started === false) {
+        error_log('Maspik DB Update Error: Failed to start transaction - ' . $wpdb->last_error);
+        if (!$upgrader_object) {
+            wp_die('Failed to start database transaction: ' . $wpdb->last_error);
+        }
+        return;
+    }
+
+    try {
+        // Only run if we need to update
+        if (version_compare($current_db_version, $required_db_version, '<')) {
+            // Check if table exists
+            $table_exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_name));
+
+            if (!$table_exists) {
+                $result = create_maspik_log_table();
+                if ($result === false) {
+                    throw new Exception('Failed to create log table: ' . $wpdb->last_error);
+                }
+            } else {
+                // Check if columns exist
+                $columns = $wpdb->get_col("SHOW COLUMNS FROM $table_name");
+                if ($columns === false) {
+                    throw new Exception('Failed to get columns: ' . $wpdb->last_error);
+                }
+                
+                // Add missing columns
+                $new_columns = array(
+                    'spam_tag' => "ALTER TABLE $table_name ADD COLUMN spam_tag varchar(191) NOT NULL DEFAULT ''",
+                    'spamsrc_label' => "ALTER TABLE $table_name ADD COLUMN spamsrc_label varchar(191) NOT NULL DEFAULT ''",
+                    'spamsrc_val' => "ALTER TABLE $table_name ADD COLUMN spamsrc_val varchar(191) NOT NULL DEFAULT ''"
+                );
+                
+                foreach ($new_columns as $column => $sql) {
+                    if (!in_array($column, $columns)) {
+                        $result = $wpdb->query($sql);
+                        if ($result === false) {
+                            throw new Exception("Failed to add column $column: " . $wpdb->last_error);
+                        }
+                    }
+                }
+            }
+
+            // Update the stored version
+            $update_result = update_option('maspik_db_version', $required_db_version);
+            if ($update_result === false) {
+                throw new Exception('Failed to update version number');
+            }
+            
+            // Commit transaction
+            $commit_result = $wpdb->query('COMMIT');
+            if ($commit_result === false) {
+                throw new Exception('Failed to commit transaction: ' . $wpdb->last_error);
+            }
+        } else {
+            // Commit transaction even if no update was needed
+            $wpdb->query('COMMIT');
+        }
+    } catch (Exception $e) {
+        error_log('Maspik DB Update Error: ' . $e->getMessage());
+        error_log('Maspik DB Update Error Stack Trace: ' . $e->getTraceAsString());
+
+        // Rollback on error
+        $wpdb->query('ROLLBACK');
+        
+        // If this is an activation, we should show error but not deactivate
+        if (!$upgrader_object) {
+            wp_die('Failed to create or update database tables: ' . $e->getMessage());
+        }
+    }
+}
+
+// Run during plugin update
+add_action('upgrader_process_complete', 'maspik_check_and_update_log_table', 10, 2);
+
+// Run during plugin activation
+register_activation_hook(__FILE__, function() {
+    try {
+        maspik_check_and_update_log_table(null, array());
+    } catch (Exception $e) {
+        // Deactivate the plugin if database setup fails
+        error_log('Maspik DB Activation Error: ' . $e->getMessage());
+
+        deactivate_plugins(plugin_basename(__FILE__));
+        wp_die('Plugin activation failed: ' . $e->getMessage());
+    }
+});
+
+
 
 add_action('admin_footer-plugins.php', 'maspik_deactivation_survey');
 function maspik_deactivation_survey() {

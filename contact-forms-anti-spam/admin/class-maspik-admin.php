@@ -385,6 +385,9 @@ class Maspik_Admin {
 		$this->version = $version;
 		add_action('admin_menu', array( $this, 'Maspik_addPluginAdminMenu' ), 9);   
 		//add_action('admin_init', array( $this, 'registerAndBuildFields' ));
+        
+        // Add AJAX handler for feedback form
+        add_action('wp_ajax_maspik_submit_feedback', array($this, 'maspik_handle_feedback_submission'));
 	}
 
     
@@ -508,4 +511,122 @@ class Maspik_Admin {
         add_settings_error($setting_field, $err_code, $message, $type);
     }
          
+    /**
+     * Handle feedback form submission
+     */
+    public function maspik_handle_feedback_submission() {
+        // Enable error logging
+        if (!defined('WP_DEBUG_LOG')) {
+            define('WP_DEBUG_LOG', true);
+        }
+        
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'maspik_feedback_nonce')) {
+            wp_send_json_error('Invalid nonce');
+            return;
+        }
+
+        // Get and sanitize form data
+        $feedback_type = isset($_POST['feedback_type']) ? sanitize_text_field($_POST['feedback_type']) : '';
+        $feedback_message = isset($_POST['feedback_message']) ? sanitize_textarea_field($_POST['feedback_message']) : '';
+        $feedback_email = isset($_POST['feedback_email']) ? sanitize_email($_POST['feedback_email']) : '';
+
+        // Log received data
+
+        // Validate required fields
+        if (empty($feedback_type) || empty($feedback_message)) {
+            wp_send_json_error('Required fields are missing');
+            return;
+        }
+
+        // Prepare email content
+        $site_url = get_site_url();
+        $subject = sprintf('[Maspik Feedback] %s from %s', ucfirst($feedback_type), $site_url);
+        
+        $message = "Feedback Type: " . $feedback_type . "\n\n";
+        $message .= "Message:\n" . $feedback_message . "\n\n";
+        $message .= "Site URL: " . $site_url . "\n";
+        if (!empty($feedback_email)) {
+            $message .= "User Email: " . $feedback_email . "\n";
+        }
+
+        // Set up email headers with proper From address
+        $site_name = get_bloginfo('name');
+        $domain = parse_url(get_site_url(), PHP_URL_HOST);
+        
+        // Use the site's own domain for sending
+        $from_email = 'noreply@' . $domain;
+        if (!is_email($from_email)) {
+            // If the domain is not valid, use a fallback
+            $from_email = 'noreply@' . $_SERVER['HTTP_HOST'];
+            if (!is_email($from_email)) {
+                $from_email = 'noreply@wpmaspik.com';
+            }
+        }
+        $from_name = $site_name ? $site_name : 'WordPress';
+        
+        // Add additional headers for better deliverability
+        $headers = array(
+            'Content-Type: text/plain; charset=UTF-8',
+            'From: ' . $from_name . ' <' . $from_email . '>',
+            'Reply-To: ' . (!empty($feedback_email) ? $feedback_email : $from_email),
+            'X-Mailer: PHP/' . phpversion(),
+            'X-Sender: ' . $from_email,
+            'X-Auth-User: ' . $from_email,
+            'List-Unsubscribe: <mailto:' . $from_email . '?subject=unsubscribe>',
+            'Return-Path: ' . $from_email
+        );
+
+        $to = 'hello@wpmaspik.com';
+        
+        // Debug information
+        $debug_info = array(
+            'to' => $to,
+            'from_email' => $from_email,
+            'from_name' => $from_name,
+            'subject' => $subject,
+            'message' => $message,
+            'headers' => $headers,
+            'site_url' => $site_url,
+            'php_version' => PHP_VERSION,
+            'wordpress_version' => get_bloginfo('version'),
+            'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
+            'mail_function_exists' => function_exists('mail'),
+            'wp_mail_function_exists' => function_exists('wp_mail')
+        );
+
+        // Try to send email with error handling
+        $sent = false;
+        $error_message = '';
+        
+        try {
+            // First attempt with wp_mail
+            $sent = wp_mail($to, $subject, $message, $headers);
+            
+            // If wp_mail fails, try direct mail() function
+            if (!$sent && function_exists('mail')) {
+                $header_string = implode("\r\n", $headers);
+                $sent = mail($to, $subject, $message, $header_string);
+            }
+            
+            if (!$sent) {
+                $error_message = 'Failed to send email using both wp_mail and mail()';
+            }
+        } catch (Exception $e) {
+            $error_message = $e->getMessage();
+        }
+        
+        if ($sent) {
+            wp_send_json_success(array(
+                'message' => 'Feedback sent successfully',
+                'debug_info' => $debug_info
+            ));
+        } else {
+            wp_send_json_error(array(
+                'message' => 'Failed to send feedback: ' . $error_message,
+                'debug_info' => $debug_info
+            ));
+        }
+    }
 }
+

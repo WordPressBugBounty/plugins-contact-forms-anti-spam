@@ -1512,7 +1512,7 @@ $spamcounter = maspik_spam_count();
                                                         <div class = 'maspik-minmax-wrap'>
                                                             <?php 
 
-                                                            echo create_maspik_numbox("text_limit_min", "MinCharactersInTextAreaField", "character-limit" , "Min",'' ,1,30);
+                                                            echo create_maspik_numbox("text_area_limit_min", "MinCharactersInTextAreaField", "character-limit" , "Min",'' ,1,30);
                                                             
                                                             echo create_maspik_numbox("textarea_limit_max", "MaxCharactersInTextAreaField", "character-limit" , "Max", '', 6,100000) 
                                                             ?>
@@ -2222,6 +2222,153 @@ $spamcounter = maspik_spam_count();
 
                                     <?php wp_nonce_field('maspik_save_settings_action', 'maspik_save_settings_nonce'); ?>
                                 </form> <!--End of content to submit -->
+
+
+                                <!--  -->
+                                <!-- Feedback Form Section -->
+                                <div class="maspik-feedback-section" id="maspik-feedback">
+                                    <div class="maspik-settings-action-content" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                        <span class="dashicons dashicons-format-chat" style="font-size: 28px; color: #F48722;"></span>
+                                        <div>
+                                            <h4 style="margin: 0; padding: 0; font-size: 18px; color: #2c3338; display: inline-block; vertical-align: middle;">
+                                                <?php esc_html_e('Send Feedback', 'contact-forms-anti-spam'); ?>
+                                            </h4>
+                                            <div style="font-size: 13px; color: #666; margin-top: 2px;">
+                                                <?php esc_html_e('Help us improve Maspik by sharing your thoughts and suggestions.', 'contact-forms-anti-spam'); ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <form id="maspik-feedback-form" class="maspik-feedback-form">
+                                        <div class="maspik-feedback-field">
+                                            <label for="maspik-feedback-type"><?php esc_html_e('Feedback Type:', 'contact-forms-anti-spam'); ?></label>
+                                            <select id="maspik-feedback-type" name="feedback_type" required>
+                                                <option value="suggestion"><?php esc_html_e('Suggestion', 'contact-forms-anti-spam'); ?></option>
+                                                <option value="bug"><?php esc_html_e('Bug Report', 'contact-forms-anti-spam'); ?></option>
+                                                <option value="feature"><?php esc_html_e('Feature Request', 'contact-forms-anti-spam'); ?></option>
+                                                <option value="other"><?php esc_html_e('Other', 'contact-forms-anti-spam'); ?></option>
+                                            </select>
+                                        </div>
+                                        <div class="maspik-feedback-field">
+                                            <label for="maspik-feedback-message"><?php esc_html_e('Your Message:', 'contact-forms-anti-spam'); ?></label>
+                                            <textarea id="maspik-feedback-message" name="feedback_message" rows="4" required></textarea>
+                                        </div>
+                                        <div class="maspik-feedback-field">
+                                            <label for="maspik-feedback-email"><?php esc_html_e('Your Email - If expecting answer (optional):', 'contact-forms-anti-spam'); ?></label>
+                                            <input type="email" id="maspik-feedback-email" name="feedback_email">
+                                        </div>
+                                        <button type="submit" class="button maspik-feedback-btn">
+                                            <span class="dashicons dashicons-email-alt"></span>
+                                            <?php esc_html_e('Send Feedback', 'contact-forms-anti-spam'); ?>
+                                        </button>
+                                        <div id="maspik-feedback-message-status" style="display:none; margin-top:10px;"></div>
+                                    </form>
+                                </div>
+
+                                <style>
+                                .maspik-feedback-section {
+                                    padding: 28px 28px 20px 28px;
+                                    background: #fff7f0;
+                                    border-radius: 12px;
+                                    box-shadow: 0 2px 10px 0 rgba(244,135,34,0.07);
+                                }
+                                .maspik-feedback-form {
+                                    margin-top: 10px;
+                                }
+                                .maspik-feedback-field {
+                                    margin-bottom: 18px;
+                                }
+                                .maspik-feedback-field label {
+                                    display: block;
+                                    margin-bottom: 6px;
+                                    font-weight: 600;
+                                    color: #2c3338;
+                                }
+                                .maspik-feedback-field select,
+                                .maspik-feedback-field textarea,
+                                .maspik-feedback-field input {
+                                    width: 100%;
+                                    padding: 9px 12px;
+                                    border: 1.5px solid #e2e4e7;
+                                    border-radius: 7px;
+                                    background: #fff;
+                                    font-size: 15px;
+                                    transition: border-color 0.2s, box-shadow 0.2s;
+                                    box-sizing: border-box;
+                                    max-width: 100%;
+                                }
+                                .maspik-feedback-field select:focus,
+                                .maspik-feedback-field textarea:focus,
+                                .maspik-feedback-field input:focus {
+                                    border-color: #F48722;
+                                    outline: none;
+                                    box-shadow: 0 0 0 2px #ffe3c7;
+                                }
+                                .maspik-feedback-field textarea {
+                                    resize: vertical;
+                                    min-height: 80px;
+                                }
+                                .button.maspik-feedback-btn {
+                                    background: #F48722;
+                                    border-color: #F48722;
+                                    color: #fff;
+                                    font-weight: 600;
+                                    border-radius: 7px;
+                                    padding: 10px 22px;
+                                    font-size: 16px;
+                                    transition: background 0.2s, border-color 0.2s;
+                                    box-shadow: 0 1px 4px 0 rgba(244,135,34,0.08);
+                                    display: inline-flex;
+                                    align-items: center;
+                                    gap: 7px;
+                                }
+                                .button.maspik-feedback-btn:hover {
+                                    background: #e06f0f;
+                                    border-color: #e06f0f;
+                                    color: #fff;
+                                }
+                                #maspik-feedback-message-status {
+                                    font-size: 15px;
+                                    padding: 8px 12px;
+                                    border-radius: 6px;
+                                    margin-top: 10px;
+                                }
+                                #maspik-feedback-message-status.success {
+                                    background: #e6f7e6;
+                                    color: #1a7f37;
+                                    border: 1px solid #b6e2b6;
+                                }
+                                #maspik-feedback-message-status.error {
+                                    background: #fff0f0;
+                                    color: #c00;
+                                    border: 1px solid #f5b6b6;
+                                }
+                                </style>
+
+                                <script>
+                                jQuery(document).ready(function($) {
+                                    $('#maspik-feedback-form').on('submit', function(e) {
+                                        e.preventDefault();
+                                        var formData = {
+                                            action: 'maspik_submit_feedback',
+                                            nonce: '<?php echo wp_create_nonce('maspik_feedback_nonce'); ?>',
+                                            feedback_type: $('#maspik-feedback-type').val(),
+                                            feedback_message: $('#maspik-feedback-message').val(),
+                                            feedback_email: $('#maspik-feedback-email').val()
+                                        };
+                                        var statusDiv = $('#maspik-feedback-message-status');
+                                        statusDiv.hide().removeClass('success error');
+                                        $.post(ajaxurl, formData, function(response) {
+                                            if (response.success) {
+                                                statusDiv.text('<?php esc_html_e('Thank you for your feedback!', 'contact-forms-anti-spam'); ?>').addClass('success').show();
+                                                $('#maspik-feedback-form')[0].reset();
+                                            } else {
+                                                statusDiv.text('<?php esc_html_e('There was an error sending your feedback. Please try again.', 'contact-forms-anti-spam'); ?>').addClass('error').show();
+                                            }
+                                        });
+                                    });
+                                });
+                                </script>
+                                <!-- end feedback-->
                             </div><!-- End of Accordion content -->
                         </div><!--end of blacklist opts -->
                         <!--Test form here -->

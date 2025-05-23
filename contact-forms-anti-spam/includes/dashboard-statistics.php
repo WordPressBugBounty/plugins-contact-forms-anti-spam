@@ -6,27 +6,44 @@ if (!defined('WPINC')) {
 // file name: dashboard-statistics.php
 
 function maspik_format_reason_value($text) {
-    // Count asterisks in the text
-    $count = substr_count($text, '*');
-    if ($count < 2) {
+    // If no pattern found, return original text
+    if (strpos($text, '*!') === false || strpos($text, '!*') === false) {
         return esc_html($text);
     }
 
-    // Find position of first and last asterisk
-    $first_pos = strpos($text, '*');
-    $last_pos = strrpos($text, '*');
+    $result = '';
+    $current_pos = 0;
+    $text_length = strlen($text);
 
-    // If they're the same (only one asterisk) or no asterisks found, return original text
-    if ($first_pos === false || $first_pos === $last_pos) {
-        return esc_html($text);
+    while ($current_pos < $text_length) {
+        // Find next occurrence of *!
+        $start_pos = strpos($text, '*!', $current_pos);
+        if ($start_pos === false) {
+            // No more patterns, add remaining text
+            $result .= esc_html(substr($text, $current_pos));
+            break;
+        }
+
+        // Add text before the pattern
+        $result .= esc_html(substr($text, $current_pos, $start_pos - $current_pos));
+
+        // Find the matching !*
+        $end_pos = strpos($text, '!*', $start_pos);
+        if ($end_pos === false) {
+            // No matching end, add remaining text
+            $result .= esc_html(substr($text, $current_pos));
+            break;
+        }
+
+        // Extract and format the text between *! and !*
+        $bold_text = esc_html(substr($text, $start_pos + 2, $end_pos - $start_pos - 2));
+        $result .= '<b style="color: #F48722; font-weight: bold;">' . $bold_text . '</b>';
+
+        // Move position after the current pattern
+        $current_pos = $end_pos + 2;
     }
 
-    // Split the text into three parts and escape HTML
-    $start = esc_html(substr($text, 0, $first_pos));
-    $middle = esc_html(substr($text, $first_pos + 1, $last_pos - $first_pos - 1));
-    $end = esc_html(substr($text, $last_pos + 1));
-
-    return $start . '<b>' . $middle . '</b>' . $end;
+    return $result;
 }
 
 function maspik_get_monthly_stats() {
@@ -346,10 +363,6 @@ function maspik_render_dashboard_widget() {
         }
         .maspik-reasons-table tr:hover {
             background-color: #f5f5f5;
-        }
-        .maspik-reasons-table td.reason-value b {
-            font-weight: 600;
-            color: #F48722;
         }
         .maspik-footer {
             margin-top: 20px;

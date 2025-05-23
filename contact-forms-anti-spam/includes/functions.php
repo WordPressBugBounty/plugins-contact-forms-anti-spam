@@ -426,9 +426,9 @@ function create_maspik_log_table() {
         spam_agent varchar(191) NOT NULL,
         spam_date varchar(191) NOT NULL,
         spam_source varchar(191) NOT NULL,
-        spamsrc_label varchar(191) NOT NULL,
-        spamsrc_val varchar(191) NOT NULL,
-        spam_tag varchar(191) NOT NULL,
+        spamsrc_label varchar(191) NOT NULL DEFAULT '',
+        spamsrc_val varchar(191) NOT NULL DEFAULT '',
+        spam_tag varchar(191) NOT NULL DEFAULT '',
         PRIMARY KEY  (id)
     ) " . $wpdb->get_charset_collate();
 

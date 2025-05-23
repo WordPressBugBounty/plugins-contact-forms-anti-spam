@@ -425,7 +425,7 @@
             <tbody>
                 <?php foreach ($stats['top_reasons'] as $reason): ?>
                 <tr>
-                    <td><?php echo esc_html($reason->reason); ?></td>
+                    <td><?php echo maspik_format_reason_value($reason->reason); ?></td>
                     <td><?php echo number_format($reason->count); ?></td>
                     <td><?php echo number_format($reason->percentage, 1); ?>%</td>
                 </tr>
@@ -458,20 +458,4 @@
     </div>
 
     <?php echo get_maspik_footer(); ?>
-
-
-    <!-- Raw Data (for debugging) -->
-    <?php if (WP_DEBUG): ?>
-    <div class="notice notice-info">
-        <p>Raw Data:</p>
-        <pre><?php 
-            echo "Timeline Data:\n";
-            print_r($stats['timeline_data']);
-            echo "\nCountries Data:\n";
-            print_r($stats['countries_data']);
-            echo "\nSources Data:\n";
-            print_r($stats['sources_data']);
-        ?></pre>
-    </div>
-    <?php endif; ?>
 </div> 

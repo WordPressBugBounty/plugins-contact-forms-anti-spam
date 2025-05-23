@@ -518,13 +518,17 @@ function checkTextareaForSpam($field_value) {
             $pattern = trim($bad_string, '*'); // Remove existing asterisks from each side
             $pattern = "*$pattern*";           // Add asterisks on both sides
             
-            if (fnmatch($pattern, $field_value, FNM_CASEFOLD)) {
-                return array(
-                    'spam' => "field value matches pattern *!$bad_string!*", 
-                    'message' => "textarea_field",
-                    'option_value' => $bad_string,
-                    'label' => "textarea_blacklist"
-                );
+            // Split long strings into chunks of 4000 characters to avoid fnmatch limit
+            $chunks = str_split($field_value, 4000);
+            foreach ($chunks as $chunk) {
+                if (fnmatch($pattern, $chunk, FNM_CASEFOLD)) {
+                    return array(
+                        'spam' => "field value matches pattern *!$bad_string!*", 
+                        'message' => "textarea_field",
+                        'option_value' => $bad_string,
+                        'label' => "textarea_blacklist"
+                    );
+                }
             }
         } 
         elseif (maspik_is_field_value_exist_in_string($bad_string, $field_value)) {
@@ -746,7 +750,6 @@ function Maspik_add_hp_js_to_footer() {
                     var honeypot = createHiddenField({
                         type: "text",
                         name: "<?php echo maspik_HP_name(); ?>",
-                        id: "<?php echo maspik_HP_name(); ?>",
                         class: form.className + " maspik-field",
                         placeholder: "Leave this field empty"
                     }, hiddenFieldStyles);
@@ -758,7 +761,6 @@ function Maspik_add_hp_js_to_footer() {
                     var currentYearField = createHiddenField({
                         type: "text",
                         name: "Maspik-currentYear",
-                        id: "Maspik-currentYear",
                         class: form.className + " maspik-field"
                     }, hiddenFieldStyles);
                     form.appendChild(currentYearField);
@@ -787,8 +789,8 @@ function Maspik_add_hp_js_to_footer() {
                             addMaspikHiddenFields(e.target);
                             <?php if ($maspikYearCheck) { ?>
                             //if exists in the e.target.tagName === "FORM" the field id Maspik-currentYear, add the current year to it
-                            if (e.target.querySelector("#Maspik-currentYear")) {
-                                e.target.querySelector("#Maspik-currentYear").value = new Date().getFullYear();
+                            if (e.target.querySelector("[name='Maspik-currentYear']")) {
+                                e.target.querySelector("[name='Maspik-currentYear']").value = new Date().getFullYear();
                             }
                             <?php } ?>
                         }
@@ -850,19 +852,6 @@ function Maspik_add_hp_js_to_footer() {
 }
 add_action('wp_footer', 'Maspik_add_hp_js_to_footer');
 add_action('register_form', 'Maspik_add_hp_js_to_footer' , 99);
-
-/**
- * Injects the spam key field dynamically into forms with specific classes using JavaScript.
- */
-function maspik_add_spam_key_field_js() {
-   
-
-}
-
-// add to all forms
-add_action('wp_footer', 'maspik_add_spam_key_field_js' , 99); // Add to wp_footer()
-// add to user registration form on admin side
-add_action('register_form', 'maspik_add_spam_key_field_js' , 99); // Add to wp_footer()
 
 
 /**

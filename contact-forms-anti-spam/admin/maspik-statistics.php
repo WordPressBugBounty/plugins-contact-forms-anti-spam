@@ -185,7 +185,7 @@ class Maspik_Statistics {
         // Set time interval based on range
         $where_clause = "";
         if ($time_range === 'custom' && !empty($start_date) && !empty($end_date)) {
-            $where_clause = $wpdb->prepare("WHERE spam_date BETWEEN %s AND %s", 
+            $where_clause = $wpdb->prepare("spam_date BETWEEN %s AND %s", 
                 $start_date . ' 00:00:00', 
                 $end_date . ' 23:59:59'
             );
@@ -212,12 +212,7 @@ class Maspik_Statistics {
                     $group_by = 'DATE(spam_date)';
                     $date_format = '%Y-%m-%d';
             }
-            $where_clause = "WHERE spam_date >= DATE_SUB(NOW(), INTERVAL $interval)";
-        }
-
-        // Debug output
-        if (WP_DEBUG) {
-            //error_log("Maspik Statistics: Getting data for $time_range, interval: $interval, table: $table");
+            $where_clause = "spam_date >= DATE_SUB(NOW(), INTERVAL $interval)";
         }
 
         try {
@@ -225,8 +220,7 @@ class Maspik_Statistics {
             $total_blocked = $wpdb->get_var("
                 SELECT COUNT(*)
                 FROM $table
-                $where_clause
-                AND (spam_tag IS NULL OR spam_tag != 'not spam')"
+                WHERE $where_clause"
             );
 
             // Get timeline data with improved date handling
@@ -238,7 +232,6 @@ class Maspik_Statistics {
                         COUNT(*) as count
                     FROM $table
                     WHERE spam_date BETWEEN %s AND %s
-                    AND (spam_tag IS NULL OR spam_tag != 'not spam')
                     GROUP BY DATE(spam_date)
                     ORDER BY period ASC",
                     $start_date . ' 00:00:00',
@@ -281,16 +274,12 @@ class Maspik_Statistics {
                         DATE_FORMAT(spam_date, %s) as period,
                         COUNT(*) as count
                     FROM $table
-                    $where_clause
-                    AND (spam_tag IS NULL OR spam_tag != 'not spam')
+                    WHERE $where_clause
                     GROUP BY period
-                    ORDER BY spam_date ASC",
+                    ORDER BY period ASC",
                     $date_format
                 ));
             }
-
-            // Add debug log
-            //error_log("Maspik Timeline Data: " . print_r($timeline_data, true));
 
             // Get top countries
             $total_for_period = $total_blocked;
@@ -300,18 +289,12 @@ class Maspik_Statistics {
                     COALESCE(spam_country, 'Unknown') as country,
                     COUNT(*) as count
                 FROM $table
-                $where_clause
-                AND (spam_tag IS NULL OR spam_tag != 'not spam')
+                WHERE $where_clause
                 GROUP BY country
                 HAVING count > 0
                 ORDER BY count DESC
                 LIMIT 10"
             );
-
-            // Add percentage to countries data
-            foreach ($countries_data as $data) {
-                $data->percentage = $total_for_period > 0 ? round(($data->count / $total_for_period) * 100, 1) : 0;
-            }
 
             // Get spam sources
             $sources_data = $wpdb->get_results("
@@ -319,18 +302,12 @@ class Maspik_Statistics {
                     COALESCE(SUBSTRING_INDEX(spam_source, '|||', 1), 'Unknown') as source,
                     COUNT(*) as count
                 FROM $table
-                $where_clause
-                AND (spam_tag IS NULL OR spam_tag != 'not spam')
+                WHERE $where_clause
                 GROUP BY source
                 HAVING count > 0
                 ORDER BY count DESC
                 LIMIT 10"
             );
-
-            // Add percentage to sources data
-            foreach ($sources_data as $data) {
-                $data->percentage = $total_for_period > 0 ? round(($data->count / $total_for_period) * 100, 1) : 0;
-            }
 
             // Get top IPs
             $top_ips = $wpdb->get_results("
@@ -340,8 +317,7 @@ class Maspik_Statistics {
                     COUNT(*) as count,
                     MAX(spam_date) as last_attempt
                 FROM $table
-                $where_clause
-                AND (spam_tag IS NULL OR spam_tag != 'not spam')
+                WHERE $where_clause
                 GROUP BY ip, country
                 ORDER BY count DESC
                 LIMIT 10"
@@ -353,10 +329,9 @@ class Maspik_Statistics {
                     SUBSTRING_INDEX(spamsrc_val, '@', -1) as domain,
                     COUNT(*) as count
                 FROM $table
-                $where_clause
+                WHERE $where_clause
                 AND spam_type = 'email'
                 AND spamsrc_val LIKE '%@%'
-                AND (spam_tag IS NULL OR spam_tag != 'not spam')
                 GROUP BY domain
                 ORDER BY count DESC
                 LIMIT 10"
@@ -368,10 +343,9 @@ class Maspik_Statistics {
                     SUBSTRING(spam_agent, 1, 50) as agent,
                     COUNT(*) as count
                 FROM $table
-                $where_clause
+                WHERE $where_clause
                 AND spam_agent IS NOT NULL
                 AND spam_agent != ''
-                AND (spam_tag IS NULL OR spam_tag != 'not spam')
                 GROUP BY agent
                 ORDER BY count DESC
                 LIMIT 10"
@@ -384,7 +358,7 @@ class Maspik_Statistics {
                 $prev_end = date('Y-m-d', strtotime($start_date . ' -1 day'));
                 $prev_start = date('Y-m-d', strtotime($prev_end . " -$date_diff days"));
                 $previous_where = $wpdb->prepare(
-                    "WHERE spam_date BETWEEN %s AND %s", 
+                    "spam_date BETWEEN %s AND %s", 
                     $prev_start . ' 00:00:00', 
                     $prev_end . ' 23:59:59'
                 );
@@ -392,34 +366,34 @@ class Maspik_Statistics {
                 // For predefined time ranges - calculate based on time range type
                 switch ($time_range) {
                     case 'today':
-                        $previous_where = "WHERE DATE(spam_date) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)";
+                        $previous_where = "DATE(spam_date) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)";
                         break;
                         
                     case 'yesterday':
-                        $previous_where = "WHERE DATE(spam_date) = DATE_SUB(CURDATE(), INTERVAL 2 DAY)";
+                        $previous_where = "DATE(spam_date) = DATE_SUB(CURDATE(), INTERVAL 2 DAY)";
                         break;
                         
                     case 'week':
-                        $previous_where = "WHERE spam_date BETWEEN 
+                        $previous_where = "spam_date BETWEEN 
                             DATE_SUB(DATE_SUB(NOW(), INTERVAL 1 WEEK), INTERVAL 1 WEEK) 
                             AND DATE_SUB(NOW(), INTERVAL 1 WEEK)";
                         break;
                         
                     case 'month':
-                        $previous_where = "WHERE spam_date BETWEEN 
+                        $previous_where = "spam_date BETWEEN 
                             DATE_SUB(DATE_SUB(NOW(), INTERVAL 1 MONTH), INTERVAL 1 MONTH) 
                             AND DATE_SUB(NOW(), INTERVAL 1 MONTH)";
                         break;
                         
                     case 'year':
-                        $previous_where = "WHERE spam_date BETWEEN 
+                        $previous_where = "spam_date BETWEEN 
                             DATE_SUB(DATE_SUB(NOW(), INTERVAL 1 YEAR), INTERVAL 1 YEAR) 
                             AND DATE_SUB(NOW(), INTERVAL 1 YEAR)";
                         break;
                         
                     default:
                         // Default - last 30 days
-                        $previous_where = "WHERE spam_date BETWEEN 
+                        $previous_where = "spam_date BETWEEN 
                             DATE_SUB(DATE_SUB(NOW(), INTERVAL 30 DAY), INTERVAL 30 DAY) 
                             AND DATE_SUB(NOW(), INTERVAL 30 DAY)";
                 }
@@ -428,8 +402,7 @@ class Maspik_Statistics {
             $previous_total = $wpdb->get_var("
                 SELECT COUNT(*)
                 FROM $table
-                $previous_where
-                AND (spam_tag IS NULL OR spam_tag != 'not spam')"
+                WHERE $previous_where"
             );
             
             $trend_percentage = 0;
@@ -447,8 +420,7 @@ class Maspik_Statistics {
                     COUNT(*) as count,
                     MAX(spam_date) as last_attempt
                 FROM $table
-                $where_clause
-                AND (spam_tag IS NULL OR spam_tag != 'not spam')
+                WHERE $where_clause
                 GROUP BY country
                 ORDER BY count DESC
                 LIMIT 10"
@@ -460,9 +432,8 @@ class Maspik_Statistics {
                     SUBSTRING_INDEX(spam_source, '|||', -1) as page_url,
                     COUNT(*) as count
                 FROM $table
-                $where_clause
+                WHERE $where_clause
                 AND spam_source LIKE '%|||%'
-                AND (spam_tag IS NULL OR spam_tag != 'not spam')
                 GROUP BY page_url
                 ORDER BY count DESC
                 LIMIT 10"
@@ -474,8 +445,7 @@ class Maspik_Statistics {
                     COALESCE(spam_type, 'Unknown') as type,
                     COUNT(*) as count
                 FROM $table
-                $where_clause
-                AND (spam_tag IS NULL OR spam_tag != 'not spam')
+                WHERE $where_clause
                 GROUP BY type
                 ORDER BY count DESC
                 LIMIT 10"
@@ -487,10 +457,9 @@ class Maspik_Statistics {
                     COALESCE(spam_value, 'Unknown') as reason,
                     COUNT(*) as count
                 FROM $table
-                $where_clause
+                WHERE $where_clause
                 AND spam_value IS NOT NULL 
                 AND spam_value != ''
-                AND (spam_tag IS NULL OR spam_tag != 'not spam')
                 GROUP BY reason
                 ORDER BY count DESC
                 LIMIT 10"
@@ -503,9 +472,31 @@ class Maspik_Statistics {
             
             foreach ($top_pages as $data) {
                 $data->percentage = $total_for_period > 0 ? round(($data->count / $total_for_period) * 100, 1) : 0;
-                // Add page title if available
+                
+                // Try to get the post title
                 $post_id = url_to_postid($data->page_url);
-                $data->title = $post_id > 0 ? get_the_title($post_id) : __('Page', 'contact-forms-anti-spam');
+                $title = '';
+                
+                if ($post_id > 0) {
+                    $title = get_the_title($post_id);
+                }
+                
+                // If we have a title, use it, otherwise use the URL
+                if (!empty($title)) {
+                    $data->title = $title;
+                } else {
+                    // Format the URL to be more readable
+                    $url = $data->page_url;
+                    // Remove protocol and domain
+                    $url = preg_replace('#^https?://[^/]+#', '', $url);
+                    // Remove trailing slash
+                    $url = rtrim($url, '/');
+                    // If empty, show home page
+                    $data->title = !empty($url) ? $url : __('Home Page', 'contact-forms-anti-spam');
+                }
+                
+                // Always store the full URL for linking
+                $data->url = $data->page_url;
             }
             
             foreach ($top_types as $data) {
@@ -535,9 +526,7 @@ class Maspik_Statistics {
             );
 
         } catch (Exception $e) {
-            if (WP_DEBUG) {
-                //error_log('Maspik Statistics Error: ' . $e->getMessage());
-            }
+            
             return array(
                 'error' => true,
                 'message' => __('An error occurred while fetching statistics.', 'contact-forms-anti-spam'),
