@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.8
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.5.2
+Stable tag: 2.5.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -241,6 +241,13 @@ So if you need advanced spam protection, that works with all forms and has a lot
 
 == Changelog ==
 
+= 2.5.3 - 24/05/2025 = 
+* Fixed - Fix php error where function was call to early.
+* We want to grow and improve the experience! so we need your help! please:
+  * Share your feedback and suggestions to our [Suggestion Box](https://wpmaspik.com/#suggestions?readme-file).
+  * Give as 5 stars review on [WordPress.org](https://wordpress.org/support/plugin/contact-forms-anti-spam/reviews/#new-post).
+  * Spread the word and write a Guide/Vlog/Post about Maspik, and receive a Pro license on us.
+
 = 2.5.2 - 23/05/2025 = 
 * New feature - adding a feedback form to the settings page to help us improve the plugin.
 * Fixed an issue where some hidden fields had duplicate IDs.
@@ -249,11 +256,6 @@ So if you need advanced spam protection, that works with all forms and has a lot
 
 = 2.5.1 - 30/04/2025 = 
 * Bug fix - Fixed an issue where search forms were not submitting properly in certain scenarios.
-* We want to grow and improve the experience! so we need your help! please:
-  * Share your feedback and suggestions to our [Suggestion Box](https://wpmaspik.com/#suggestions?readme-file).
-  * Give as 5 stars review on [WordPress.org](https://wordpress.org/support/plugin/contact-forms-anti-spam/reviews/#new-post).
-  * Spread the word and write a Guide/Vlog/Post about Maspik, and receive a Pro license on us.
-
 
 = 2.5.0 - 22/04/2025 = 
 * Improve - Improved UI/UX of the entire plugin.

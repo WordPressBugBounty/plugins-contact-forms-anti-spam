@@ -410,38 +410,6 @@ function create_maspik_table() {
     dbDelta($sql);        
 }
 
-//make new log table
-function create_maspik_log_table() {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'maspik_spam_logs';
-    
-    // define the structure of the table
-    $sql = "CREATE TABLE $table_name (
-        id mediumint(9) NOT NULL AUTO_INCREMENT,
-        spam_type varchar(191) NOT NULL,
-        spam_value varchar(191) NOT NULL,
-        spam_detail longtext NOT NULL,
-        spam_ip varchar(191) NOT NULL,
-        spam_country varchar(191) NOT NULL,
-        spam_agent varchar(191) NOT NULL,
-        spam_date varchar(191) NOT NULL,
-        spam_source varchar(191) NOT NULL,
-        spamsrc_label varchar(191) NOT NULL DEFAULT '',
-        spamsrc_val varchar(191) NOT NULL DEFAULT '',
-        spam_tag varchar(191) NOT NULL DEFAULT '',
-        PRIMARY KEY  (id)
-    ) " . $wpdb->get_charset_collate();
-
-    // if the table doesn't exist or if we need to update the structure
-    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    dbDelta($sql);
-    
-    // mark the function as run successfully
-    update_option('maspik_columns_last_check', '2');
-}
-
-
-
 function maspik_limit_log_size() {
     global $wpdb;
 

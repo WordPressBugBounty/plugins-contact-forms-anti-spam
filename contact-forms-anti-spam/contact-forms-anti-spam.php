@@ -4,7 +4,7 @@
  * Plugin Name:       Maspik - Ultimate Spam Protection
  * Plugin URI:        https://wpmaspik.com/
  * Description:       The best spam protection plugin. Block spam using advanced filters, blacklists, and IP verification...
- * Version:           2.5.2
+ * Version:           2.5.3
  * Author:            WpMaspik
  * Author URI:        https://wpmaspik.com/?readme
  * Text Domain:       contact-forms-anti-spam
@@ -32,11 +32,8 @@ if (!defined('ABSPATH')) exit;
 /**
  * Currently plugin version.
  */
-define( 'MASPIK_VERSION', '2.5.2' );
+define( 'MASPIK_VERSION', '2.5.3' );
 define('MASPIK_PLUGIN_FILE', __FILE__);
-
-
-
 
 /**
  * Load plugin text domain and initialize plugin
@@ -63,6 +60,7 @@ function maspik_plugins_loaded() {
     $plugin = new Maspik();
     $plugin->run();
 }
+
 // Hook into plugins_loaded which runs before init
 add_action('init', 'maspik_plugins_loaded');
 
@@ -81,6 +79,35 @@ function maspik_plugin_row_meta( $links, $file ) {
 	return $links;
 }
 
+//make new log table
+function create_maspik_log_table() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'maspik_spam_logs';
+    
+    // define the structure of the table
+    $sql = "CREATE TABLE $table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        spam_type varchar(191) NOT NULL,
+        spam_value varchar(191) NOT NULL,
+        spam_detail longtext NOT NULL,
+        spam_ip varchar(191) NOT NULL,
+        spam_country varchar(191) NOT NULL,
+        spam_agent varchar(191) NOT NULL,
+        spam_date varchar(191) NOT NULL,
+        spam_source varchar(191) NOT NULL,
+        spamsrc_label varchar(191) NOT NULL DEFAULT '',
+        spamsrc_val varchar(191) NOT NULL DEFAULT '',
+        spam_tag varchar(191) NOT NULL DEFAULT '',
+        PRIMARY KEY  (id)
+    ) " . $wpdb->get_charset_collate();
+
+    // if the table doesn't exist or if we need to update the structure
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+    
+    // mark the function as run successfully
+    update_option('maspik_columns_last_check', '2');
+}
 
 function maspik_check_and_update_log_table($upgrader_object = null, $options = array()) {
     // Check if this is our plugin being updated
@@ -92,6 +119,12 @@ function maspik_check_and_update_log_table($upgrader_object = null, $options = a
 
     // Check user capabilities if not during activation/update
     if (!$upgrader_object && !current_user_can('manage_options')) {
+        return;
+    }
+
+    // Check if required function exists
+    if (!function_exists('create_maspik_log_table')) {
+        error_log('Maspik DB Update Error: Required function create_maspik_log_table() not found');
         return;
     }
 
@@ -189,8 +222,6 @@ register_activation_hook(__FILE__, function() {
         wp_die('Plugin activation failed: ' . $e->getMessage());
     }
 });
-
-
 
 add_action('admin_footer-plugins.php', 'maspik_deactivation_survey');
 function maspik_deactivation_survey() {
@@ -543,46 +574,4 @@ function maspik_deactivation_survey() {
     });
     </script>
     <?php
-}
-
-
-// Delete the transient when the plugin is updated
-function maspik_delete_version_transient($upgrader_object, $options) {
-    // Check if we're updating plugins
-    if ($options['action'] == 'update' && $options['type'] == 'plugin') {
-        // Get the path to our plugin's main file
-        $our_plugin = plugin_basename(MASPIK_PLUGIN_FILE);
-        
-        // Check if our plugin is in the list of updated plugins
-        if (isset($options['plugins']) && is_array($options['plugins'])) {
-            foreach ($options['plugins'] as $plugin) {
-                if ($plugin == $our_plugin) {
-                    // Delete the transient only when Maspik is updated
-                    delete_transient('maspik_version_info');
-                    
-                    // Create tables if they don't exist
-                    if (!maspik_table_exists()) {
-                        create_maspik_log_table();
-                        create_maspik_table();
-                    }
-
-                    // Add a flag to indicate we need to refresh
-                    set_transient('maspik_needs_refresh', true, 30);
-                    wp_redirect(admin_url());  
-                    break;
-                }
-            }
-        }
-    }
-}
-//add_action('upgrader_process_complete', 'maspik_delete_version_transient', 10, 2);
-
-// Add action to check for refresh flag
-//add_action('plugins_loaded', 'maspik_check_refresh_needed');
-function maspik_check_refresh_needed() {
-    if (get_transient('maspik_needs_refresh')) {
-        delete_transient('maspik_needs_refresh');
-        wp_redirect(admin_url());
-        exit;
-    }
 }
