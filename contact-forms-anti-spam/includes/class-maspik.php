@@ -153,6 +153,13 @@ class Maspik {
         }
       }
 
+      // Breakdance Builder
+      if( maspik_get_settings( "maspik_support_breakdance_forms" ) != "no" ){ 
+        if ( maspik_is_plugin_active( 'breakdance/plugin.php' ) ) {
+          require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/breakdance.php';
+        }
+      }
+
       // Buddypress
       if( maspik_get_settings( "maspik_support_buddypress_forms" ) != "no" ){ 
         if ( maspik_is_plugin_active( 'buddypress/bp-loader.php' ) ) {

@@ -51,51 +51,6 @@ function maspik_make_extra_spam_check($post) {
 
     }
 
-    // Year check
-
-    if (maspik_get_settings('maspikYearCheck')) {
-        $serverYear = intval(gmdate('Y'));
-        $submittedYear = sanitize_text_field($post['Maspik-currentYear']);
-        if ($post['Maspik-currentYear'] != $serverYear) {
-            return [
-                'spam' => true,
-                'reason' => "JavaScript check failed - The year submitted by JavaScript($submittedYear) does not match the current server year($serverYear)",
-                'message' => "maspikYearCheck"
-            ];
-        }
-    }
-    
-
-    // Time check
-    // TODO: remove this check, it's not needed
-    /*
-    if (maspik_get_settings('maspikTimeCheck') && isset($post['Maspik-exactTime']) && is_numeric($post['Maspik-exactTime'])) {
-        $inputTime = (int)$post['Maspik-exactTime'];
-        $currentTime = time();
-        $timeDifference = abs($currentTime - $inputTime);
-
-        if ($inputTime > $currentTime) {
-            // for prevent false positive
-                return [
-                    'spam' => false,
-                    'reason' => false,
-                    'message' => false
-            
-                // 'spam' => true,
-                //'reason' => "Invalid submission time - future timestamp detected",
-                // 'message' => "maspikTimeCheck"
-            ];
-        }
-
-        if ($timeDifference < maspik_submit_buffer()) {
-            return [
-                'spam' => true,
-                'reason' => "Maspik Spam Trap - Submitted too fast, Only {$timeDifference} seconds",
-                'message' => "maspikTimeCheck"
-            ];
-        }
-    }
-    */
 
     // If we've made it this far, it's not spam
     return [
@@ -408,6 +363,72 @@ function checkEmailForSpam($field_value) {
     }
 
     return false;
+}
+
+
+/**
+* URL check 
+**/
+function checkUrlForSpam($field_value) {
+    // Check if the field is empty
+    if (empty($field_value) || is_array($field_value)) {
+        return array('spam' => false, 'message' => '', 'label' => '', 'option_value' => '');
+    }
+
+    // Get the URL blacklist - cache this to avoid repeated database calls
+    static $url_blacklist = null;
+    if ($url_blacklist === null) {
+        $url_blacklist = efas_makeArray(maspik_get_settings('url_blacklist'));
+        
+        // Check if there are additional blacklist entries from the spam API
+        $additional_blacklist = efas_get_spam_api('url_field');
+        if ($additional_blacklist) {
+            $url_blacklist = array_merge($url_blacklist, $additional_blacklist);
+        }
+        
+        // Filter out empty entries once
+        $url_blacklist = array_filter($url_blacklist, function($item) {
+            return !empty(trim($item));
+        });
+    }
+
+    // Early return if no blacklist items
+    if (empty($url_blacklist)) {
+        return array('spam' => false, 'message' => '', 'label' => '', 'option_value' => '');
+    }
+
+    // Convert the field value to lowercase once
+    $field_value_lower = strtolower(trim($field_value));
+
+    // Loop through the blacklist entries
+    foreach ($url_blacklist as $bad_string) {
+        // Convert the blacklist string to lowercase once
+        $bad_string_lower = strtolower(trim($bad_string));
+        
+        // Check for wildcard pattern using fnmatch
+        if (strpbrk($bad_string_lower, '*?') !== false) {
+            if (fnmatch($bad_string_lower, $field_value_lower, FNM_CASEFOLD)) {
+                return array(
+                    'spam' => "URL *!$field_value_lower!* is blocked because wildcard pattern *!$bad_string!* is in the blacklist",
+                    'message' => 'url_blacklist',
+                    'label' => 'url_blacklist',
+                    'option_value' => $bad_string
+                );
+            }
+        } else {
+            // Use direct strpos for better performance
+            if (strpos($field_value_lower, $bad_string_lower) !== false) {
+                return array(
+                    'spam' => "URL *!$field_value_lower!* is blocked because *!$bad_string!* is in the blacklist",
+                    'message' => 'url_blacklist',
+                    'label' => 'url_blacklist',
+                    'option_value' => $bad_string
+                );
+            }
+        }
+    }
+
+    return array('spam' => false, 'message' => '', 'label' => '', 'option_value' => '');
 }
 
 

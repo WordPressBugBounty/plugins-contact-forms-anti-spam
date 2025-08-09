@@ -38,6 +38,9 @@ $MASPIK_FIELD_DISPLAY_NAMES = [
     // Email fields
     "emails_blacklist" => "Email Field",
     
+    // URL fields
+    "url_blacklist" => "URL Field",
+    
     // Textarea fields
     "textarea_blacklist" => "Textarea Field",
     "MinCharactersInTextAreaField" => "Textarea Field Min Character",
@@ -81,6 +84,7 @@ $MASPIK_PLUGIN_MAP = [
     'Ninjaforms' => 'ninjaforms',
     'Jetforms' => 'jetforms',
     'Everestforms' => 'everestforms',
+    'Breakdance Builder' => 'breakdance',
     'Wordpress Comments' => 'comments',
     'Custom PHP Forms' => 'custom'
 ];
@@ -97,6 +101,9 @@ $MASPIK_IMPORT_OPTIONS = [
     
     // Email options
     'emails_blacklist',
+    
+    // URL options
+    'url_blacklist',
     
     // Textarea options
     'textarea_blacklist',
@@ -156,6 +163,7 @@ $MASPIK_DEFAULT_SETTINGS = [
     'maspik_Store_log' => 'yes',
     'spam_log_limit' => '1000',
     'contain_links' => '',
+    'url_blacklist' => '',
     
     // Form support settings
     'maspik_support_cf7' => 'yes',
@@ -170,6 +178,7 @@ $MASPIK_DEFAULT_SETTINGS = [
     'maspik_support_ninjaforms' => 'yes',
     'maspik_support_jetforms' => 'yes',
     'maspik_support_everestforms' => 'yes',
+    'maspik_support_breakdance_forms' => 'no',
     'maspik_support_gravity_forms' => 'yes',
     'maspik_support_Wpforms' => 'yes',
     'maspik_support_woocommerce_review' => 'yes',
@@ -184,18 +193,21 @@ const MASPIK_TEMPLATES = array(
         'description' => 'Optimized for online stores with enhanced protection against spam queries, fake reviews, and automated form submissions. Includes specific filters for common e-commerce spam patterns.',
         'text_blacklist' => "\nseo\ncripto\ndiscount\nfree shipping\norder now\npromo code",
         'emails_blacklist' => "*@spam.com\n*@temp-mail.*\n/^sales.*@/",
+        'url_blacklist' => "bit.ly\nbitly\nrb.gy\ntinyurl.com",
         'textarea_blacklist' => "buy now\ncheck out\norder today\nspecial offer\ndiscount code",
     ),
     'blog' => array(
         'description' => 'Perfect for blogs, portfolios and service websites. Balanced protection that keeps your forms accessible while blocking common spam patterns and automated submissions.',
         'text_blacklist' => "seo\nbacklink\nrank\nranking\ntraffic\nvisitor\nclick here\nlink exchange\nlink building\nbitcoin\nbtc",
         'emails_blacklist' => "*@spam.com\n*@temp.*\n/^marketing.*@/",
+        'url_blacklist' => "bit.ly\nbitly\nrb.gy\ntinyurl.com",
         'textarea_blacklist' => "check my blog\nnice article\ngreat post\nbacklink exchange",
     ),
     'seo' => array(
         'description' => 'Specially configured for SEO, marketing and web agencies. Enhanced protection And allow SEO professionals to get more traffic and backlinks.',
         'text_blacklist' => "seo\nranking\ntraffic\nbacklinks\nmarketing",
         'emails_blacklist' => "*@spam.com\n*@temp.*\n/^seo.*@/",
+        'url_blacklist' => "bit.ly\nbitly\nrb.gy\ntinyurl.com",
         'textarea_blacklist' => "increase traffic\nimprove ranking\nseo services",
     ),
     'onlyusa' => array(
@@ -222,6 +234,7 @@ const MASPIK_TEMPLATES = array(
         'description' => 'A balanced configuration suitable for most websites. Provides good overall protection against common spam patterns while maintaining form accessibility, not for SEO agencies. link wont be allowed in text area fields',
         'text_blacklist' => "\nbinance\nspam\nscam\nfree\nurgent\nmoney\nSEO\nRanking\nGoogle Ads\nFiverr\nCrypto\nviagra\npoker\ncasino\nxxx\nsex\nporn\nfuck\ndating\npenis\nbitch\nhacker\npussy",
         'emails_blacklist' => "ericjones\n*@temp.*\n*t.me*",
+        'url_blacklist' => "bit.ly\nbitly\nrb.gy\ntinyurl.com",
         'textarea_blacklist' => "\nnbinance\nleads\nInvestment\nINSTANTLY\nInstagram growth\nyour website\nYouTube channel\nSubscribe\nunsubcribe\nbit.ly\nbitly\nClick here\nscotsindallas\nwork from home\nmake money fast\nget rich quick\nno experience\ntoo good to be true\nwinner\nbonus\ncongratulations\nrb.gy/\n✅\n⮕\n→\nUnlock the\n(SMS)\n365/24\nLearn More\nGet 50% off\nthem today!\nhigh-quality content\nAI Tools\ncontent generation\nAI tools\ninstant access\nAI power\nno limits\nNo subscriptions\n$100+\nMidJourney\nDALL·E 3\nChatGPT-4",
     )
 );

@@ -78,6 +78,22 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
                 }
                 break;
 
+            case 'url':
+                // URL Field Validation
+                $checkUrlForSpam = checkUrlForSpam($field_value);
+                $spam = isset($checkUrlForSpam['spam']) ? $checkUrlForSpam['spam'] : 0;
+                $message = isset($checkUrlForSpam['message']) ? $checkUrlForSpam['message'] : 0;
+                $spam_lbl = isset($checkUrlForSpam['label']) ? $checkUrlForSpam['label'] : 0;
+                $spam_val = isset($checkUrlForSpam['option_value']) ? $checkUrlForSpam['option_value'] : 0;
+
+                if ($spam) {
+                    $error_message = cfas_get_error_text($message);
+                    efas_add_to_log('url', $spam, $form_data, 'Elementor forms', $spam_lbl, $spam_val);
+                    $ajax_handler->add_error($field_id, $error_message);
+                    return;
+                }
+                break;
+                
             case 'textarea':
                 // Textarea Field Validation
                 $checkTextareaForSpam = checkTextareaForSpam($field_value);

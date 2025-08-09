@@ -1236,7 +1236,9 @@ td.column-ip.column-entries {
   box-shadow: none;
   color: #000;
 }
-
+.maspik-main-list-wrap.maspik-textfield-list {
+  flex-direction: column;
+}
 .maspik-accordion-content .form-table>tbody tr:first-child th:first-child {
   display: none;
 }

@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", function() {
             updateInputElement("note-name", data.name);
             updateInputElement("note-email", data.email);
             updateInputElement("note-tel", data.tel);
+            updateInputElement("note-url", data.url);
             updateInputElement("note-textarea", data.textarea);
         })
         .catch(error => {

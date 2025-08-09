@@ -84,6 +84,25 @@ function maspik_validate_cf7_process( $result, $tags ) {
                 }
                 break;
 
+            case 'url':
+                // URL Field Validation
+                $checkUrlForSpam = checkUrlForSpam($field_value);
+                $spam = isset($checkUrlForSpam['spam']) ? $checkUrlForSpam['spam'] : 0;
+                $message = isset($checkUrlForSpam['message']) ? $checkUrlForSpam['message'] : 0;
+                $spam_lbl = isset($checkUrlForSpam['label']) ? $checkUrlForSpam['label'] : 0;
+                $spam_val = isset($checkUrlForSpam['option_value']) ? $checkUrlForSpam['option_value'] : 0;
+
+                if ($spam) {
+                    $post_entries = array_filter($_POST, function($key) {
+                        return strpos($key, '_wpcf7') === false;
+                    }, ARRAY_FILTER_USE_KEY);
+                    $error_message = cfas_get_error_text($message);
+                    efas_add_to_log('url', $spam, $post_entries, 'Contact Form 7', $spam_lbl, $spam_val);
+                    $result->invalidate($tag, $error_message);
+                    return $result;
+                }
+                break;
+
             case 'textarea':
                 // Textarea Field Validation
                 $checkTextareaForSpam = checkTextareaForSpam( $field_value );
@@ -116,9 +135,7 @@ function maspik_validate_cf7_process( $result, $tags ) {
 
     if ( $spam ) {
         $result->invalidate( '', cfas_get_error_text( $message ) );
-        $post_entries = array_filter( $_POST, function( $key ) {
-            return strpos( $key, '_wpcf7' ) === false;
-        }, ARRAY_FILTER_USE_KEY );
+        $post_entries = isset($_POST) ? $_POST : array();
         efas_add_to_log( "General", $reason, $post_entries, "Contact Form 7", $message, $spam_val );
         return $result;
     }

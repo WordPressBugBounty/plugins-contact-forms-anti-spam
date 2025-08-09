@@ -58,6 +58,17 @@ function maspik_comments_checker(array $data) {
         }
     }
 
+    // URL check
+    $url = isset($data['comment_author_url']) ? strtolower(sanitize_url($data['comment_author_url'])) : '';
+    if (!empty($url) && !$spam) {
+        $checkUrlForSpam = checkUrlForSpam($url);
+        $spam = $reason = $checkUrlForSpam['spam'] ?? false;
+        $message = $checkUrlForSpam['message'] ?? '';
+        $spam_lbl = $checkUrlForSpam['label'] ?? '';
+        $spam_val = $checkUrlForSpam['option_value'] ?? '';
+        $type = "URL";
+    }
+
     // Content check
     if (!empty($content) && !$spam) {
         $checkTextareaForSpam = checkTextareaForSpam($content);

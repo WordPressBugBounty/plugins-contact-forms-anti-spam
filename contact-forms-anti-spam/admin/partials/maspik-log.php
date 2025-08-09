@@ -58,9 +58,25 @@ function processArray($array, &$form_data, $parent_key = '') {
           processArray($value, $form_data, $full_key);
       } else {
           // Adding a row to the table with the full key and value
-          $form_data .= '<tr>';
-          $form_data .= '<td>' . esc_html($full_key) . '</td>';
-          $form_data .= '<td>' . esc_html($value) . '</td>';
+          $form_data .= '<tr style="border-bottom: 1px solid #eee;">';
+          $form_data .= '<td style="padding: 8px; border: 1px solid #ddd; font-weight: 600; background-color: #f9f9f9;">' . esc_html($full_key) . '</td>';
+          
+          // Handle different value types
+          if (is_null($value)) {
+              $form_data .= '<td style="padding: 8px; border: 1px solid #ddd; color: #999;">' . esc_html__('(empty)', 'contact-forms-anti-spam') . '</td>';
+          } elseif (is_bool($value)) {
+              $form_data .= '<td style="padding: 8px; border: 1px solid #ddd;">' . ($value ? 'true' : 'false') . '</td>';
+          } elseif (is_numeric($value)) {
+              $form_data .= '<td style="padding: 8px; border: 1px solid #ddd;">' . esc_html($value) . '</td>';
+          } else {
+              // For strings, check if they're long and format accordingly
+              $display_value = esc_html($value);
+              if (strlen($value) > 100) {
+                  $display_value = '<div style="max-height: 100px; overflow-y: auto;">' . $display_value . '</div>';
+              }
+              $form_data .= '<td style="padding: 8px; border: 1px solid #ddd; word-break: break-word;">' . $display_value . '</td>';
+          }
+          
           $form_data .= '</tr>';
       }
   }
@@ -69,12 +85,43 @@ function processArray($array, &$form_data, $parent_key = '') {
 
 function cfes_build_table() {
     global $wpdb;
+    if (!maspik_logtable_exists()) {
+        echo "<p>" . esc_html__('The spam log table does not exist.', 'contact-forms-anti-spam') . "</p>";
+        return;
+    }
+    
     if (maspik_logtable_exists()) {
         $table = maspik_get_logtable();
+        
+        // Debug: Check table name
+        if (empty($table)) {
+            echo "<p>Error: Table name is empty</p>";
+            return;
+        }
+        
         $sql = "SELECT * FROM $table ORDER BY id DESC";
         $results = $wpdb->get_results($sql, ARRAY_A);
         
+        // Check for database errors
+        if ($wpdb->last_error) {
+            echo "<p>Database error: " . esc_html($wpdb->last_error) . "</p>";
+            return;
+        }
+        
+        // Debug: Check number of results
+        if ($results === false) {
+            echo "<p>Error: Query failed</p>";
+            return;
+        }
+        
         echo maspik_Download_log_btn();
+        
+        if (empty($results)) {
+            echo "<p>" . esc_html__('No spam attempts were recorded and stored in the spam log during the selected time period.', 'contact-forms-anti-spam') . "</p>";
+            echo "<p>Debug: Found " . count($results) . " results</p>";
+            return;
+        }
+        
         echo "<table class='maspik-log-table'>";
         echo "<tr class='header-row'>
                 <th class='maspik-log-column column-type'>" . esc_html__('Type', 'contact-forms-anti-spam') . "</th>
@@ -89,29 +136,31 @@ function cfes_build_table() {
         $row_count = 0;
         foreach ($results as $row) {
             $row_class = ($row_count % 2 == 0) ? 'even' : 'odd';
-            $row_id = $row['id'];
-            $spam_value = esc_html($row['spamsrc_val']);
-            $spam_type = esc_html($row['spam_type']);
-            $spam_date = $row['spam_date'] ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($row['spam_date'])) : esc_html($row['spam_date']);
-            $spam_val_intext = esc_html(maspik_get_field_display_name($row['spamsrc_label']));
-            $not_spam_tag = esc_html($row['spam_tag']) == "not spam" ? " not-a-spam" : "";
-            $spamsrc_label = esc_html($row['spamsrc_label']);
+            $row_id = isset($row['id']) ? $row['id'] : '';
+            $spam_value = isset($row['spamsrc_val']) ? esc_html($row['spamsrc_val']) : '';
+            $spam_type = isset($row['spam_type']) ? esc_html($row['spam_type']) : '';
+            $spam_date = isset($row['spam_date']) && $row['spam_date'] ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($row['spam_date'])) : '';
+            $spam_val_intext = isset($row['spamsrc_label']) && !empty($row['spamsrc_label']) ? esc_html(maspik_get_field_display_name($row['spamsrc_label'])) : '';
+            $not_spam_tag = isset($row['spam_tag']) && esc_html($row['spam_tag']) == "not spam" ? " not-a-spam" : "";
+            $spamsrc_label = isset($row['spamsrc_label']) ? esc_html($row['spamsrc_label']) : '';
             
             // Process form data
-            $form_data = process_form_data($row['spam_detail']);
+            $form_data = maspik_process_form_data(isset($row['spam_detail']) ? $row['spam_detail'] : '');
 
             // Process source
-            $spam_source = process_spam_source($row['spam_source']);
+            $spam_source = maspik_process_spam_source(isset($row['spam_source']) ? $row['spam_source'] : '');
 
-            if ($row['spam_tag'] != "spam") {
+            // Show all rows regardless of spam_tag
+            if (isset($row['spam_tag']) && $row['spam_tag'] != "spam") {
                 echo "<tr class='row-entries row-$row_class $not_spam_tag'>
                         <td class='column-type column-entries'>
-                            " . esc_html($row['spam_type']) . "
+                            " . $spam_type . "
                             " . maspik_spam_item_option($row_id, $spam_value, $spamsrc_label) . "
+
                         </td>
                         <td class='column-value column-entries'>
                             <div class='value-content-container'>
-                                <div class='spam-value-text'>" . esc_html($row['spam_value']) . "</div>
+                                <div class='spam-value-text'>" . (isset($row['spam_value']) ? esc_html($row['spam_value']) : '') . "</div>
                                 <button class='details-toggle-btn' aria-expanded='false'>
                                     <span class='dashicons dashicons-arrow-down details-icon'></span>
                                     <span class='details-text'>" . esc_html__('Show Details', 'contact-forms-anti-spam') . "</span>
@@ -121,9 +170,9 @@ function cfes_build_table() {
                                 </div>
                             </div>
                         </td>
-                        <td class='column-ip column-entries'>" . esc_html($row['spam_ip']) . "</td>
-                        <td class='column-country column-entries'>" . esc_html($row['spam_country']) . "</td>
-                        <td class='column-agent column-entries'>" . esc_html($row['spam_agent']) . "</td>
+                        <td class='column-ip column-entries'>" . (isset($row['spam_ip']) ? esc_html($row['spam_ip']) : '') . "</td>
+                        <td class='column-country column-entries'>" . (isset($row['spam_country']) ? esc_html($row['spam_country']) : '') . "</td>
+                        <td class='column-agent column-entries'>" . (isset($row['spam_agent']) ? esc_html($row['spam_agent']) : '') . "</td>
                         <td class='column-date column-entries'>" . $spam_date . "</td>
                         <td class='column-source column-entries'>" . $spam_source . "</td>
                     </tr>";
@@ -135,20 +184,46 @@ function cfes_build_table() {
 }
 
 // Helper function to process form data
-function process_form_data($raw_data) {
+function maspik_process_form_data($raw_data) {
+    if (empty($raw_data)) {
+        return '<p>No form data available.</p>';
+    }
+    
     $unserialize_array = @unserialize($raw_data);
     if (is_array($unserialize_array)) {
-        $form_data = '<table class="details-table">';
-        $form_data .= '<tr><th>' . esc_html__('Field', 'contact-forms-anti-spam') . '</th><th>' . esc_html__('Value', 'contact-forms-anti-spam') . '</th></tr>';
+        $form_data = '<table class="details-table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">';
+        $form_data .= '<thead><tr style="background-color: #f8f8f8;">';
+        $form_data .= '<th style="padding: 8px; border: 1px solid #ddd; text-align: left;">' . esc_html__('Field', 'contact-forms-anti-spam') . '</th>';
+        $form_data .= '<th style="padding: 8px; border: 1px solid #ddd; text-align: left;">' . esc_html__('Value', 'contact-forms-anti-spam') . '</th>';
+        $form_data .= '</tr></thead><tbody>';
         processArray($unserialize_array, $form_data);
-        $form_data .= '</table>';
+        $form_data .= '</tbody></table>';
         return $form_data;
     }
-    return "<pre>" . esc_html($raw_data) . "</pre>";
+    
+    // If it's not an array, try to decode JSON
+    $json_data = json_decode($raw_data, true);
+    if (is_array($json_data)) {
+        $form_data = '<table class="details-table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">';
+        $form_data .= '<thead><tr style="background-color: #f8f8f8;">';
+        $form_data .= '<th style="padding: 8px; border: 1px solid #ddd; text-align: left;">' . esc_html__('Field', 'contact-forms-anti-spam') . '</th>';
+        $form_data .= '<th style="padding: 8px; border: 1px solid #ddd; text-align: left;">' . esc_html__('Value', 'contact-forms-anti-spam') . '</th>';
+        $form_data .= '</tr></thead><tbody>';
+        processArray($json_data, $form_data);
+        $form_data .= '</tbody></table>';
+        return $form_data;
+    }
+    
+    // If it's just a string, display it as is
+    return "<pre style='background: #f8f8f8; padding: 10px; border: 1px solid #ddd; border-radius: 3px; overflow-x: auto;'>" . esc_html($raw_data) . "</pre>";
 }
 
 // Helper function to process spam source
-function process_spam_source($source) {
+function maspik_process_spam_source($source) {
+    if (empty($source)) {
+        return '';
+    }
+    
     if (strpos($source, '|||') !== false) {
         list($source_type, $url) = explode('|||', $source);
         $url = htmlspecialchars($url);

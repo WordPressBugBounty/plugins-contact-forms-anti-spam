@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.8
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.5.3
+Stable tag: 2.5.4
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -81,6 +81,7 @@ Maspik integrates seamlessly with a wide range of popular contact forms and comm
 * Forminator forms
 * Fluentforms
 * Bricksbuilder forms
+* Breakdance Builder forms
 * BuddyPress
 * WordPress comments
 * WordPress registration form
@@ -207,6 +208,7 @@ Currently supports the following forms:
 <li>Forminator forms</li>
 <li>Fluentforms</li>
 <li>Bricksbuilder forms</li>
+<li>Breakdance Builder forms</li>
 <li>BuddyPress</li>
 <li>Custom PHP forms</li>
 <li>Wpforms (Maspik Pro license required)</li>
@@ -241,6 +243,11 @@ So if you need advanced spam protection, that works with all forms and has a lot
 
 == Changelog ==
 
+= 2.5.4 - 09/08/2025 = 
+* New feature - Add URL field blocker.
+* New feature - Add support for Breakdance Builder forms.
+* Fixed - Fix issue where spam statistics dashboard give php error when no spam was blocked in some cases.
+
 = 2.5.3 - 24/05/2025 = 
 * Fixed - Fix php error where function was call to early.
 * We want to grow and improve the experience! so we need your help! please:
@@ -268,12 +275,10 @@ So if you need advanced spam protection, that works with all forms and has a lot
 * Bug fix - Fixed issue where maximum links limit was not being set through the Dashboard API.
 * Improvement - Compatibility with WP version 6.8
 
-
 = 2.4.4 - 20/03/2025 = 
 * Announcement - Advance key check is now officialy released and not anymore in ongoing exprement.
 * Improved - Enhanced security by hiding passwords in Spam log
 * Improved - Disabled autocomplete functionality in WooCommerce registration forms for better security
-
 
 = 2.4.3 - 19/02/2025 = 
 * Fixed - Fix Elementor Bot detector option not working wall (When page source url is empty).
@@ -302,7 +307,6 @@ So if you need advanced spam protection, that works with all forms and has a lot
 * Improved Elementor form support
 * Improved default settings auto activation
 * Removed update support from Maspik versions smaller than 2.0.0 to improve stability and performance
-
 
 = 2.2.14 - 05/01/2025 = 
 * New exprement! - Enhanced Advanced Key Check system - Under ongoing exprement.
@@ -337,7 +341,6 @@ So if you need advanced spam protection, that works with all forms and has a lot
 * Improvement - improve time block check to reduce false positive.
 * Improvement - Add spanish translation.
 
-
 = 2.2.7 - 16/10/2024 =
 * Bug fix - Fix error in Contact Form 7 with checkbox field in some cases.
 
@@ -353,7 +356,6 @@ So if you need advanced spam protection, that works with all forms and has a lot
 * Bug fix - Fix error in Country check for some cases.
 * Bug fix - Fix error in AbuseAPI check for some cases.
 * Remove - shortcode option in text-area field, because can be confuseding.
-
 
 = 2.2.3 - 01/10/2024 =
 * New Feature - IP verification, add IP verification usage activity to Maspik dashboard.
@@ -373,7 +375,6 @@ So if you need advanced spam protection, that works with all forms and has a lot
 * Improvement - Improve UI/UX
 * Improvement - Make main block setting as ON by default. You can deactivate settings in the settings page.
 * Improvement - Forms are now supported by default. You can deactivate support for specific forms in the settings page.
-
 
 == Upgrade Notice ==
 

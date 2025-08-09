@@ -282,7 +282,13 @@ function maspik_render_dashboard_widget() {
                             <tr>
                                 <td class="reason-value"><?php echo maspik_format_reason_value($reason_value); ?></td>
                                 <td><?php echo number_format($reason_count); ?></td>
-                                <td><?php echo number_format(($reason_count / $total_blocked) * 100, 1); ?>%</td>
+                                <td><?php
+    if ($total_blocked > 0) {
+        echo number_format(($reason_count / $total_blocked) * 100, 1);
+    } else {
+        echo '0.0';
+    }
+?>%</td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

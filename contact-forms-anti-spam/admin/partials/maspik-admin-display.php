@@ -801,6 +801,7 @@ $spamcounter = maspik_spam_count();
                         'maspik_support_fluentforms_forms' => sanitize_text_field(isset($_POST['maspik_support_fluentforms_forms']) ? "yes" : "no"),
                         'maspik_support_gravity_forms' => sanitize_text_field(isset($_POST['maspik_support_gravity_forms']) ? "yes" : "no"),
                         'maspik_support_bricks_forms' => sanitize_text_field(isset($_POST['maspik_support_bricks_forms']) ? "yes" : "no"),
+                        'maspik_support_breakdance_forms' => sanitize_text_field(isset($_POST['maspik_support_breakdance_forms']) ? "yes" : "no"),
                         'maspik_support_ninjaforms' => sanitize_text_field(isset($_POST['maspik_support_ninjaforms']) ? "yes" : "no"),
                         'maspik_support_jetforms' => sanitize_text_field(isset($_POST['maspik_support_jetforms']) ? "yes" : "no"),
                         'maspik_support_everestforms' => sanitize_text_field(isset($_POST['maspik_support_everestforms']) ? "yes" : "no"),
@@ -809,6 +810,7 @@ $spamcounter = maspik_spam_count();
                         'maspik_Store_log' => sanitize_text_field(isset($_POST['maspik_Store_log']) ? 'yes' : 'no'),
                         'spam_log_limit' => sanitize_text_field($_POST['spam_log_limit'] ?? ''),
                         'shere_data' => isset($_POST['shere_data']) ? 1 : 0,
+                        'url_blacklist' => sanitize_textarea_field(stripslashes($_POST['url_blacklist'] ?? '')),
                     ];
 
 
@@ -1295,6 +1297,7 @@ $spamcounter = maspik_spam_count();
                                                     
                                             <div class="maspik-main-list-wrap maspik-textfield-list">
 
+                                                <label for="text_blacklist"><b><?php esc_html_e('Forbidden text keywords (one per line):', 'contact-forms-anti-spam'); ?></b></label>
                                                 <?php
                                                     echo create_maspik_textarea('text_blacklist', 6, 80, 'maspik-textarea' , 'Seo&#10;Eric jones&#10;Crypto&#10;...');
                                                         
@@ -1385,8 +1388,9 @@ $spamcounter = maspik_spam_count();
                                                     
                                                 <div class="maspik-main-list-wrap maspik-textfield-list">
 
-                                                    <?php 
-                                                        echo create_maspik_textarea('emails_blacklist', 6, 80, 'maspik-textarea');
+                                                <label for="emails_blacklist"><b><?php esc_html_e('Forbidden email domains/patterns (one per line):', 'contact-forms-anti-spam'); ?></b></label>
+                                                <?php
+                                                    echo create_maspik_textarea('emails_blacklist', 6, 80, 'maspik-textarea');
                                                         
                                                         maspik_spam_api_list('email_field');
                                                     ?>      
@@ -1430,8 +1434,9 @@ $spamcounter = maspik_spam_count();
                                                     ?>
                                                 </div> <!--end of maspik-setting-info-->
                                                         
-                                                <div class="maspik-main-list-wrap maspik-textareafield-list">
+                                                <div class="maspik-main-list-wrap maspik-textfield-list">
 
+                                                    <label for="textarea_blacklist"><b><?php esc_html_e('Forbidden textarea keywords (one per line):', 'contact-forms-anti-spam'); ?></b></label>
                                                     <?php 
                                                         echo create_maspik_textarea('textarea_blacklist', 6, 80, 'maspik-textarea' , 'Seo&#10;Ranking&#10;Click here&#10;Google&#10;Crypto&#10;...');
                                                             
@@ -1542,6 +1547,42 @@ $spamcounter = maspik_spam_count();
                                         </div>
                                     </div>
 
+
+                                    <!-- Accordion Item - URL Field Blocker - Custom -->
+                                    <div class="maspik-accordion-item maspik-accordion-url-field">
+                                        <div class="maspik-accordion-header">
+                                            <div class="mpk-acc-header-texts">
+                                                <h4 class="maspik-header maspik-accordion-header-text">
+                                                    <?php esc_html_e('URL Field', 'contact-forms-anti-spam'); ?>
+                                                </h4>
+                                                <span class="maspik-accordion-subheader">
+                                                    <?php esc_html_e('Block URL field from forbidden domains/keywords', 'contact-forms-anti-spam'); ?>
+                                                </span>
+                                            </div>
+                                            <span class="maspik-acc-arrow">
+                                                <span class="dashicons dashicons-arrow-right"></span>
+                                            </span>
+                                        </div>
+                                        <div class="maspik-accordion-content">
+                                            <div class="maspik-accordion-content-wrap hide-form-title">
+                                                <div class="maspik-setting-info">
+                                                    <?php maspik_tooltip(__('Any keywords/domain entered here, if found in a URL field, will cause the submission/comment to be marked as spam.', 'contact-forms-anti-spam')); ?>
+                                                </div>
+                                                <div class="">
+                                                    <div class="maspik-url-blacklist-wrap">
+                                                        <label for="url_blacklist"><b><?php esc_html_e('Forbidden URL keywords/domains (one per line):', 'contact-forms-anti-spam'); ?></b></label>
+                                                        <?php echo create_maspik_textarea('url_blacklist', 4, 80, 'maspik-textarea', 'example.com&#10;bit.ly&#10;spamdomain.com'); ?>
+                                                        <span class="maspik-subtext">
+                                                            <?php esc_html_e('If the URL field contains any of these, the submission will be blocked.', 'contact-forms-anti-spam'); ?>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <?php maspik_save_button_show(); ?>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
                                     <!-- Accordion Item - Phone Field - Custom -->
                                     <div class="maspik-accordion-item maspik-accordion-phone-field">
                                         <div class="maspik-accordion-header">
@@ -1567,9 +1608,9 @@ $spamcounter = maspik_spam_count();
                                                         
                                                 <div class="maspik-main-list-wrap maspik-textfield-list">
 
+                                                    <label for="tel_formats"><b><?php esc_html_e('Allowed phone formats (one per line):', 'contact-forms-anti-spam'); ?></b></label>
                                                     <?php 
-                                                        echo create_maspik_textarea('tel_formats', 6, 80, 'maspik-textarea'); 
-                                                            
+                                                        echo create_maspik_textarea('tel_formats', 6, 80, 'maspik-textarea');
                                                         maspik_spam_api_list('phone_format');
                                                     ?>   
 
@@ -1652,36 +1693,6 @@ $spamcounter = maspik_spam_count();
                                     </div>
                                     <!-- MORE OPTIONS HEADER - END -->
 
-                                    <!-- Accordion Item - Ongoing Experiments Field - Custom -->
-                                    <div class="maspik-accordion-item maspik-accordion-general-field">
-                                        <div class="maspik-accordion-header">
-                                            <div class="mpk-acc-header-texts">
-                                                <h4 class="maspik-header maspik-accordion-header-text"><?php esc_html_e('Ongoing Experiments', 'contact-forms-anti-spam'); ?></h4>
-                                            </div>
-                                            <div class = "maspik-pro-button-wrap">
-                                                <span class="maspik-acc-arrow">
-                                                    <span class="dashicons dashicons-arrow-right"></span>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    <div class="maspik-accordion-content">
-                                            <div class="maspik-accordion-content-wrap hide-form-title">
-                                                <div class="maspik-txt-custom-msg-head togglewrap maspik-honeypot-wrap">
-                                                    <?php echo maspik_toggle_button('maspikYearCheck', 'maspikYearCheck', 'maspikYearCheck', 'maspik-honeypot togglebutton',"",""); ?>
-                                                    <div>
-                                                        <h4> <?php esc_html_e('JavaScript check', 'contact-forms-anti-spam'); ?> 
-                                                        </h4>
-                                                        <span><?php esc_html_e('JavaScript check - This feature adds a hidden field that is automatically filled with the current year using JavaScript. If the submitted year does not match the server\'s current year, it likely means JavaScript is disabled or the form was submitted by a bot. In either case, the submission will be blocked as a security measure.', 'contact-forms-anti-spam'); ?></span>
-                                                    </div>  
-                                                </div><!-- end of maspik-maspikYearCheck -->
-
-                                                <?php 
-                                                    maspik_save_button_show() ?>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <!-- Accordion Item - Other Options Field - Custom -->
                                     <div class="maspik-accordion-item maspik-accordion-other-option-field" >
                                         <div class="maspik-accordion-header" id="ip-blacklist-accordion">
@@ -1704,8 +1715,9 @@ $spamcounter = maspik_spam_count();
                                                     ?>
                                                 </div> <!--end of maspik-accordion-subtitle-wrap-->
                                                 <div class="maspik-ip-wrap maspik-main-list-wrap maspik-textfield-list">
+                                                    <label for="ip_blacklist"><b><?php esc_html_e('Blocked IP addresses (one per line):', 'contact-forms-anti-spam'); ?></b></label>
                                                     <?php
-                                                        echo create_maspik_textarea('ip_blacklist', 6, 80, 'maspik-textarea');   
+                                                        echo create_maspik_textarea('ip_blacklist', 6, 80, 'maspik-textarea');
                                                         maspik_spam_api_list('ip');
                                                     ?> 
                                                 </div> <!-- end of maspik-ip-wrap  -->
@@ -1874,12 +1886,19 @@ $spamcounter = maspik_spam_count();
                                                     </div>  
                                                 </div><!-- end of maspik-fluentform-switch-wrap -->
 
-                                                <div class="maspik-bricks-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('bricks') == 1 ? 'enabled':'disabled' ?>">
+                                                                                                <div class="maspik-bricks-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('bricks') == 1 ? 'enabled':'disabled' ?>">
                                                     <?php echo maspik_toggle_button('maspik_support_bricks_forms', 'maspik_support_bricks_forms', 'maspik_support_bricks_forms', 'maspik-form-switch togglebutton', "form-toggle", efas_if_plugin_is_active('bricks')); ?>
                                                         <div>
                                                             <h4> <?php esc_html_e('Support Bricks forms', 'contact-forms-anti-spam'); ?> </h4>
-                                                    </div>  
-                                                </div><!-- end of maspik-bricks-switch-wrap -->
+                                                        </div>  
+                                                    </div><!-- end of maspik-bricks-switch-wrap -->
+
+                                                <div class="maspik-breakdance-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('breakdance') == 1 ? 'enabled':'disabled' ?>">
+                                                    <?php echo maspik_toggle_button('maspik_support_breakdance_forms', 'maspik_support_breakdance_forms', 'maspik_support_breakdance_forms', 'maspik-form-switch togglebutton', "form-toggle", efas_if_plugin_is_active('breakdance')); ?>
+                                                        <div>
+                                                            <h4> <?php esc_html_e('Support Breakdance Builder forms', 'contact-forms-anti-spam'); ?> </h4>
+                                                        </div>  
+                                                    </div><!-- end of maspik-breakdance-switch-wrap -->
 
 
                                                 <div class="maspik-support-ninjaforms-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('ninjaforms') == 1 ? 'enabled':'disabled' ?>">
@@ -2398,6 +2417,11 @@ $spamcounter = maspik_spam_count();
                                     <input type="tel" class="input-field" name="tel" id="tel" />
                                     <span class="note" id="note-tel"></span>
                                 </div>
+                                <div class="input-row row-url" style="display: none;">
+                                    <label><?php esc_html_e('Website (URL field)', 'contact-forms-anti-spam'); ?></label> <span id="subject-info" class="info"></span>
+                                    <input type="url" class="input-field" name="url" id="url" />
+                                    <span class="note" id="note-url"></span>
+                                </div>
                                 <div class="input-row row-content">
                                     <label><?php esc_html_e('Message (Text area field)', 'contact-forms-anti-spam'); ?></label> <span id="userMessage-info" class="info"></span>
                                     <textarea name="content" id="content" class="input-field" cols="60"
@@ -2471,6 +2495,7 @@ $spamcounter = maspik_spam_count();
     document.addEventListener('DOMContentLoaded', function() {
         const buttons = document.querySelector('.maspik-test-form-buttons').children;
         const phoneField = document.querySelector('.row-phone');
+        const urlField = document.querySelector('.row-url');
         const messageField = document.querySelector('.row-content');
 
         // Set Contact Form as default active
@@ -2486,7 +2511,7 @@ $spamcounter = maspik_spam_count();
                 // Show all fields first
                 phoneField.style.display = 'block';
                 messageField.style.display = 'block';
-
+                urlField.style.display = 'none';
                 // Handle different form types
                 switch(this.dataset.id) {
                     case 'registration':
@@ -2495,6 +2520,7 @@ $spamcounter = maspik_spam_count();
                         break;
                     case 'comment':
                         phoneField.style.display = 'none';
+                        urlField.style.display = 'block';
                         break;
                     // contact-form shows everything by default
                 }
