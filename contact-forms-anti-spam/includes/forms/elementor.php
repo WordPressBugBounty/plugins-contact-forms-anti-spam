@@ -7,10 +7,56 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Main Elementor validation functions
  *
+ * DEVELOPER HOOK: maspik_disable_elementor_spam_check
+ * 
+ * This filter allows developers to disable spam check for specific Elementor forms.
+ * 
+ * @param bool   $disable     Whether to disable spam check (default: false)
+ * @param string $form_name   Name of the Elementor form
+ * @param object $record      Elementor form record object
+ * @return bool  True to disable spam check, false to proceed with spam check
+ * 
+ * USAGE EXAMPLES:
+ * 
+ * 1. Disable spam check for specific form by name:
+ * add_filter('maspik_disable_elementor_spam_check', function($disable, $form_name, $record) {
+ *     if ($form_name === 'MY_CONTACT_FORM') {
+ *         return true; // Disable spam check for this form
+ *     }
+ *     return $disable;
+ * }, 10, 3);
+ * 
+ * 2. Disable spam check for multiple forms:
+ * add_filter('maspik_disable_elementor_spam_check', function($disable, $form_name, $record) {
+ *     $excluded_forms = ['MY_FORM_1', 'MY_FORM_2', 'ADMIN_TEST_FORM'];
+ *     if (in_array($form_name, $excluded_forms)) {
+ *         return true;
+ *     }
+ *     return $disable;
+ * }, 10, 3);
+ * 
+ * 3. Disable spam check for logged-in administrators:
+ * add_filter('maspik_disable_elementor_spam_check', function($disable, $form_name, $record) {
+ *     if (is_user_logged_in() && current_user_can('administrator')) {
+ *         return true;
+ *     }
+ *     return $disable;
+ * }, 10, 3);
  */
 
 add_action( 'elementor_pro/forms/validation', 'maspik_validation_process_elementor', 10, 2 );
 function maspik_validation_process_elementor( $record, $ajax_handler ) {
+
+    // Get form name for developer filtering
+    $form_name = $record->get_form_settings( 'form_name' );
+    
+    //option to disable elementor spam check for developers
+    $disable_elementor_spam_check = apply_filters('maspik_disable_elementor_spam_check', false, $form_name, $record);
+    if($disable_elementor_spam_check){
+        return;
+    }
+
+
     $spam = false;
     $reason = '';
     $form_data = array_map('sanitize_text_field', isset($_POST['form_fields']) ? $_POST['form_fields'] : array());
@@ -122,10 +168,11 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
     $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false;
     $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false;
     $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false;
+    $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : "General";
     $error_message = cfas_get_error_text($message);
     $spam_val = isset($GeneralCheck['value']) && $GeneralCheck['value'] ? $GeneralCheck['value'] : false;
     if($spam){
-        efas_add_to_log($type = "General",$reason, $form_data,"Elementor forms", $message,  $spam_val);
+        efas_add_to_log($type,$reason, $form_data,"Elementor forms", $message,  $spam_val);
         $ajax_handler->add_error( $lastKeyId, $error_message );
         return;
     }

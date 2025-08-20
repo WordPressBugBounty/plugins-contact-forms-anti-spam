@@ -64,6 +64,13 @@ function maspik_submit_buffer(){
     return 4;
 }
 
+//add maspik_spam_key + full-name-maspik-hp to the array
+function maspik_add_spam_keys_to_array($arraytoadd,$arraytotakefrom){
+    $arraytoadd['maspik_spam_key'] = isset($arraytotakefrom['maspik_spam_key']) ? $arraytotakefrom['maspik_spam_key'] : '';
+    $arraytoadd['full-name-maspik-hp'] = isset($arraytotakefrom['full-name-maspik-hp']) ? $arraytotakefrom['full-name-maspik-hp'] : '';
+    return $arraytoadd;
+}
+
 
 function maspik_HP_name(){
     return "full-name-maspik-hp";
@@ -73,7 +80,7 @@ function maspik_HP_name(){
 function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
     
     $to_do_extra_spam_check = maspik_get_settings('maspikHoneypot') || maspik_get_settings('maspikTimeCheck') || maspik_get_settings('maspikYearCheck');
-    if( is_array($post) && $to_do_extra_spam_check ){ 
+    if( is_array($post) && $to_do_extra_spam_check && $form != "ninjaforms"){ 
         $extra_spam_check =  maspik_make_extra_spam_check($post) ;
         $is_spam = isset($extra_spam_check['spam']) ? $extra_spam_check['spam'] : $spam ;
         if($is_spam){
@@ -208,6 +215,29 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
         }
       }
     
+
+    // AI-based spam check (Beta feature - will be Pro-only in future versions)
+    if ( !$spam && $form && is_array($post) ) {
+        $ai_enabled = maspik_get_settings('maspik_ai_enabled');
+        if ( $ai_enabled ) {
+            // Prepare fields for AI analysis
+            //add log
+            $fields = maspik_prepare_fields_for_ai($post, $form);
+
+            if ( !empty($fields) ) {
+                $ai_result = maspik_ai_check_submission($fields);
+                //add log
+                //error_log("AI-based spam check result: " . json_encode($ai_result));
+                if ( isset($ai_result['allow']) && !$ai_result['allow'] ) {
+                    $spam = true;
+                    $reason = isset($ai_result['reason']) ? $ai_result['reason'] : 'AI detected spam';
+                    $message = 'ai_spam_check';
+                    return array('spam' => $spam, 'reason' => $reason, 'message' => $message, 'value' => 1, 'type' => 'AI check');
+                }
+            }
+        }
+    }
+
     //start check IP in api
     $do_ip_api_check = maspik_get_settings('maspikDbCheck');
     if ($do_ip_api_check && !$spam && $form) {
@@ -219,8 +249,6 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
         }
     } 
     //end check IP in api
-
-    
 
     return array('spam' => $spam, 'reason' => $reason, 'message' => $message, 'value' => "");
 }
@@ -725,10 +753,39 @@ function Maspik_add_hp_js_to_footer() {
                 
                 // Function to check if form should be excluded
                 function shouldExcludeForm(form) {
+                    // Check role/aria for search
+                    var role = (form.getAttribute('role') || '').toLowerCase();
+                    if (role === 'search') { return true; }
+                    var aria = (form.getAttribute('aria-label') || '').toLowerCase();
+                    if (aria.indexOf('search') !== -1) { return true; }
+                    
+                    // Check action URL for search patterns
+                    var action = (form.getAttribute('action') || '').toLowerCase();
+                    if (action.indexOf('?s=') !== -1 || action.indexOf('search=') !== -1 || /\/search(\/?|\?|$)/.test(action)) {
+                        return true;
+                    }
+                    
+                    // Check form classes
                     var classes = form.className.split(' ');
-                    return classes.some(function(className) {
+                    if (classes.some(function(className) {
                         return className.toLowerCase().includes('search');
-                    });
+                    })) {
+                        return true;
+                    }
+                    
+                    // Check for search inputs inside the form
+                    var searchInputs = form.querySelectorAll('input[type="search"], input.search, .search input, input[class*="search"], input[id*="search"], input[name="s"], input[name*="search"]');
+                    if (searchInputs.length > 0) {
+                        return true;
+                    }
+                    
+                    // Check for search-related classes in child elements
+                    var searchElements = form.querySelectorAll('.search, [class*="search"], [id*="search"], [aria-label*="search" i]');
+                    if (searchElements.length > 0) {
+                        return true;
+                    }
+                    
+                    return false;
                 }
                 
                 <?php if ($maspikHoneypot || $maspikYearCheck) { ?>

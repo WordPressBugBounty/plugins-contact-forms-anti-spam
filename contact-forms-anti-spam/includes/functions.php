@@ -236,8 +236,16 @@ function maspik_delete_filter() {
         if (empty($col_name) || $col_name === '0' || $col_name === 0 ) {
             return ;
         }
-        if (empty(trim($new_value)) && $new_value !== 0) {
-            // make value empty
+        // Check if value is empty (handle both strings and arrays)
+        if (is_string($new_value)) {
+            if (empty(trim($new_value)) && $new_value !== '0') {
+                $new_value = '';
+            }
+        } elseif (is_array($new_value)) {
+            if (empty($new_value)) {
+                $new_value = [];
+            }
+        } elseif (empty($new_value) && $new_value !== 0) {
             $new_value = '';
         }
 
@@ -249,7 +257,16 @@ function maspik_delete_filter() {
 
             // sanitize the values
         $col_name = sanitize_text_field($col_name);
-        $new_value = is_numeric($new_value) ? intval($new_value) : wp_strip_all_tags($new_value);
+        
+        // Handle different value types for sanitization
+        if (is_numeric($new_value)) {
+            $new_value = intval($new_value);
+        } elseif (is_array($new_value)) {
+            // For arrays (like AI logs), we'll store them as JSON
+            $new_value = wp_json_encode($new_value);
+        } elseif (is_string($new_value)) {
+            $new_value = wp_strip_all_tags($new_value);
+        }
 
         // check if the row exists
         $exists = $wpdb->get_var($wpdb->prepare(
@@ -358,6 +375,15 @@ function maspik_get_settings($data_name, $type = '', $table_var = 'new'){
             if ($value === null || $value == '') {
                 return '';
             }
+            
+            // Try to decode JSON if it looks like JSON
+            if (is_string($value) && (strpos($value, '{') === 0 || strpos($value, '[') === 0)) {
+                $decoded = json_decode($value, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    return $decoded;
+                }
+            }
+            
             return $value;
         }
     }
@@ -2244,3 +2270,59 @@ function maspik_check_version_status() {
 
     return $version_info;
 }
+
+/**
+ * AJAX handler for generating new AI client secret
+ */
+function maspik_handle_generate_ai_secret() {
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'maspik_ajax_nonce')) {
+        wp_send_json_error('Invalid nonce');
+        return;
+    }
+    
+    // Check user capabilities
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Insufficient permissions');
+        return;
+    }
+    
+    try {
+        // Generate new secret
+        $new_secret = maspik_generate_ai_client_secret();
+        
+        wp_send_json_success([
+            'secret' => $new_secret,
+            'message' => 'New secret generated successfully'
+        ]);
+        
+    } catch (Exception $e) {
+        wp_send_json_error('Failed to generate secret: ' . $e->getMessage());
+    }
+}
+add_action('wp_ajax_maspik_generate_ai_secret', 'maspik_handle_generate_ai_secret');
+
+/**
+ * AJAX handler for clearing AI logs
+ */
+function maspik_handle_clear_ai_logs() {
+    // Verify nonce
+    if ( !wp_verify_nonce($_POST['nonce'], 'maspik_clear_ai_logs') ) {
+        wp_die('Security check failed');
+    }
+    
+    // Check user capabilities
+    if ( !current_user_can('manage_options') ) {
+        wp_die('Insufficient permissions');
+    }
+    
+    // Clear AI logs
+    $cleared = maspik_save_settings('maspik_ai_logs', []);
+    
+    if ( $cleared ) {
+        wp_send_json_success('AI logs cleared successfully');
+    } else {
+        wp_send_json_error('Failed to clear AI logs');
+    }
+}
+add_action('wp_ajax_maspik_clear_ai_logs', 'maspik_handle_clear_ai_logs');

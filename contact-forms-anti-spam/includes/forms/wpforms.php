@@ -23,9 +23,11 @@ add_action('wpforms_process_before', function( $entry, $form_data ) {
   $ip = maspik_get_real_ip();
   $reason = "";
 
+  // Add key 'maspik_spam_key' with value from $_POST['maspik_spam_key'] if exists to the entry fields
+  $all_fields = array_merge($entry['fields'], isset($_POST['maspik_spam_key']) ? ['maspik_spam_key' => $_POST['maspik_spam_key']] : []);
 
     // Country IP Check 
-    $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"wpforms");
+    $GeneralCheck = GeneralCheck($ip,$spam,$reason,$all_fields,"wpforms");
     $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
     $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;  
     $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;

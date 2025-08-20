@@ -2805,3 +2805,405 @@ td.column-ip.column-entries {
 .maspik-version .update-version:hover .dashicons-update {
   transform: rotate(180deg);
 }
+
+/* AI Spam Check Accordion Styles */
+.maspik-ai-accordion-header {
+  position: relative;
+}
+
+.maspik-beta-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #e88224 0%, #f48623 100%);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 25px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-left: 12px;
+  box-shadow: 0 3px 12px rgba(102, 126, 234, 0.4);
+  animation: pulse-glow 2s ease-in-out infinite alternate;
+  position: relative;
+  overflow: hidden;
+}
+
+.maspik-beta-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 2px 4px rgba(238, 90, 36, 0.3);
+  }
+  100% {
+    box-shadow: 0 4px 8px rgba(238, 90, 36, 0.5);
+  }
+}
+
+.maspik-pro-notice {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border: 1px solid #dee2e6;
+  border-left: 3px solid #f48722;
+  padding: 8px 12px;
+  margin: 8px 0;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #6c757d;
+  position: relative;
+  display: inline-block;
+  font-style: italic;
+}
+
+.maspik-pro-notice::before {
+  content: "ℹ";
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #f48722;
+  color: white;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: bold;
+}
+
+.maspik-ai-toggle-wrap {
+  margin-bottom: 20px;
+}
+
+.maspik-ai-toggle-wrap .maspik-toggle {
+  margin-right: 10px;
+}
+
+.maspik-ai-toggle-wrap label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+#maspik-ai-config-fields {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 15px;
+}
+
+#maspik-ai-config-fields .form-table th {
+  padding: 15px 10px 15px 0;
+  width: 200px;
+  vertical-align: top;
+}
+
+#maspik-ai-config-fields .form-table td {
+  padding: 15px 10px;
+}
+
+#maspik-ai-config-fields .form-table input[type="text"],
+#maspik-ai-config-fields .form-table input[type="url"],
+#maspik-ai-config-fields .form-table input[type="number"] {
+  width: 100%;
+  max-width: 400px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+#maspik-ai-config-fields .form-table textarea {
+  width: 100%;
+  max-width: 400px;
+  min-height: 80px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+  resize: vertical;
+}
+
+#maspik-ai-config-fields .form-table input:focus,
+#maspik-ai-config-fields .form-table textarea:focus {
+  outline: none;
+  border-color: #f48722;
+  box-shadow: 0 0 0 2px rgba(244, 135, 34, 0.2);
+}
+
+#maspik-ai-config-fields .form-table label {
+  font-weight: 500;
+  color: #555;
+  font-size: 13px;
+}
+
+#maspik-ai-config-fields .form-table .description {
+  color: #666;
+  font-size: 12px;
+  font-style: italic;
+  margin-top: 5px;
+  display: block;
+}
+
+/* Remove character counter styling */
+
+/* AI accordion specific animations */
+#maspik-ai-spam-check {
+  transition: all 0.3s ease;
+}
+
+#maspik-ai-spam-check.active {
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
+}
+
+/* Responsive adjustments for AI section */
+@media (max-width: 768px) {
+  #maspik-ai-config-fields .form-table th,
+  #maspik-ai-config-fields .form-table td {
+    display: block;
+    width: 100%;
+    padding: 10px 0;
+  }
+  
+  #maspik-ai-config-fields .form-table input[type="text"],
+  #maspik-ai-config-fields .form-table input[type="url"],
+  #maspik-ai-config-fields .form-table input[type="number"],
+  #maspik-ai-config-fields .form-table textarea {
+    max-width: 100%;
+  }
+  
+  .maspik-beta-badge {
+    margin-left: 5px;
+    font-size: 9px;
+    padding: 1px 6px;
+  }
+}
+
+/* AI accordion specific animations */
+#maspik-ai-spam-check {
+  transition: all 0.3s ease;
+}
+
+#maspik-ai-spam-check.active {
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
+}
+
+/* AI Logs Table Styling */
+.maspik-ai-logs-table-wrap {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+}
+
+.maspik-ai-logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.maspik-ai-logs-table-button {
+  margin-bottom: 15px !important;
+}
+
+.maspik-ai-logs-table-container h4 {
+  margin-top: 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.maspik-ai-logs-table {
+  margin-top: 15px;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.maspik-ai-logs-table th {
+  background: #f1f3f4;
+  padding: 10px;
+  text-align: left;
+  font-weight: 600;
+  border: 1px solid #ddd;
+}
+
+.maspik-ai-logs-table td {
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  vertical-align: top;
+}
+
+.maspik-ai-logs-table tbody tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.maspik-ai-logs-table tbody tr:hover {
+  background: #f0f0f0;
+}
+
+/* Score styling */
+.maspik-score-0, .maspik-score-1, .maspik-score-2, .maspik-score-3, .maspik-score-4, .maspik-score-5 {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.maspik-score-6, .maspik-score-7, .maspik-score-8, .maspik-score-9, .maspik-score-10 {
+  color: #ffc107;
+  font-weight: 600;
+}
+
+.maspik-score-11, .maspik-score-12, .maspik-score-13, .maspik-score-14, .maspik-score-15,
+.maspik-score-16, .maspik-score-17, .maspik-score-18, .maspik-score-19, .maspik-score-20 {
+  color: #fd7e14;
+  font-weight: 600;
+}
+
+.maspik-score-21, .maspik-score-22, .maspik-score-23, .maspik-score-24, .maspik-score-25,
+.maspik-score-26, .maspik-score-27, .maspik-score-28, .maspik-score-29, .maspik-score-30,
+.maspik-score-31, .maspik-score-32, .maspik-score-33, .maspik-score-34, .maspik-score-35,
+.maspik-score-36, .maspik-score-37, .maspik-score-38, .maspik-score-39, .maspik-score-40,
+.maspik-score-41, .maspik-score-42, .maspik-score-43, .maspik-score-44, .maspik-score-45,
+.maspik-score-46, .maspik-score-47, .maspik-score-48, .maspik-score-49, .maspik-score-50 {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.maspik-score-51, .maspik-score-52, .maspik-score-53, .maspik-score-54, .maspik-score-55,
+.maspik-score-56, .maspik-score-57, .maspik-score-58, .maspik-score-59, .maspik-score-60,
+.maspik-score-61, .maspik-score-62, .maspik-score-63, .maspik-score-64, .maspik-score-65,
+.maspik-score-66, .maspik-score-67, .maspik-score-68, .maspik-score-69, .maspik-score-70,
+.maspik-score-71, .maspik-score-72, .maspik-score-73, .maspik-score-74, .maspik-score-75,
+.maspik-score-76, .maspik-score-77, .maspik-score-78, .maspik-score-79, .maspik-score-80,
+.maspik-score-81, .maspik-score-82, .maspik-score-83, .maspik-score-84, .maspik-score-85,
+.maspik-score-86, .maspik-score-87, .maspik-score-88, .maspik-score-89, .maspik-score-90,
+.maspik-score-91, .maspik-score-92, .maspik-score-93, .maspik-score-94, .maspik-score-95,
+.maspik-score-96, .maspik-score-97, .maspik-score-98, .maspik-score-99, .maspik-score-100 {
+  color: #6f42c1;
+  font-weight: 700;
+}
+
+/* Result styling */
+.maspik-result-allow {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.maspik-result-block {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+/* Modal styling */
+.maspik-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.maspik-modal {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+}
+
+.maspik-modal-header {
+  background: #f8f9fa;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.maspik-modal-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.maspik-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.maspik-modal-close:hover {
+  color: #333;
+}
+
+.maspik-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+.maspik-modal-body table {
+  margin: 0;
+}
+
+.maspik-modal-body th {
+  background: #f1f3f4;
+  padding: 10px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.maspik-modal-body td {
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+}
+
+/* Responsive adjustments for AI section */
+@media (max-width: 768px) {
+  .maspik-ai-logs-table-wrap {
+    padding: 15px;
+  }
+  
+  .maspik-ai-logs-table {
+    font-size: 12px;
+  }
+  
+  .maspik-ai-logs-table th,
+  .maspik-ai-logs-table td {
+    padding: 6px 8px;
+  }
+  
+  .maspik-modal {
+    width: 95%;
+    margin: 10px;
+  }
+}

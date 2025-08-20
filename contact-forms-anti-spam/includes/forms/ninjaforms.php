@@ -14,6 +14,38 @@ function maspik_if_contains_string_in_array($type, $to_check_array) {
     return false;
 }
 
+/**
+ * Flatten Ninja Forms fields into key => value array
+ *
+ * @param array $nf_fields Raw Ninja Forms fields array
+ * @return array
+ */
+function maspik_ninjaforms_flatten_fields( array $nf_fields ): array {
+	$flat = [];
+	foreach ( $nf_fields as $field ) {
+		if ( ! is_array( $field ) ) {
+			continue;
+		}
+		$key = isset($field['key']) && $field['key'] !== '' ? (string) $field['key'] : ( isset($field['id']) ? (string) $field['id'] : '' );
+		if ( $key === '' ) {
+			continue;
+		}
+		// Skip internal keys
+		if ( in_array( $key, [ 'submit', 'maspik_spam_key' ], true ) ) {
+			continue;
+		}
+		$value = isset($field['value']) ? $field['value'] : '';
+		if ( is_array( $value ) ) {
+			$value = implode( ' ', array_map( 'strval', $value ) );
+		}
+		$value = sanitize_text_field( (string) $value );
+		if ( $value === '' ) {
+			continue;
+		}
+		$flat[$key] = $value;
+	}
+	return $flat;
+}
 
 /**
  * Main Ninja Forms validation functions
@@ -34,8 +66,11 @@ function my_ninja_forms_submit_data( $form_data ) {
     // ip
     $ip =  maspik_get_real_ip();
 
+    $fields = $form_data['fields'];
+    $new_fields = maspik_ninjaforms_flatten_fields($fields);
+
     // Country IP Check 
-    $GeneralCheck = GeneralCheck($ip,$spam,$reason,false,"ninjaforms");
+    $GeneralCheck = GeneralCheck($ip,$spam,$reason,$new_fields,"ninjaforms");
     $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
     $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
     $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
@@ -43,11 +78,10 @@ function my_ninja_forms_submit_data( $form_data ) {
 
 
     // Iterate through the first key ID
-    $fields = $form_data['fields'];
     $first_key = array_keys($fields)[0] ? array_keys($fields)[0] : $form_data['fields'][1];
 
-    if ( $spam) {
-        efas_add_to_log($type = "Country/IP",$reason , $fields, "Ninja Forms", $message,  $spam_val );
+    if ( $spam ) {
+        efas_add_to_log($type = "Country/IP",$reason , $new_fields, "Ninja Forms", $message,  $spam_val );
         $form_data['errors']['fields'][$first_key] =  __('General: ', 'contact-forms-anti-spam').cfas_get_error_text($message);
         return $form_data;
     }

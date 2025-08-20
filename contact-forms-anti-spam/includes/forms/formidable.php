@@ -10,10 +10,13 @@ function maspik_validate_formidable_general($errors, $values){
     
   $spam = false;
   $reason ="";
-  $ip =  maspik_get_real_ip();
+  $ip =  maspik_get_real_ip(); 
+
+  // Add $_POST['maspik_spam_key'] to the $_POST['item_meta']
+  $datatocheck = maspik_add_spam_keys_to_array($_POST['item_meta'],$_POST);
 
   // Country IP Check 
-  $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"formidable");
+  $GeneralCheck = GeneralCheck($ip,$spam,$reason,$datatocheck,"formidable");
   $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
   $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
   $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;

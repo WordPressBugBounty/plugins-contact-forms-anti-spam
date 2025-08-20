@@ -6,9 +6,57 @@ if ( ! defined( 'WPINC' ) ) {
 
 /**
  * CF7 Validation Hook
+ * 
+ * DEVELOPER HOOK: maspik_disable_cf7_spam_check
+ * 
+ * This filter allows developers to disable spam check for specific Contact Form 7 forms by ID.
+ * 
+ * @param bool   $disable     Whether to disable spam check (default: false)
+ * @param int    $form_id     ID of the CF7 form
+ * @return bool  True to disable spam check, false to proceed with spam check
+ * 
+ * USAGE EXAMPLES:
+ * 
+ * 1. Disable spam check for specific form by ID:
+ * add_filter('maspik_disable_cf7_spam_check', function($disable, $form_id) {
+ *     if ($form_id === 123) {
+ *         return true; // Disable spam check for form ID 123
+ *     }
+ *     return $disable;
+ * }, 10, 2);
+ * 
+ * 2. Disable spam check for multiple form IDs:
+ * add_filter('maspik_disable_cf7_spam_check', function($disable, $form_id) {
+ *     $excluded_form_ids = [123, 456, 789];
+ *     if (in_array($form_id, $excluded_form_ids)) {
+ *         return true;
+ *     }
+ *     return $disable;
+ * }, 10, 2);
+ * 
+ * 3. Disable spam check for logged-in administrators:
+ * add_filter('maspik_disable_cf7_spam_check', function($disable, $form_id) {
+ *     if (is_user_logged_in() && current_user_can('administrator')) {
+ *         return true;
+ *     }
+ *     return $disable;
+ * }, 10, 2);
  */
 add_filter( 'wpcf7_validate', 'maspik_validate_cf7_process', 10, 2 );
 function maspik_validate_cf7_process( $result, $tags ) {
+
+    // Get form ID for developer filtering
+    $form_id = 0;
+    if (isset($_POST['_wpcf7'])) {
+        $form_id = intval($_POST['_wpcf7']);
+    }
+
+    //option to disable cf7 spam check for developers
+    $disable_cf7_spam_check = apply_filters('maspik_disable_cf7_spam_check', false, $form_id);
+    if($disable_cf7_spam_check){
+        return $result;
+    }
+
     $error_message = cfas_get_error_text();
     $spam = false;
     $reason = "";
@@ -132,11 +180,12 @@ function maspik_validate_cf7_process( $result, $tags ) {
     $reason = isset( $GeneralCheck['reason'] ) ? $GeneralCheck['reason'] : false;
     $message = isset( $GeneralCheck['message'] ) ? $GeneralCheck['message'] : false;
     $spam_val = isset( $GeneralCheck['value'] ) ? $GeneralCheck['value'] : false;
+    $type = isset( $GeneralCheck['type'] ) ? $GeneralCheck['type'] : "General";
 
     if ( $spam ) {
         $result->invalidate( '', cfas_get_error_text( $message ) );
         $post_entries = isset($_POST) ? $_POST : array();
-        efas_add_to_log( "General", $reason, $post_entries, "Contact Form 7", $message, $spam_val );
+        efas_add_to_log( $type, $reason, $post_entries, "Contact Form 7", $message, $spam_val );
         return $result;
     }
 

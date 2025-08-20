@@ -1,7 +1,54 @@
 <?php
 
+/**
+ * DEVELOPER HOOK: maspik_disable_wp_comments_spam_check
+ * 
+ * This filter allows developers to disable spam check for WordPress comments on specific posts.
+ * 
+ * @param bool $disable   Whether to disable spam check (default: false) (True mean skip spam check)
+ * @param int  $post_id   ID of the post where comment is being made
+ * @param array $data     Comment data array
+ * @return bool True to disable spam check, false to proceed with spam check
+ * 
+ * USAGE EXAMPLES:
+ * 
+ * 1. Disable spam check for specific post by ID:
+ * add_filter('maspik_disable_wp_comments_spam_check', function($disable, $post_id, $data) {
+ *     if ($post_id === 123) {
+ *         return true; // Disable spam check for comments on post ID 123
+ *     }
+ *     return $disable;
+ * }, 10, 3);
+ * 
+ * 2. Disable spam check for multiple posts:
+ * add_filter('maspik_disable_wp_comments_spam_check', function($disable, $post_id, $data) {
+ *     $excluded_post_ids = [123, 456, 789];
+ *     if (in_array($post_id, $excluded_post_ids)) {
+ *         return true;
+ *     }
+ *     return $disable;
+ * }, 10, 3);
+ * 
+ * 3. Disable spam check for logged-in administrators:
+ * add_filter('maspik_disable_wp_comments_spam_check', function($disable, $post_id, $data) {
+ *     if (is_user_logged_in() && current_user_can('administrator')) {
+ *         return true;
+ *     }
+ *     return $disable;
+ * }, 10, 3);
+ */
+
 // WP comments and WooCommerce reviews
 function maspik_comments_checker(array $data) {
+    // Get post ID for developer filtering
+    $post_id = isset($data['comment_post_ID']) ? intval($data['comment_post_ID']) : 0;
+    
+    // Allow developers to disable spam check for specific posts
+    $disable_comments_spam_check = apply_filters('maspik_disable_wp_comments_spam_check', false, $post_id, $data);
+    if ($disable_comments_spam_check) {
+        return $data;
+    }
+
     // Extracting data from the comment with validation
     $content = isset($data['comment_content']) ? strtolower(sanitize_text_field($data['comment_content'])) : '';
     $email = isset($data['comment_author_email']) ? strtolower(sanitize_email($data['comment_author_email'])) : '';
@@ -35,7 +82,7 @@ function maspik_comments_checker(array $data) {
     $message = $GeneralCheck['message'] ?? '';
     $spam_val = $GeneralCheck['value'] ?? '';
     $spam_lbl = $GeneralCheck['message'] ?? '';
-    $type = "General";
+    $type = $GeneralCheck['type'] ?? "General";
 
     // Name check
     if (!empty($name) && !$spam) {

@@ -811,7 +811,11 @@ $spamcounter = maspik_spam_count();
                         'spam_log_limit' => sanitize_text_field($_POST['spam_log_limit'] ?? ''),
                         'shere_data' => isset($_POST['shere_data']) ? 1 : 0,
                         'url_blacklist' => sanitize_textarea_field(stripslashes($_POST['url_blacklist'] ?? '')),
-                    ];
+                        'maspik_ai_enabled' => isset($_POST['maspik_ai_enabled']) ? 1 : 0,
+                        'maspik_ai_threshold' => (isset($_POST['maspik_ai_threshold']) && !empty($_POST['maspik_ai_threshold']) && intval($_POST['maspik_ai_threshold']) >= 2) ? 
+                            sanitize_text_field($_POST['maspik_ai_threshold']) : '50',
+                        'maspik_ai_context' => sanitize_text_field(stripslashes($_POST['maspik_ai_context'] ?? '')),
+                    ]; 
 
 
                     // Save the settings
@@ -820,6 +824,18 @@ $spamcounter = maspik_spam_count();
                             $error_message .= "Failed to save $key. ";
                         }
                     }
+                    
+                    // Ensure AI client secret exists
+                    if (isset($_POST['maspik_ai_enabled']) && $_POST['maspik_ai_enabled']) {
+                        $existing_secret = maspik_get_settings('maspik_ai_client_secret');
+                        if (empty($existing_secret) || $existing_secret === null) {
+                            // Generate new client secret if it doesn't exist
+                            if (function_exists('maspik_generate_ai_client_secret')) {
+                                maspik_generate_ai_client_secret();
+                            }
+                        }
+                    }
+                    
                     // Save Options END --
 
                     // Array of select fields for processing
@@ -1813,6 +1829,217 @@ $spamcounter = maspik_spam_count();
                                         </div>
                                     </div>
 
+                                    <!-- Accordion Item - AI Spam Check (Beta Feature) -->
+                                    <div class="maspik-accordion-item maspik-accordion-ai-spam-check" >
+                                        <div class="maspik-accordion-header" id="ai-spam-check-accordion">
+                                            <div class="mpk-acc-header-texts">
+                                                <h4 class="maspik-header maspik-accordion-header-text">
+                                                    <?php esc_html_e('AI Spam Check', 'contact-forms-anti-spam'); ?>
+                                                    <span class="maspik-beta-badge">BETA</span>
+                                                    <span class="maspik-pro-notice"><?php esc_html_e('(Will be Pro-only in future versions)', 'contact-forms-anti-spam'); ?></span>
+                                                </h4>
+                                            </div>
+                                            <div class="maspik-pro-button-wrap">
+                                                <span class="maspik-acc-arrow">
+                                                    <span class="dashicons dashicons-arrow-right"></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                            
+                                        <div class="maspik-accordion-content" id="maspik-ai-spam-check">
+                                            <div class="maspik-accordion-content-wrap">
+                                                
+                                                <!-- AI Spam Check Toggle -->
+                                                <div class="maspik-ai-toggle-wrap togglewrap">
+                                                    <?php echo maspik_toggle_button('maspik_ai_enabled', 'maspik_ai_enabled', 'maspik_ai_enabled', 'maspik-ai-toggle togglebutton', "ai-toggle", maspik_get_settings('maspik_ai_enabled')); ?>
+                                                    <div>
+                                                        <h4><?php esc_html_e('Enable AI Spam Check', 'contact-forms-anti-spam'); ?></h4>
+                                                        <p class="maspik-field-description">
+                                                            <?php esc_html_e('Advanced AI technology to detect and block sophisticated spam submissions.', 'contact-forms-anti-spam'); ?>
+                                                            <br>
+                                                            <?php esc_html_e('Uses AI (Gemini/OpenAI/Mistral) to detect spam. Note that AI detection may not be 100% accurate and could occasionally flag legitimate submissions.', 'contact-forms-anti-spam'); ?>
+                                                        </p>
+
+                                                    </div>
+                                                </div>
+
+                                                <!-- AI Configuration Fields (shown only when enabled) -->
+                                                <div class="maspik-ai-config-fields" id="maspik-ai-config-fields" style="display: none;">
+                                                    
+                                                                                                        <!-- Threshold -->
+                                                    <div class="maspik-field-group">
+                                                        <label for="maspik_ai_threshold"><?php esc_html_e('Spam Threshold', 'contact-forms-anti-spam'); ?></label>
+                                                        <?php echo create_maspik_numbox('maspik_ai_threshold', 'maspik_ai_threshold', 'maspik_ai_threshold', 'ai-threshold', 50, 2, 100); ?>
+                                                        <p class="maspik-field-description">
+                                                        <?php esc_html_e('AI Spam Threshold — Score (0–100) above which a message will be blocked as spam. Lower values (e.g., 10) = stricter filtering, even borderline messages may be considered spam. Higher values (e.g., 70) = looser filtering, only strong spam signals will be blocked. Recommended: 50 and check the spam log from time to time to see if you need to adjust the threshold.', 'contact-forms-anti-spam'); ?>
+                                                        <br><?php esc_html_e('Please check the spam log from time to time to see if you need to adjust the threshold.', 'contact-forms-anti-spam'); ?>
+                                                        </p>
+                                                    </div>
+
+                                                    <!-- Business Context (Optional) -->
+                                                    <div class="maspik-field-group">
+                                                        <label for="maspik_ai_context"><?php esc_html_e('Business Context/ Short prompt (Optional)', 'contact-forms-anti-spam'); ?></label>
+                                                        <?php echo create_maspik_textarea('maspik_ai_context', 2, 50, 'ai-context', 'Example: "Business deals with selling used cars, please make sure to block any other language than English"', 170 ); ?>
+                                                        <p class="maspik-field-description">
+                                                            <?php esc_html_e('Describe your business to help AI better understand legitimate submissions. Example: "Business deals with selling used cars,  please make sure that text not include any other language than English" Max 170 characters.', 'contact-forms-anti-spam'); ?>
+                                                        </p>
+                                                    </div>
+
+                                                                                                                                                              <!-- AI Logs Table -->
+                                                     <div class="maspik-ai-logs-table-wrap">
+                                                         <div class="maspik-ai-logs-header">
+                                                             <button type="button" class="maspik-ai-logs-table-button button button-secondary">
+                                                                 <?php esc_html_e('Show AI Logs', 'contact-forms-anti-spam'); ?>
+                                                             </button>
+                                                             
+                                                             <?php
+                                                             $ai_logs = maspik_get_ai_logs();
+                                                             if ( !empty($ai_logs) ) : ?>
+                                                                 <button type="button" class="maspik-clear-ai-logs button button-link-delete">
+                                                                     <?php esc_html_e('Clear Logs', 'contact-forms-anti-spam'); ?>
+                                                                 </button>
+                                                             <?php endif; ?>
+                                                         </div>
+                                                         
+                                                         <div class="maspik-ai-logs-table-container" style="display: none;">
+                                                             <h4><?php esc_html_e('Last 10 AI Spam Check Results', 'contact-forms-anti-spam'); ?></h4>
+                                                             
+                                                             <?php if ( !empty($ai_logs) ) : ?>
+                                                                 <table class="maspik-ai-logs-table widefat">
+                                                                     <thead>
+                                                                         <tr>
+                                                                             <th><?php esc_html_e('Time', 'contact-forms-anti-spam'); ?></th>
+                                                                             <th><?php esc_html_e('IP Address', 'contact-forms-anti-spam'); ?></th>
+                                                                             <th><?php esc_html_e('Fields', 'contact-forms-anti-spam'); ?></th>
+                                                                             <th><?php esc_html_e('AI Score', 'contact-forms-anti-spam'); ?></th>
+                                                                             <th><?php esc_html_e('Result', 'contact-forms-anti-spam'); ?></th>
+                                                                             <th><?php esc_html_e('Reason', 'contact-forms-anti-spam'); ?></th>
+                                                                         </tr>
+                                                                     </thead>
+                                                                     <tbody>
+                                                                         <?php foreach ( $ai_logs as $log ) : ?>
+                                                                             <tr>
+                                                                                 <td><?php echo esc_html(date('Y-m-d H:i:s', strtotime($log['timestamp']))); ?></td>
+                                                                                 <td><?php echo esc_html($log['ip_address']); ?></td>
+                                                                                 <td>
+                                                                                     <button type="button" class="button button-small maspik-view-fields" data-fields='<?php echo esc_attr(wp_json_encode($log['fields'])); ?>'>
+                                                                                         <?php esc_html_e('View Fields', 'contact-forms-anti-spam'); ?>
+                                                                                     </button>
+                                                                                 </td>
+                                                                                 <td>
+                                                                                     <span class="maspik-score-<?php echo esc_attr($log['ai_response']['response']['spam_score'] ?? 0); ?>">
+                                                                                         <?php echo esc_html($log['ai_response']['response']['spam_score'] ?? 'N/A'); ?>
+                                                                                     </span>
+                                                                                 </td>
+                                                                                 <td>
+                                                                                     <span class="maspik-result-<?php echo esc_attr($log['result']['allow'] ? 'allow' : 'block'); ?>">
+                                                                                        <?php
+                                                                                         $is_error = isset($log['ai_response']['error']) && $log['ai_response']['error'] == "true" ? true : false;
+                                                                                         echo $is_error ? "Error" : esc_html($log['result']['allow'] ? 'Allowed' : 'Blocked'); 
+                                                                                         ?>
+                                                                                     </span>
+                                                                                 </td>
+                                                                                 <td><?php 
+                                                                                 echo esc_html(
+                                                                                     isset($log['ai_response']['response']['reason']) && $log['ai_response']['response']['reason'] ? 
+                                                                                         $log['ai_response']['response']['reason'] : 
+                                                                                         (isset($log['ai_response']['response_body']) && $log['ai_response']['response_body'] ? 
+                                                                                             $log['ai_response']['response_body'] : 
+                                                                                             'N/A'
+                                                                                         )
+                                                                                 );
+                                                                                 if(isset($log['ai_response'])){
+                                                                                     echo '<br>';
+                                                                                     echo isset($log['ai_response']['response']['field_errors']) ? esc_html(json_encode($log['ai_response']['response']['field_errors'])) : 
+                                                                                          (isset($log['result']['reason']) ? esc_html(json_encode($log['result']['reason'])) : '');
+                                                                                 }
+                                                                                 ?></td>
+                                                                             </tr>
+                                                                         <?php endforeach; ?>
+                                                                     </tbody>
+                                                                 </table>
+                                                             <?php else : ?>
+                                                                 <p><?php esc_html_e('No AI logs found yet.', 'contact-forms-anti-spam'); ?></p>
+                                                             <?php endif; ?>
+                                                         </div>
+                                                     </div>
+ 
+                                                 </div>
+                                                 
+                                                 <script>
+                                                 jQuery(document).ready(function($) {
+                                                     // Toggle AI logs table
+                                                     $('.maspik-ai-logs-table-button').on('click', function() {
+                                                         var $container = $('.maspik-ai-logs-table-container');
+                                                         var $button = $(this);
+                                                         
+                                                         if ($container.is(':visible')) {
+                                                             $container.hide();
+                                                             $button.text('<?php esc_html_e('Show AI Logs', 'contact-forms-anti-spam'); ?>');
+                                                         } else {
+                                                             $container.show();
+                                                             $button.text('<?php esc_html_e('Hide AI Logs', 'contact-forms-anti-spam'); ?>');
+                                                         }
+                                                     });
+                                                     
+                                                     // Clear AI logs
+                                                     $('.maspik-clear-ai-logs').on('click', function() {
+                                                         if (confirm('<?php esc_html_e('Are you sure you want to clear all AI logs?', 'contact-forms-anti-spam'); ?>')) {
+                                                             $.post(ajaxurl, {
+                                                                 action: 'maspik_clear_ai_logs',
+                                                                 nonce: '<?php echo wp_create_nonce('maspik_clear_ai_logs'); ?>'
+                                                             }, function(response) {
+                                                                 if (response.success) {
+                                                                     location.reload();
+                                                                 } else {
+                                                                     alert('<?php esc_html_e('Failed to clear logs', 'contact-forms-anti-spam'); ?>');
+                                                                 }
+                                                             });
+                                                         }
+                                                     });
+                                                     
+                                                     // View fields modal
+                                                     $('.maspik-view-fields').on('click', function() {
+                                                         var fields = $(this).data('fields');
+                                                         var fieldsHtml = '';
+                                                         
+                                                         for (var key in fields) {
+                                                             if (fields.hasOwnProperty(key)) {
+                                                                 fieldsHtml += '<tr><td><strong>' + key + '</strong></td><td>' + fields[key] + '</td></tr>';
+                                                             }
+                                                         }
+                                                         
+                                                         var modalHtml = '<div class="maspik-modal-overlay">' +
+                                                                         '<div class="maspik-modal">' +
+                                                                         '<div class="maspik-modal-header">' +
+                                                                         '<h3><?php esc_html_e('Form Fields', 'contact-forms-anti-spam'); ?></h3>' +
+                                                                         '<button class="maspik-modal-close">&times;</button>' +
+                                                                         '</div>' +
+                                                                         '<div class="maspik-modal-body">' +
+                                                                         '<table class="widefat">' +
+                                                                         '<thead><tr><th><?php esc_html_e('Field', 'contact-forms-anti-spam'); ?></th><th><?php esc_html_e('Value', 'contact-forms-anti-spam'); ?></th></tr></thead>' +
+                                                                         '<tbody>' + fieldsHtml + '</tbody>' +
+                                                                         '</table>' +
+                                                                         '</div>' +
+                                                                         '</div>' +
+                                                                         '</div>';
+                                                         
+                                                         $('body').append(modalHtml);
+                                                     });
+                                                     
+                                                     // Close modal
+                                                     $(document).on('click', '.maspik-modal-close, .maspik-modal-overlay', function() {
+                                                         $('.maspik-modal-overlay').remove();
+                                                     });
+                                                 });
+                                                 </script>
+
+                                                <?php maspik_save_button_show() ?>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <!-- Accordion Item - Form Options Field - Custom -->
                                     <div class="maspik-accordion-item maspik-accordion-form-option-field" >
                                         <div class="maspik-accordion-header" id="form-option-accordion">
@@ -2705,6 +2932,50 @@ $spamcounter = maspik_spam_count();
 
 
         // END of Load template description
+
+        // AI Spam Check functionality
+            $(function() {
+                
+                // Handle AI toggle button change
+                $(document).on('change', '.maspik-ai-toggle-wrap input[type="checkbox"]', function() {
+                    var isChecked = $(this).is(':checked');
+                    var configFields = $('#maspik-ai-config-fields');
+                    
+                    if (isChecked) {
+                        configFields.slideDown(300);
+                    } else {
+                        configFields.slideUp(300);
+                    }
+                });
+
+                // Initialize AI config fields visibility on page load
+                $(document).ready(function() {
+                    var aiToggle = $('.maspik-ai-toggle-wrap input[type="checkbox"]');
+                    var configFields = $('#maspik-ai-config-fields');
+                    
+                    if (aiToggle.is(':checked')) {
+                        configFields.show();
+                    } else {
+                        configFields.hide();
+                    }
+                });
+
+                // Handle accordion functionality for AI section
+                $(document).on('click', '#ai-spam-check-accordion', function() {
+                    var content = $('#maspik-ai-spam-check');
+                    var arrow = $(this).find('.dashicons-arrow-right');
+                    
+                    if (content.hasClass('active')) {
+                        content.removeClass('active').slideUp(300);
+                        arrow.removeClass('rotated');
+                    } else {
+                        content.addClass('active').slideDown(300);
+                        arrow.addClass('rotated');
+                    }
+                });
+
+            });
+
         }); // END of jQuery(document).ready
 
         
@@ -2826,7 +3097,7 @@ $spamcounter = maspik_spam_count();
             });
         });
 
-    <?php if (cfes_is_supporting("api")) { ?>
+        <?php if (cfes_is_supporting("api")) { ?>
         function maspikUpdatePrivateFileId() {
             // Get ID from URL parameters safely
             const urlParams = new URLSearchParams(window.location.search);
@@ -3007,6 +3278,9 @@ $spamcounter = maspik_spam_count();
 
     wp_enqueue_script('custom-ajax-script', plugin_dir_url(__DIR__). 'maspik-ajax-script.js', array('jquery'), MASPIK_VERSION, true);
     wp_localize_script('custom-ajax-script', 'ajax_object', array('ajax_url' => admin_url('admin-ajax.php')));
+    
+    // Localize script for AI secret generation
+    wp_localize_script('custom-ajax-script', 'maspik_ajax', array('nonce' => wp_create_nonce('maspik_ajax_nonce')));
 
 
 ?>

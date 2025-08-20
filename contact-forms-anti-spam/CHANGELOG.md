@@ -1,5 +1,31 @@
 # Changelog #
 
+## 2.5.5 - 20/08/2025 ##
+* New (Beta) feature - AI spam check - Give it a try!
+* For Developers - Add hooks to disable spam check for specific forms link: [Developers Hooks](https://wpmaspik.com/documentation/developers/?readme-file)
+* Fixed - Fix issue where Breakdance form didn't recognize Spam key check.
+* Fixed - Fix issue where search form was not submitting properly in some cases.
+
+
+## 2.5.4 - 09/08/2025 ##
+* New feature - Add URL field blocker.
+* New feature - Add support for Breakdance Builder forms.
+* Fixed - Fix issue where spam statistics dashboard give php error when no spam was blocked in some cases.
+
+## 2.5.3 - 24/05/2025 ##
+* Fixed - Fix php error where function was call to early.
+* We want to grow and improve the experience! so we need your help! please:
+  * Share your feedback and suggestions to our [Suggestion Box](https://wpmaspik.com/#suggestions?readme-file).
+  * Give as 5 stars review on [WordPress.org](https://wordpress.org/support/plugin/contact-forms-anti-spam/reviews/#new-post).
+  * Spread the word and write a Guide/Vlog/Post about Maspik, and receive a Pro license on us.
+
+## 2.5.2 - 23/05/2025 ## 
+* New feature - adding a feedback form to the settings page to help us improve the plugin.
+* Fixed an issue where some hidden fields had duplicate IDs.
+* Fixed database update issue when upgrading from version 1.x to version 2.0 or higher.
+* Improved - Enhanced handling and performance for processing lengthy textarea content.
+
+
 ## 2.5.1 - 30/04/2025 ## 
 * Bug fix - Fixed an issue where search forms were not submitting properly in certain scenarios.
 * We want to grow and improve the experience! so we need your help! please:

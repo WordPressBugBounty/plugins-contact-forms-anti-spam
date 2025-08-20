@@ -63,8 +63,11 @@ class Maspik {
       
 		// functions
       	require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/functions.php';
-     	// spam block functions
+     	      // spam block functions
       	require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/spam-block.php';
+      
+      // AI spam check functions (Beta feature)
+      	require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/ai-spam-check.php';
 
       /**
       * Forms functions

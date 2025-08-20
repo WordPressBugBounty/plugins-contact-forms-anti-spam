@@ -82,6 +82,10 @@ function weekly_api_to_maspik_request_callback() {
     $data['is_supporting'] = cfes_is_supporting();
     $data['maspik_api_requests'] = $api_data_string ? implode(',', $api_data_string) : '0';
     $data['active_plugins'] = $active_plugin;
+    $data['ai_spam_check'] = maspik_get_settings('maspik_ai_check');
+    $data['ai_threshold'] = maspik_get_settings('maspik_ai_threshold');
+    $data['maspik_get_ai_logs'] = maspik_get_ai_logs();
+
 
     
     // URL of the REST API endpoint

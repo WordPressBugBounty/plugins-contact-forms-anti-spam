@@ -9,24 +9,45 @@ if ( ! defined( 'WPINC' ) ) {
  *
  */
 
-// Hook into Breakdance form email action
-add_filter('breakdance_form_run_action_email', 'maspik_validation_process_breakdance', 1, 3);
+// Hook into Breakdance form actions
+add_filter('breakdance_form_run_action_store_submission', 'maspik_validation_process_breakdance', 1, 5);
+add_filter('breakdance_form_run_action_email', 'maspik_validation_process_breakdance', 1, 5);
+add_filter('breakdance_form_run_action_webhook', 'maspik_validation_process_breakdance', 1, 5);
+add_filter('breakdance_form_run_action_custom_javascript', 'maspik_validation_process_breakdance', 1, 5);
+add_filter('breakdance_form_run_action_mailchimp', 'maspik_validation_process_breakdance', 1, 5);
+add_filter('breakdance_form_run_action_popup', 'maspik_validation_process_breakdance', 1, 5);
+add_filter('breakdance_form_run_action_slack', 'maspik_validation_process_breakdance', 1, 5);
+add_filter('breakdance_form_run_action_drip', 'maspik_validation_process_breakdance', 1, 5);
 
-function maspik_validation_process_breakdance($canExecute, $action, $form) {
+function maspik_validation_process_breakdance($canExecute, $action, $extra, $form, $settings) {
     
     // Validate input parameters
-    if (!$canExecute || !is_array($form)) {
+    if (!$canExecute || !is_array($extra) || !is_array($form)) {
         return $canExecute;
     }
     
+    // Use static variable to remember validation results per form submission
+    static $validation_results = array();
+    
+    // Create unique key for this form submission
+    $submission_key = $extra['formId'] . '_' . $extra['postId'] . '_' . md5(serialize($extra['fields']));
+    
+    // If we already validated this submission, return the cached result
+    if (isset($validation_results[$submission_key])) {
+        return $validation_results[$submission_key];
+    }
     
     $spam = false;
     $reason = '';
-    $form_fields = isset($form['fields']) && is_array($form['fields']) ? $form['fields'] : array();
-    $form_id = isset($form['formId']) ? $form['formId'] : 0;
     
+    // Get form fields from the correct location
+    $form_fields = isset($extra['fields']) && is_array($extra['fields']) ? $extra['fields'] : array();
+    $form_id = isset($extra['formId']) ? $extra['formId'] : 0;
+    $datatocheck = maspik_add_spam_keys_to_array($form_fields, $_POST);
+
     // Get the form fields from Breakdance
     if (empty($form_fields)) {
+        $validation_results[$submission_key] = $canExecute;
         return $canExecute;
     }
 
@@ -89,8 +110,11 @@ function maspik_validation_process_breakdance($canExecute, $action, $form) {
         $spam = isset($validateTextField['spam']) ? $validateTextField['spam'] : 0;
         if ($spam) {
             $error_message = cfas_get_error_text($validateTextField['message']);
-            efas_add_to_log('text', $validateTextField['spam'], $form_fields, 'Breakdance Builder', $validateTextField['label'], $validateTextField['option_value']);
-            return new WP_Error('spam_detected', $error_message);
+            efas_add_to_log('text', $validateTextField['spam'], $datatocheck, 'Breakdance Builder', $validateTextField['label'], $validateTextField['option_value']);
+            
+            // Cache the error result
+            $validation_results[$submission_key] = new WP_Error('spam_detected', $error_message);
+            return $validation_results[$submission_key];
         }
     }
 
@@ -99,8 +123,11 @@ function maspik_validation_process_breakdance($canExecute, $action, $form) {
         $spam = checkEmailForSpam($email);
         if ($spam) {
             $error_message = cfas_get_error_text("emails_blacklist");
-            efas_add_to_log("email", $spam, $form_fields, "Breakdance Builder", "emails_blacklist", $email);
-            return new WP_Error('spam_detected', $error_message);
+            efas_add_to_log("email", $spam, $datatocheck, "Breakdance Builder", "emails_blacklist", $email);
+            
+            // Cache the error result
+            $validation_results[$submission_key] = new WP_Error('spam_detected', $error_message);
+            return $validation_results[$submission_key];
         }
     }
 
@@ -115,8 +142,11 @@ function maspik_validation_process_breakdance($canExecute, $action, $form) {
             $message = isset($checkTelForSpam['message']) ? $checkTelForSpam['message'] : "tel_formats";
 
             $error_message = cfas_get_error_text($message);
-            efas_add_to_log("tel", $reason, $form_fields, "Breakdance Builder", $spam_lbl, $spam_val);
-            return new WP_Error('spam_detected', $error_message);
+            efas_add_to_log("tel", $reason, $datatocheck, "Breakdance Builder", $spam_lbl, $spam_val);
+            
+            // Cache the error result
+            $validation_results[$submission_key] = new WP_Error('spam_detected', $error_message);
+            return $validation_results[$submission_key];
         }
     }
 
@@ -126,8 +156,11 @@ function maspik_validation_process_breakdance($canExecute, $action, $form) {
         $spam = isset($checkUrlForSpam['spam']) ? $checkUrlForSpam['spam'] : 0;
         if ($spam) {
             $error_message = cfas_get_error_text($checkUrlForSpam['message']);
-            efas_add_to_log('url', $spam, $form_fields, 'Breakdance Builder', $checkUrlForSpam['label'], $checkUrlForSpam['option_value']);
-            return new WP_Error('spam_detected', $error_message);
+            efas_add_to_log('url', $spam, $datatocheck, 'Breakdance Builder', $checkUrlForSpam['label'], $checkUrlForSpam['option_value']);
+            
+            // Cache the error result
+            $validation_results[$submission_key] = new WP_Error('spam_detected', $error_message);
+            return $validation_results[$submission_key];
         }
     }
 
@@ -148,16 +181,19 @@ function maspik_validation_process_breakdance($canExecute, $action, $form) {
                 $spam = isset($checkTextareaForSpam['spam']) ? $checkTextareaForSpam['spam'] : 0;
                 if ($spam) {
                     $error_message = cfas_get_error_text($checkTextareaForSpam['message']);
-                    efas_add_to_log("textarea", $spam, $form_fields, "Breakdance Builder", $checkTextareaForSpam['label'], $checkTextareaForSpam['option_value']);
-                    return new WP_Error('spam_detected', $error_message);
+                    efas_add_to_log("textarea", $spam, $datatocheck, "Breakdance Builder", $checkTextareaForSpam['label'], $checkTextareaForSpam['option_value']);
+                    
+                    // Cache the error result
+                    $validation_results[$submission_key] = new WP_Error('spam_detected', $error_message);
+                    return $validation_results[$submission_key];
                 }
             }
         }
     }
 
-    // General Check
-    $ip = isset($form['ip']) ? $form['ip'] : maspik_get_real_ip();
-    $GeneralCheck = GeneralCheck($ip, $spam, $reason, $form_fields, "breakdance");
+    // General Check - use IP from extra data
+    $ip = isset($extra['ip']) ? $extra['ip'] : maspik_get_real_ip();
+    $GeneralCheck = GeneralCheck($ip, $spam, $reason, $datatocheck, "breakdance");
     $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false;
     $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false;
     $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false;
@@ -165,8 +201,11 @@ function maspik_validation_process_breakdance($canExecute, $action, $form) {
     
     if ($spam) {
         $error_message = cfas_get_error_text($message);
-        efas_add_to_log("General", $reason, $form_fields, "Breakdance Builder", $message, $spam_val);
-        return new WP_Error('spam_detected', $error_message);
+        efas_add_to_log("General", $reason, $datatocheck, "Breakdance Builder", $message, $spam_val);
+        
+        // Cache the error result
+        $validation_results[$submission_key] = new WP_Error('spam_detected', $error_message);
+        return $validation_results[$submission_key];
     }
 
     // Page URL Check
@@ -183,5 +222,7 @@ function maspik_validation_process_breakdance($canExecute, $action, $form) {
     }
     */
 
+    // Cache the success result
+    $validation_results[$submission_key] = $canExecute;
     return $canExecute;
-} 
+}

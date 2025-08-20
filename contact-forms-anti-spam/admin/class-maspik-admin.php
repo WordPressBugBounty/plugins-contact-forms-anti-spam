@@ -158,7 +158,7 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
 
         } 
 
-        function create_maspik_textarea($name, $rows = 4, $cols = 50, $class = '', $pholder = "") { 
+        function create_maspik_textarea($name, $rows = 4, $cols = 50, $class = '', $pholder = "", $maxlength = 0) { 
 
         
             if($pholder == "error-message"){
@@ -174,6 +174,9 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
             if($txtplaceholder!= ""){
                 $textarea .= ' placeholder="' . esc_attr($txtplaceholder) . '"';
             }
+            if($maxlength > 0){
+                $textarea .= ' maxlength="' . esc_attr($maxlength) . '"';
+            }
             $textarea .= '>' . esc_html($data) . '</textarea>';
 
             
@@ -182,12 +185,12 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
             return $textarea;
         }
 
-        function create_maspik_input($name, $class = '', $mode = "text") {      
+        function create_maspik_input($name, $class = '', $mode = "text", $placeholder = "") {      
             
             $data = ( $mode === "number" && maspik_get_settings($name) ) ? (int)maspik_get_settings($name) : maspik_get_settings($name);
 
             $class_attr = !empty($class) ? ' class="' . esc_attr($class . " is-". $mode) . '"' : '';
-            $input = "<input  name='" . esc_attr($name) . "' id='". esc_attr($name) . " '" . $class_attr . " type='" . $mode . "' value='". esc_attr($data) ."'></input>";
+            $input = "<input  name='" . esc_attr($name) . "' id='". esc_attr($name) . " '" . $class_attr . " type='" . $mode . "' value='". esc_attr($data) ."' placeholder='". esc_attr($placeholder) ."'></input>";
 
 
             return $input;
@@ -628,5 +631,7 @@ class Maspik_Admin {
             ));
         }
     }
+
+        // AI logs clearing is handled in includes/functions.php
 }
 

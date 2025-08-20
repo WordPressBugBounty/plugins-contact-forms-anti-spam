@@ -167,8 +167,8 @@ add_filter('maspik_validate_custom_form_fields', function($is_spam, $fields, $fo
     if (isset($GeneralCheck['spam']) && $GeneralCheck['spam']) {
         $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false;
         $spam_val = isset($GeneralCheck['value']) && $GeneralCheck['value'] ? $GeneralCheck['value'] : false;
-    
-        efas_add_to_log("General", $GeneralCheck['reason'], $_POST, $form_name, $message, $spam_val);
+        $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : "General";
+        efas_add_to_log($type, $GeneralCheck['reason'], $_POST, $form_name, $message, $spam_val);
         return [
             'spam' => true,
             'message' => cfas_get_error_text($GeneralCheck['message']),

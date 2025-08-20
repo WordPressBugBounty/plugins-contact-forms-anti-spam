@@ -2,6 +2,9 @@
 // If this file is called directly, abort.
 if (!defined('ABSPATH')) exit;
 
+// AI Spam Check Constants (Beta feature - will be Pro-only in future versions)
+define('MASPIK_AI_ENDPOINT', 'https://api.wpmaspik.com/ai/v1/ai-spam-check');
+
 // Toggle mapping constants
 $MASPIK_TOGGLE_MAP = [
     // Text related toggles
@@ -61,7 +64,13 @@ $MASPIK_FIELD_DISPLAY_NAMES = [
     "maspikHoneypot" => "Honeypot",
     "maspikTimeCheck" => "Time Check",
     "maspikYearCheck" => "Year Check",
-    "emoji_check" => "Emoji Check"
+    "emoji_check" => "Emoji Check",
+    
+         // AI spam check fields (Beta feature - will be Pro-only in future versions)
+     "maspik_ai_enabled" => "AI Spam Check",
+     "maspik_ai_threshold" => "AI Spam Threshold",
+     "maspik_ai_context" => "Business Context",
+     "maspik_ai_client_secret" => "AI Client Secret",
 ]; 
 
 
@@ -149,7 +158,13 @@ $MASPIK_IMPORT_OPTIONS = [
     'abuseipdb_api',
     'abuseipdb_score',
     'proxycheck_io_api',
-    'proxycheck_io_risk'
+    'proxycheck_io_risk',
+    
+    // AI spam check options (Beta feature - will be Pro-only in future versions)
+    'maspik_ai_enabled',
+    'maspik_ai_threshold',
+    'maspik_ai_context',
+    'maspik_ai_client_secret',
 ];
 
 
@@ -184,7 +199,12 @@ $MASPIK_DEFAULT_SETTINGS = [
     'maspik_support_woocommerce_review' => 'yes',
     'maspik_support_Woocommerce_registration' => 'yes',
     'maspik_support_buddypress_forms' => 'yes',
-    'maspik_support_helloplus_forms' => 'yes'
+    'maspik_support_helloplus_forms' => 'yes',
+    
+    // AI spam check settings (Beta feature - will be Pro-only in future versions)
+    'maspik_ai_enabled' => '0',
+    'maspik_ai_threshold' => '50',
+    'maspik_ai_context' => '',
 ];
 
 // load templates settings array

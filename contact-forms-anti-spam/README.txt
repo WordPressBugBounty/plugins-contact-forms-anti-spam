@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.8
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.5.4
+Stable tag: 2.5.5
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -17,10 +17,10 @@ No more fake leads and bot submissions - Every email will be real and valuable, 
 **Lets bring back the excitement** of getting new leads.
 
 ## Why to block spam with Maspik?
-* 🚀 **Quick Setup**: Ready in 2 minutes
+* 🚀 **Works immediately**: Works when you activate the plugin
 * 🎯 **High Success Rate**: Better protection than traditional CAPTCHA
 * 🔍 **Smart Detection**: Identifies spam patterns automatically
-* 🌐 **Wide Compatibility**: Works with all major form plugins
+* 🌐 **Wide Compatibility**: Works with all major form plugins and registration forms
 * 🛠️ **Fully Customizable**: Adapt to your specific needs you can block any spam you want with Blacklist system
 * 👥 **Spam Block Guarantee**: We are committed to help you to block spam, See [Spam Block Guarantee](#spam-block-guarantee) paragraph.
 
@@ -32,6 +32,8 @@ No more fake leads and bot submissions - Every email will be real and valuable, 
 ✅ Phone number validation
 ✅ Several methods to block spam with advanced honeypot fields
 ✅ Multi-language support
+✅ AI spam check (Beta)
+
 
 ## Detailed Features: Our Advanced Spam Protection & Filtering ##
 
@@ -49,6 +51,7 @@ No more fake leads and bot submissions - Every email will be real and valuable, 
   * IP verification (100 checks/month)
   * Block submissions post by bot
   * Advance key check 
+  * AI spam check (Beta) with Google Gemini, OpenAI, and Mistral AI
 * **Character Control:**
   * Maximum number of characters in text fields
   * Maximum number of characters in text area fields
@@ -141,7 +144,7 @@ Our team will guide you to block the spam effectively!
 ## Getting Started 🚀
 1. **Installation**
    * Search for "Maspik" in WordPress plugins
-   * Click Install & Activate
+   * Click Install & Activate 
 
 2. **Basic Setup**
    * Go to Maspik Settings
@@ -242,6 +245,13 @@ So if you need advanced spam protection, that works with all forms and has a lot
 
 
 == Changelog ==
+
+= 2.5.5 - 20/08/2025 = 
+* New (Beta) feature - AI spam check - Give it a try!
+* For Developers - Add hooks to disable spam check for specific forms link: [Developers Hooks](https://wpmaspik.com/documentation/developers/?readme-file)
+* Fixed - Fix issue where Breakdance form didn't recognize Spam key check.
+* Fixed - Fix issue where search form was not submitting properly in some cases.
+
 
 = 2.5.4 - 09/08/2025 = 
 * New feature - Add URL field blocker.
