@@ -36,7 +36,7 @@ function maspik_ai_check_submission( array $fields ): array {
     //error_log('Maspik AI: Endpoint=' . $endpoint . ', Mode=' . (maspik_is_ai_beta_mode() ? 'beta' : 'live'));
     
 
-    $threshold = (int) maspik_get_settings('maspik_ai_threshold', 50 ) ;
+    $threshold = (int) maspik_get_settings('maspik_ai_threshold', 60 ) ;
     $threshold = $threshold < 3 ? 50 : $threshold;
     $context   = (string) maspik_get_settings('maspik_ai_context', '' );
     

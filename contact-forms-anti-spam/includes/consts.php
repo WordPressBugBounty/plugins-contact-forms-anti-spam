@@ -95,7 +95,9 @@ $MASPIK_PLUGIN_MAP = [
     'Everestforms' => 'everestforms',
     'Breakdance Builder' => 'breakdance',
     'Wordpress Comments' => 'comments',
-    'Custom PHP Forms' => 'custom'
+    'Custom PHP Forms' => 'custom',
+    'MetForm' => 'metform',
+    'BitForm' => 'bitform'
 ];
 
 
@@ -200,10 +202,12 @@ $MASPIK_DEFAULT_SETTINGS = [
     'maspik_support_Woocommerce_registration' => 'yes',
     'maspik_support_buddypress_forms' => 'yes',
     'maspik_support_helloplus_forms' => 'yes',
+    'maspik_support_metform_forms' => 'yes',
+    'maspik_support_bitform_forms' => 'yes',
     
     // AI spam check settings (Beta feature - will be Pro-only in future versions)
     'maspik_ai_enabled' => '0',
-    'maspik_ai_threshold' => '50',
+    'maspik_ai_threshold' => '60',
     'maspik_ai_context' => '',
 ];
 

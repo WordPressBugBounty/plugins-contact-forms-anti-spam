@@ -801,6 +801,8 @@ $spamcounter = maspik_spam_count();
                         'maspik_support_fluentforms_forms' => sanitize_text_field(isset($_POST['maspik_support_fluentforms_forms']) ? "yes" : "no"),
                         'maspik_support_gravity_forms' => sanitize_text_field(isset($_POST['maspik_support_gravity_forms']) ? "yes" : "no"),
                         'maspik_support_bricks_forms' => sanitize_text_field(isset($_POST['maspik_support_bricks_forms']) ? "yes" : "no"),
+                        'maspik_support_metform_forms' => sanitize_text_field(isset($_POST['maspik_support_metform_forms']) ? "yes" : "no"),
+                        'maspik_support_bitform_forms' => sanitize_text_field(isset($_POST['maspik_support_bitform_forms']) ? "yes" : "no"),
                         'maspik_support_breakdance_forms' => sanitize_text_field(isset($_POST['maspik_support_breakdance_forms']) ? "yes" : "no"),
                         'maspik_support_ninjaforms' => sanitize_text_field(isset($_POST['maspik_support_ninjaforms']) ? "yes" : "no"),
                         'maspik_support_jetforms' => sanitize_text_field(isset($_POST['maspik_support_jetforms']) ? "yes" : "no"),
@@ -813,7 +815,7 @@ $spamcounter = maspik_spam_count();
                         'url_blacklist' => sanitize_textarea_field(stripslashes($_POST['url_blacklist'] ?? '')),
                         'maspik_ai_enabled' => isset($_POST['maspik_ai_enabled']) ? 1 : 0,
                         'maspik_ai_threshold' => (isset($_POST['maspik_ai_threshold']) && !empty($_POST['maspik_ai_threshold']) && intval($_POST['maspik_ai_threshold']) >= 2) ? 
-                            sanitize_text_field($_POST['maspik_ai_threshold']) : '50',
+                            sanitize_text_field($_POST['maspik_ai_threshold']) : '60',
                         'maspik_ai_context' => sanitize_text_field(stripslashes($_POST['maspik_ai_context'] ?? '')),
                     ]; 
 
@@ -997,8 +999,36 @@ $spamcounter = maspik_spam_count();
                                             <h4> <?php esc_html_e('Advance key check', 'contact-forms-anti-spam'); ?>
                                             </h4>
                                             <span><?php esc_html_e('Advanced key check - This feature adds a hidden field that is automatically filled with a unique key. If the submitted key does not match the expected key, it likely means the form was submitted by a bot or automated script. The submission will be blocked as a security measure.', 'contact-forms-anti-spam'); ?></span>
+                                            <br>
+                                            <span><?php esc_html_e('Please clear cache after activate this feature.', 'contact-forms-anti-spam'); ?></span>
                                         </div>  
                                     </div><!-- end of Advance key check -->
+
+                                    <!-- AI Spam Check Toggle -->
+                                    <div class="maspik-ai-toggle-wrap togglewrap">
+                                        <?php echo maspik_toggle_button('maspik_ai_enabled', 'maspik_ai_enabled', 'maspik_ai_enabled', 'maspik-ai-toggle togglebutton', "ai-toggle", maspik_get_settings('maspik_ai_enabled')); ?>
+                                        <div>
+                                            <h4>
+                                                <svg class="maspik-ai-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect class="ai-head" x="4" y="6" width="16" height="14" rx="2" fill="#F48722"/>
+                                                    <circle class="ai-eye" cx="8" cy="12" r="1.5" fill="#ffffff"/>
+                                                    <circle class="ai-eye" cx="16" cy="12" r="1.5" fill="#ffffff"/>
+                                                    <rect class="ai-mouth" x="10" y="16" width="4" height="2" rx="1" fill="#ffffff"/>
+                                                    <line class="ai-antenna" x1="12" y1="6" x2="12" y2="2" stroke="#F48722" stroke-width="2" stroke-linecap="round"/>
+                                                    <circle class="ai-signal" cx="12" cy="2" r="1" fill="#F48722"/>
+                                                </svg>
+                                                <?php esc_html_e('AI Spam Check', 'contact-forms-anti-spam'); ?> (<?php esc_html_e('BETA', 'contact-forms-anti-spam'); ?>)
+                                            </h4>
+                                            <span>
+                                                <?php esc_html_e('Advanced AI technology to detect and block sophisticated spam submissions.', 'contact-forms-anti-spam'); ?>
+                                                <br>
+                                                <?php esc_html_e('There options that can be configured to improve the AI detection, see in accordion down this page.', 'contact-forms-anti-spam'); ?>
+                                                <br>
+                                                <?php esc_html_e('(This feature will be Pro-only in future versions)', 'contact-forms-anti-spam'); ?>
+                                    </span>
+
+                                        </div>
+                                    </div>
 
 
                                     <?php maspik_save_button_show() ?>
@@ -1709,134 +1739,13 @@ $spamcounter = maspik_spam_count();
                                     </div>
                                     <!-- MORE OPTIONS HEADER - END -->
 
-                                    <!-- Accordion Item - Other Options Field - Custom -->
-                                    <div class="maspik-accordion-item maspik-accordion-other-option-field" >
-                                        <div class="maspik-accordion-header" id="ip-blacklist-accordion">
-                                            <div class="mpk-acc-header-texts">
-                                                <h4 class="maspik-header maspik-accordion-header-text"><?php esc_html_e('IP Blacklist and 3rd Party APIs', 'contact-forms-anti-spam'); ?></h4><!--Accordion Title-->
-                                            </div>
-                                            <div class = "maspik-pro-button-wrap">
-                                                <span class="maspik-acc-arrow">
-                                                    <span class="dashicons dashicons-arrow-right"></span>
-                                                </span>
-                                            </div>
-                                        </div>
-                                            
-                                        <div class="maspik-accordion-content" id="maspik-form-options">
-                                            <div class="maspik-accordion-content-wrap hide-form-title">
-                                                <div class="maspik-accordion-subtitle-wrap short-tooltip">
-                                                    <h3 class="maspik-accordion-subtitle"><?php esc_html_e("List of block IPs", 'contact-forms-anti-spam'); ?></h3>
-                                                    <?php 
-                                                        maspik_tooltip("Any IP you enter above will be blocked.One IP per line.");
-                                                    ?>
-                                                </div> <!--end of maspik-accordion-subtitle-wrap-->
-                                                <div class="maspik-ip-wrap maspik-main-list-wrap maspik-textfield-list">
-                                                    <label for="ip_blacklist"><b><?php esc_html_e('Blocked IP addresses (one per line):', 'contact-forms-anti-spam'); ?></b></label>
-                                                    <?php
-                                                        echo create_maspik_textarea('ip_blacklist', 6, 80, 'maspik-textarea');
-                                                        maspik_spam_api_list('ip');
-                                                    ?> 
-                                                </div> <!-- end of maspik-ip-wrap  -->
-                                                <span class="maspik-subtext"><?php esc_html_e('You can also filter entire CIDR range such as 134.209.0.0/16', 'contact-forms-anti-spam'); ?></span>
-
-                                                <!---- 3rd party API divider S---------->
-                                                <div class = 'maspik-simple-divider'></div>
-                                                <!---- 3rd party API divider E---------->
-
-                                                <div class="maspik-accordion-subtitle-wrap short-tooltip">
-                                                    <h3 class="maspik-accordion-subtitle"><?php esc_html_e('AbuseIPDB API', 'contact-forms-anti-spam'); ?></h3>
-                                                    <?php 
-                                                        maspik_tooltip("AbuseIPDB.com API Recommend not lower than 25 for less false positives. We recommend setting threshold between 70-100 based on your needs.");
-                                                    ?>
-                                                </div> <!--end of maspik-accordion-subtitle-wrap-->
-                                                
-
-                                                <div class="maspik-abuse-api-wrap maspik-main-list-wrap maspik-textfield-list">
-
-                                                    <?php echo create_maspik_input('abuseipdb_api', 'maspik-inputbox'); ?>
-                                                    <div class="maspik-threshold-wrap">
-                                                    <?php echo create_maspik_numbox("abuseipdb_score", "abuseipdb_score", "threshold-limit" , "Risk Threshold", "") ?>
-                                                    </div>
-
-                                                </div> <!-- end of maspik-abuse-api-wrap  -->
-                                            
-                                                <span class="maspik-subtext"><?php esc_html_e('For more infromation', 'contact-forms-anti-spam'); ?> <a target = "_blank" href="https://www.abuseipdb.com/?Maspik-plugin">
-                                                <?php esc_html_e('AbuseIPDB', 'contact-forms-anti-spam'); ?></a></span>
-                                                <span class="maspik-subtext"><?php esc_html_e('Leave blank to disable', 'contact-forms-anti-spam'); ?>.</span>
-                                                    <?php maspik_spam_api_list('abuseipdb_api');?>
-
-                                                <div class="maspik-accordion-subtitle-wrap short-tooltip add-space-top">
-                                                    <h3 class="maspik-accordion-subtitle"><?php esc_html_e('Proxycheck.io API', 'contact-forms-anti-spam'); ?></h3>
-                                                    <?php 
-                                                        maspik_tooltip("Proxycheck.io API risk score: 0-50 may have false positives. Scores above 70 indicate higher reliability in detecting proxy/VPN usage. We recommend setting threshold between 70-100 based on your needs.");
-                                                    ?>
-                                                </div> <!--end of maspik-accordion-subtitle-wrap-->
-
-
-                                                <div class="maspik-abuse-api-wrap maspik-main-list-wrap maspik-textfield-list">
-
-                                                    <?php echo create_maspik_input('proxycheck_io_api', 'maspik-inputbox'); ?>
-                                                    <div class="maspik-threshold-wrap">
-                                                    <?php echo create_maspik_numbox("proxycheck_io_risk", "proxycheck_io_risk", "threshold-limit" , "Risk Threshold", "") ?>
-                                                    </div>
-
-                                                </div> <!-- end of maspik-abuse-api-wrap  -->
-                                                <span class="maspik-subtext"><?php esc_html_e('For more infromation', 'contact-forms-anti-spam'); ?> <a target = "_blank" href="https://proxycheck.io/?Maspik-plugin">
-                                                <?php esc_html_e('ProxyCheck', 'contact-forms-anti-spam'); ?></a></span>
-
-                                                <span class="maspik-subtext"><?php esc_html_e('Leave blank to disable.', 'contact-forms-anti-spam'); ?></span>
-                                                
-                                                <?php maspik_spam_api_list('proxycheck_io_api');?>    
-                                                
-                                                <div class="maspik-accordion-subtitle-wrap short-tooltip add-space-top">
-                                                    <h3 class="maspik-accordion-subtitle"><?php esc_html_e('Numverify API Key', 'contact-forms-anti-spam'); ?></h3>
-                                                    <?php 
-                                                        maspik_tooltip("Numverify API is a phone number verification service that checks if a phone number is valid.");
-                                                    ?>
-                                                </div> <!--end of maspik-accordion-subtitle-wrap-->
-
-                                                <div class="maspik-numverify-api-wrap maspik-main-list-wrap maspik-textfield-list">
-
-                                                    <?php echo create_maspik_input('numverify_api', 'maspik-inputbox'); ?>
-
-                                                </div> <!-- end of maspik-abuse-api-wrap  -->
-
-                                                <span class="maspik-subtext"><?php esc_html_e('By default, Numverify requires phone numbers to include the country code.
-                                                If your site serves a specific country and users don\'t enter country codes,
-                                                you can select the country code from the list below. Note, if a country code is selected but the user enters different country code,
-                                                the number will be invalid because it will contain two country codes.
-                                                Please test thoroughly to understand this behavior.', 'contact-forms-anti-spam'); ?></span>
-                                                
-                                                <span class="maspik-subtext"><?php esc_html_e('For more infromation', 'contact-forms-anti-spam'); ?> <a target = "_blank" href="https://numverify.com/documentation/?Maspik-plugin">
-                                                <?php esc_html_e('Numverify documentation', 'contact-forms-anti-spam'); ?></a></span>
-
-                                                <?php maspik_spam_api_list('numverify_api');?>    
-
-                                                <div class="maspik-select-list">
-                                                    <div class="maspik-main-list-wrap">
-                                                        
-                                                        <?php 
-                                                            echo create_maspik_select("numverify_country", "numverify_country", $MASPIK_COUNTRIES_LIST_FOR_PHONE , "", false);                                 
-                                                        ?> 
-                                                    </div>
-                                                        
-                                                </div> <!-- end of maspik-main-list-wrap -->
-
-
-                                                    <?php  maspik_save_button_show() ?>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Accordion Item - AI Spam Check (Beta Feature) -->
-                                    <div class="maspik-accordion-item maspik-accordion-ai-spam-check" >
+                                     <!-- Accordion Item - AI Spam Check (Beta Feature) -->
+                                     <div class="maspik-accordion-item maspik-accordion-ai-spam-check" >
                                         <div class="maspik-accordion-header" id="ai-spam-check-accordion">
                                             <div class="mpk-acc-header-texts">
                                                 <h4 class="maspik-header maspik-accordion-header-text">
-                                                    <?php esc_html_e('AI Spam Check', 'contact-forms-anti-spam'); ?>
-                                                    <span class="maspik-beta-badge">BETA</span>
-                                                    <span class="maspik-pro-notice"><?php esc_html_e('(Will be Pro-only in future versions)', 'contact-forms-anti-spam'); ?></span>
+                                                    <?php esc_html_e('Configure AI Spam detection (Optional)', 'contact-forms-anti-spam'); ?>
+                                                    <span class="maspik-beta-badge">AI</span>
                                                 </h4>
                                             </div>
                                             <div class="maspik-pro-button-wrap">
@@ -1848,28 +1757,17 @@ $spamcounter = maspik_spam_count();
                                             
                                         <div class="maspik-accordion-content" id="maspik-ai-spam-check">
                                             <div class="maspik-accordion-content-wrap">
-                                                
-                                                <!-- AI Spam Check Toggle -->
-                                                <div class="maspik-ai-toggle-wrap togglewrap">
-                                                    <?php echo maspik_toggle_button('maspik_ai_enabled', 'maspik_ai_enabled', 'maspik_ai_enabled', 'maspik-ai-toggle togglebutton', "ai-toggle", maspik_get_settings('maspik_ai_enabled')); ?>
-                                                    <div>
-                                                        <h4><?php esc_html_e('Enable AI Spam Check', 'contact-forms-anti-spam'); ?></h4>
-                                                        <p class="maspik-field-description">
-                                                            <?php esc_html_e('Advanced AI technology to detect and block sophisticated spam submissions.', 'contact-forms-anti-spam'); ?>
-                                                            <br>
-                                                            <?php esc_html_e('Uses AI (Gemini/OpenAI/Mistral) to detect spam. Note that AI detection may not be 100% accurate and could occasionally flag legitimate submissions.', 'contact-forms-anti-spam'); ?>
-                                                        </p>
-
-                                                    </div>
-                                                </div>
-
+                                                <b><span><?php esc_html_e('AI Spam Check is a feature that uses AI to detect spam. It is a beta feature and may not be 100% accurate. Please use it with caution.', 'contact-forms-anti-spam'); ?></span>
+                                                <span><?php echo sprintf(esc_html__('We recommend to use this feature and read the documentation %shere%s.', 'contact-forms-anti-spam'), '<a href="https://wpmaspik.com/documentation/ai-spam-check/" target="_blank">', '</a>'); ?></span><br>
+                                                <span><?php esc_html_e('To activate this feature, please check the "AI Spam Check" toggle in the "Upper" section of this page.', 'contact-forms-anti-spam'); ?></span></b>
+                                                <br>
                                                 <!-- AI Configuration Fields (shown only when enabled) -->
-                                                <div class="maspik-ai-config-fields" id="maspik-ai-config-fields" style="display: none;">
+                                                <div class="" id="" style="">
                                                     
-                                                                                                        <!-- Threshold -->
+                                                    <!-- Threshold -->
                                                     <div class="maspik-field-group">
                                                         <label for="maspik_ai_threshold"><?php esc_html_e('Spam Threshold', 'contact-forms-anti-spam'); ?></label>
-                                                        <?php echo create_maspik_numbox('maspik_ai_threshold', 'maspik_ai_threshold', 'maspik_ai_threshold', 'ai-threshold', 50, 2, 100); ?>
+                                                        <?php echo create_maspik_numbox('maspik_ai_threshold', 'maspik_ai_threshold', 'maspik_ai_threshold', 'AI-threshold', 60, 2, 100); ?>
                                                         <p class="maspik-field-description">
                                                         <?php esc_html_e('AI Spam Threshold — Score (0–100) above which a message will be blocked as spam. Lower values (e.g., 10) = stricter filtering, even borderline messages may be considered spam. Higher values (e.g., 70) = looser filtering, only strong spam signals will be blocked. Recommended: 50 and check the spam log from time to time to see if you need to adjust the threshold.', 'contact-forms-anti-spam'); ?>
                                                         <br><?php esc_html_e('Please check the spam log from time to time to see if you need to adjust the threshold.', 'contact-forms-anti-spam'); ?>
@@ -2040,6 +1938,128 @@ $spamcounter = maspik_spam_count();
                                         </div>
                                     </div>
 
+                                    <!-- Accordion Item - Other Options Field - Custom -->
+                                    <div class="maspik-accordion-item maspik-accordion-other-option-field" >
+                                        <div class="maspik-accordion-header" id="ip-blacklist-accordion">
+                                            <div class="mpk-acc-header-texts">
+                                                <h4 class="maspik-header maspik-accordion-header-text"><?php esc_html_e('IP Blacklist and 3rd Party APIs', 'contact-forms-anti-spam'); ?></h4><!--Accordion Title-->
+                                            </div>
+                                            <div class = "maspik-pro-button-wrap">
+                                                <span class="maspik-acc-arrow">
+                                                    <span class="dashicons dashicons-arrow-right"></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                            
+                                        <div class="maspik-accordion-content" id="maspik-form-options">
+                                            <div class="maspik-accordion-content-wrap hide-form-title">
+                                                <div class="maspik-accordion-subtitle-wrap short-tooltip">
+                                                    <h3 class="maspik-accordion-subtitle"><?php esc_html_e("List of block IPs", 'contact-forms-anti-spam'); ?></h3>
+                                                    <?php 
+                                                        maspik_tooltip("Any IP you enter above will be blocked.One IP per line.");
+                                                    ?>
+                                                </div> <!--end of maspik-accordion-subtitle-wrap-->
+                                                <div class="maspik-ip-wrap maspik-main-list-wrap maspik-textfield-list">
+                                                    <label for="ip_blacklist"><b><?php esc_html_e('Blocked IP addresses (one per line):', 'contact-forms-anti-spam'); ?></b></label>
+                                                    <?php
+                                                        echo create_maspik_textarea('ip_blacklist', 6, 80, 'maspik-textarea');
+                                                        maspik_spam_api_list('ip');
+                                                    ?> 
+                                                </div> <!-- end of maspik-ip-wrap  -->
+                                                <span class="maspik-subtext"><?php esc_html_e('You can also filter entire CIDR range such as 134.209.0.0/16', 'contact-forms-anti-spam'); ?></span>
+
+                                                <!---- 3rd party API divider S---------->
+                                                <div class = 'maspik-simple-divider'></div>
+                                                <!---- 3rd party API divider E---------->
+
+                                                <div class="maspik-accordion-subtitle-wrap short-tooltip">
+                                                    <h3 class="maspik-accordion-subtitle"><?php esc_html_e('AbuseIPDB API', 'contact-forms-anti-spam'); ?></h3>
+                                                    <?php 
+                                                        maspik_tooltip("AbuseIPDB.com API Recommend not lower than 25 for less false positives. We recommend setting threshold between 70-100 based on your needs.");
+                                                    ?>
+                                                </div> <!--end of maspik-accordion-subtitle-wrap-->
+                                                
+
+                                                <div class="maspik-abuse-api-wrap maspik-main-list-wrap maspik-textfield-list">
+
+                                                    <?php echo create_maspik_input('abuseipdb_api', 'maspik-inputbox'); ?>
+                                                    <div class="maspik-threshold-wrap">
+                                                    <?php echo create_maspik_numbox("abuseipdb_score", "abuseipdb_score", "threshold-limit" , "Risk Threshold", "") ?>
+                                                    </div>
+
+                                                </div> <!-- end of maspik-abuse-api-wrap  -->
+                                            
+                                                <span class="maspik-subtext"><?php esc_html_e('For more infromation', 'contact-forms-anti-spam'); ?> <a target = "_blank" href="https://www.abuseipdb.com/?Maspik-plugin">
+                                                <?php esc_html_e('AbuseIPDB', 'contact-forms-anti-spam'); ?></a></span>
+                                                <span class="maspik-subtext"><?php esc_html_e('Leave blank to disable', 'contact-forms-anti-spam'); ?>.</span>
+                                                    <?php maspik_spam_api_list('abuseipdb_api');?>
+
+                                                <div class="maspik-accordion-subtitle-wrap short-tooltip add-space-top">
+                                                    <h3 class="maspik-accordion-subtitle"><?php esc_html_e('Proxycheck.io API', 'contact-forms-anti-spam'); ?></h3>
+                                                    <?php 
+                                                        maspik_tooltip("Proxycheck.io API risk score: 0-50 may have false positives. Scores above 70 indicate higher reliability in detecting proxy/VPN usage. We recommend setting threshold between 70-100 based on your needs.");
+                                                    ?>
+                                                </div> <!--end of maspik-accordion-subtitle-wrap-->
+
+
+                                                <div class="maspik-abuse-api-wrap maspik-main-list-wrap maspik-textfield-list">
+
+                                                    <?php echo create_maspik_input('proxycheck_io_api', 'maspik-inputbox'); ?>
+                                                    <div class="maspik-threshold-wrap">
+                                                    <?php echo create_maspik_numbox("proxycheck_io_risk", "proxycheck_io_risk", "threshold-limit" , "Risk Threshold", "") ?>
+                                                    </div>
+
+                                                </div> <!-- end of maspik-abuse-api-wrap  -->
+                                                <span class="maspik-subtext"><?php esc_html_e('For more infromation', 'contact-forms-anti-spam'); ?> <a target = "_blank" href="https://proxycheck.io/?Maspik-plugin">
+                                                <?php esc_html_e('ProxyCheck', 'contact-forms-anti-spam'); ?></a></span>
+
+                                                <span class="maspik-subtext"><?php esc_html_e('Leave blank to disable.', 'contact-forms-anti-spam'); ?></span>
+                                                
+                                                <?php maspik_spam_api_list('proxycheck_io_api');?>    
+                                                
+                                                <div class="maspik-accordion-subtitle-wrap short-tooltip add-space-top">
+                                                    <h3 class="maspik-accordion-subtitle"><?php esc_html_e('Numverify API Key', 'contact-forms-anti-spam'); ?></h3>
+                                                    <?php 
+                                                        maspik_tooltip("Numverify API is a phone number verification service that checks if a phone number is valid.");
+                                                    ?>
+                                                </div> <!--end of maspik-accordion-subtitle-wrap-->
+
+                                                <div class="maspik-numverify-api-wrap maspik-main-list-wrap maspik-textfield-list">
+
+                                                    <?php echo create_maspik_input('numverify_api', 'maspik-inputbox'); ?>
+
+                                                </div> <!-- end of maspik-abuse-api-wrap  -->
+
+                                                <span class="maspik-subtext"><?php esc_html_e('By default, Numverify requires phone numbers to include the country code.
+                                                If your site serves a specific country and users don\'t enter country codes,
+                                                you can select the country code from the list below. Note, if a country code is selected but the user enters different country code,
+                                                the number will be invalid because it will contain two country codes.
+                                                Please test thoroughly to understand this behavior.', 'contact-forms-anti-spam'); ?></span>
+                                                
+                                                <span class="maspik-subtext"><?php esc_html_e('For more infromation', 'contact-forms-anti-spam'); ?> <a target = "_blank" href="https://numverify.com/documentation/?Maspik-plugin">
+                                                <?php esc_html_e('Numverify documentation', 'contact-forms-anti-spam'); ?></a></span>
+
+                                                <?php maspik_spam_api_list('numverify_api');?>    
+
+                                                <div class="maspik-select-list">
+                                                    <div class="maspik-main-list-wrap">
+                                                        
+                                                        <?php 
+                                                            echo create_maspik_select("numverify_country", "numverify_country", $MASPIK_COUNTRIES_LIST_FOR_PHONE , "", false);                                 
+                                                        ?> 
+                                                    </div>
+                                                        
+                                                </div> <!-- end of maspik-main-list-wrap -->
+
+
+                                                    <?php  maspik_save_button_show() ?>
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                   
+
                                     <!-- Accordion Item - Form Options Field - Custom -->
                                     <div class="maspik-accordion-item maspik-accordion-form-option-field" >
                                         <div class="maspik-accordion-header" id="form-option-accordion">
@@ -2119,6 +2139,20 @@ $spamcounter = maspik_spam_count();
                                                             <h4> <?php esc_html_e('Support Bricks forms', 'contact-forms-anti-spam'); ?> </h4>
                                                         </div>  
                                                     </div><!-- end of maspik-bricks-switch-wrap -->
+
+                                                <div class="maspik-metform-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('metform') == 1 ? 'enabled':'disabled' ?>">
+                                                    <?php echo maspik_toggle_button('maspik_support_metform_forms', 'maspik_support_metform_forms', 'maspik_support_metform_forms', 'maspik-form-switch togglebutton', "form-toggle", efas_if_plugin_is_active('metform')); ?>
+                                                        <div>
+                                                            <h4> <?php esc_html_e('Support MetForm', 'contact-forms-anti-spam'); ?> </h4>
+                                                        </div>  
+                                                    </div><!-- end of maspik-metform-switch-wrap -->
+
+                                                <div class="maspik-bitform-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('bitform') == 1 ? 'enabled':'disabled' ?>">
+                                                    <?php echo maspik_toggle_button('maspik_support_bitform_forms', 'maspik_support_bitform_forms', 'maspik_support_bitform_forms', 'maspik-form-switch togglebutton', "form-toggle", efas_if_plugin_is_active('bitform')); ?>
+                                                        <div>
+                                                            <h4> <?php esc_html_e('Support BitForm', 'contact-forms-anti-spam'); ?> </h4>
+                                                        </div>  
+                                                    </div><!-- end of maspik-bitform-switch-wrap -->
 
                                                 <div class="maspik-breakdance-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('breakdance') == 1 ? 'enabled':'disabled' ?>">
                                                     <?php echo maspik_toggle_button('maspik_support_breakdance_forms', 'maspik_support_breakdance_forms', 'maspik_support_breakdance_forms', 'maspik-form-switch togglebutton', "form-toggle", efas_if_plugin_is_active('breakdance')); ?>

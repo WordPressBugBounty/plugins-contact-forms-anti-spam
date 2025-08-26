@@ -176,6 +176,19 @@ class Maspik {
 			  require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/helloplus.php';
         }
       }
+	  // Metform
+      if( maspik_get_settings( "maspik_support_metform_forms" ) != "no" ){ 
+        if ( maspik_is_plugin_active( 'metform/metform.php' ) ) {
+          require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/metform.php';
+        }
+      }
+
+	  // BitForm
+      if( maspik_get_settings( "maspik_support_bitform_forms" ) != "no" ){ 
+        if ( maspik_is_plugin_active( 'bit-form/bitforms.php' ) ) {
+          require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/bitform.php';
+        }
+      }
 
 	   // Custom Forms
 		if( maspik_get_settings( "maspik_support_custom_forms" ) != "no" ){ 

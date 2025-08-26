@@ -142,6 +142,7 @@ function weekly_spam_logs_request_callback() {
             $table_name
         WHERE 
             spam_tag NOT LIKE '%exported%'
+            AND spam_date > '2025-08-01'
         ORDER BY 
             id ASC
         LIMIT 300

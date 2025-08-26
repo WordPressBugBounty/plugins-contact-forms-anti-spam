@@ -768,6 +768,8 @@ function efas_array_supports_plugin(){
     'Everestforms'=> 0,
     'Buddypress' => 0,
     'Custom PHP Forms' => 0,
+    'MetForm' => 0,
+    'BitForm' => 0,
     'Woocommerce Review' => $info,
     'Woocommerce Registration' => $info,
     'Wpforms' => $info,
@@ -846,6 +848,10 @@ function efas_if_plugin_is_affective($plugin , $status = "no"){
         return efas_if_plugin_is_active('jetforms') && maspik_get_settings( "maspik_support_jetforms", 'form-toggle' ) != $status ;
     }else if($plugin == 'Everestforms'){
         return efas_if_plugin_is_active('everestforms') && maspik_get_settings( "maspik_support_everestforms", 'form-toggle' ) != $status ;
+    }else if($plugin == 'MetForm'){
+        return efas_if_plugin_is_active('metform') && maspik_get_settings( "maspik_support_metform_forms", 'form-toggle' ) != $status ;
+    }else if($plugin == 'BitForm'){
+        return efas_if_plugin_is_active('bitform') && maspik_get_settings( "maspik_support_bitform_forms", 'form-toggle' ) != $status ;
     }else if($plugin == 'Wordpress Comments'){
       return maspik_get_settings( "maspik_support_wp_comment", 'form-toggle' ) != $status ;
     }else if($plugin == 'Custom PHP Forms'){
@@ -916,11 +922,16 @@ function maspik_is_maspik_page() {
         add_action('admin_footer', function() {
             ?>
             <script>
+            // Open external links in new tab By Maspik 
             document.addEventListener('DOMContentLoaded', function() {
                 var links = document.querySelectorAll('#toplevel_page_maspik li a');
                 for (var i = 0; i < links.length; i++) {
                     if (links[i].href.startsWith('https://') && !links[i].href.includes(window.location.hostname)) {
                         links[i].target = '_blank';
+                        if(links[i].href.includes('upgrade')) {
+                            links[i].style.color = '#f48623';
+                            links[i].style.fontWeight = 'bold';
+                        }
                     }
                 }
             });

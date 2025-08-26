@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.8
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.5.5
+Stable tag: 2.5.6
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -86,6 +86,8 @@ Maspik integrates seamlessly with a wide range of popular contact forms and comm
 * Bricksbuilder forms
 * Breakdance Builder forms
 * BuddyPress
+* Bitforms
+* Metform
 * WordPress comments
 * WordPress registration form
 * Custom PHP forms
@@ -213,6 +215,8 @@ Currently supports the following forms:
 <li>Bricksbuilder forms</li>
 <li>Breakdance Builder forms</li>
 <li>BuddyPress</li>
+<li>Bitforms</li>
+<li>Metform</li>
 <li>Custom PHP forms</li>
 <li>Wpforms (Maspik Pro license required)</li>
 <li>Gravityforms (Maspik Pro license required)</li>
@@ -245,6 +249,11 @@ So if you need advanced spam protection, that works with all forms and has a lot
 
 
 == Changelog ==
+
+= 2.5.6 - 26/08/2025 = 
+* New feature - Add support for Bitforms forms.
+* New feature - Add support for Metform forms.
+* AI Spam check is more accurate.
 
 = 2.5.5 - 20/08/2025 = 
 * New (Beta) feature - AI spam check - Give it a try!

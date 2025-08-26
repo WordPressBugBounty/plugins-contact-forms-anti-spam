@@ -3207,3 +3207,108 @@ td.column-ip.column-entries {
     margin: 10px;
   }
 }
+
+/* AI Icon Animations */
+.maspik-ai-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+  animation: ai-float 3s ease-in-out infinite;
+}
+
+.maspik-ai-icon .ai-head {
+  animation: ai-glow 2s ease-in-out infinite alternate;
+}
+
+.maspik-ai-icon .ai-eye {
+  animation: ai-blink 4s ease-in-out infinite;
+}
+
+.maspik-ai-icon .ai-mouth {
+  animation: ai-talk 2s ease-in-out infinite;
+}
+
+.maspik-ai-icon .ai-antenna {
+  animation: ai-scan 3s ease-in-out infinite;
+}
+
+.maspik-ai-icon .ai-signal {
+  animation: ai-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes ai-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes ai-glow {
+  0% {
+    filter: drop-shadow(0 0 3px #F48722);
+  }
+  100% {
+    filter: drop-shadow(0 0 6px #F48722);
+  }
+}
+
+@keyframes ai-blink {
+  0%, 90%, 100% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes ai-talk {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.2);
+  }
+}
+
+@keyframes ai-scan {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes ai-pulse {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* Hover effects for AI icon */
+.maspik-ai-icon:hover {
+  animation: ai-bounce 0.6s ease-in-out;
+}
+
+.maspik-ai-icon:hover .ai-head {
+  filter: drop-shadow(0 0 8px #F48722);
+}
+
+@keyframes ai-bounce {
+  0%, 20%, 60%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-6px);
+  }
+  80% {
+    transform: translateY(-3px);
+  }
+}
