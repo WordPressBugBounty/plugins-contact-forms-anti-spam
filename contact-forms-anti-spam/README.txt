@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.8
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.5.6
+Stable tag: 2.5.7
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -249,6 +249,10 @@ So if you need advanced spam protection, that works with all forms and has a lot
 
 
 == Changelog ==
+
+= 2.5.7 - 08/09/2025 = 
+* Fixed - Fix security issue where spam log can be deleted by non-admin users - Thanks to @Dmitrii.
+* Fixed - Fix issue where Metform forms were not checking phone correctly.
 
 = 2.5.6 - 26/08/2025 = 
 * New feature - Add support for Bitforms forms.

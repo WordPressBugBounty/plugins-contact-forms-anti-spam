@@ -66,20 +66,20 @@ class MaspikMetFormValidation {
         $form_id = isset($form_data['form_id']) ? intval($form_data['form_id']) : 0;
         
         // Debug logging
-        error_log('Maspik MetForm: Starting validation for form ID: ' . $form_id);
-        error_log('Maspik MetForm: Form data: ' . print_r($form_data, true));
+        //error_log('Maspik MetForm: Starting validation for form ID: ' . $form_id);
+        //error_log('Maspik MetForm: Form data: ' . print_r($form_data, true));
         
         // Allow developers to disable spam check for specific forms
         $disable_metform_spam_check = apply_filters('maspik_disable_metform_spam_check', false, $form_id, $form_data);
         if ($disable_metform_spam_check) {
-            error_log('Maspik MetForm: Spam check disabled for form ID: ' . $form_id);
+            //error_log('Maspik MetForm: Spam check disabled for form ID: ' . $form_id);
             return $validation_data;
         }
         
         // Check text fields
         if ($this->check_text_fields($form_data)) {
             $error_message = cfas_get_error_text(); // Use default error message
-            error_log('Maspik MetForm: Text spam detected, returning error: ' . $error_message);
+            //error_log('Maspik MetForm: Text spam detected, returning error: ' . $error_message);
             return [
                 'is_valid' => false,
                 'message' => $error_message,
@@ -191,7 +191,7 @@ class MaspikMetFormValidation {
                     $spam_lbl = isset($validateTextField['label']) ? $validateTextField['label'] : '';
                     $spam_val = isset($validateTextField['option_value']) ? $validateTextField['option_value'] : '';
                     efas_add_to_log('text', $spam, $form_data, 'MetForm', $spam_lbl, $spam_val);
-                    error_log('Maspik MetForm: Text spam detected in field: ' . $field_name . ' with value: ' . $field_value);
+                    //error_log('Maspik MetForm: Text spam detected in field: ' . $field_name . ' with value: ' . $field_value);
                     return true; // Spam detected
                 }
             }
@@ -422,6 +422,11 @@ class MaspikMetFormValidation {
     private function is_text_field($field_name, $field_value) {
         $field_name_lower = strtolower($field_name);
         
+        //skip if field name is action,id,form_nonce,maspik_spam_key,full-name-maspik-hp
+        if (in_array($field_name, ['action', 'id', 'form_nonce', 'maspik_spam_key', 'full-name-maspik-hp'])) {
+            return false;
+        }
+        
         // Skip if it's clearly another type
         if ($this->is_email_field($field_name, $field_value) || 
             $this->is_phone_field($field_name, $field_value) || 
@@ -448,9 +453,9 @@ class MaspikMetFormValidation {
     private function is_phone_field($field_name, $field_value) {
         $field_name_lower = strtolower($field_name);
         
-        // Phone detection
+        // Phone detection - only based on field name, not content
         if (strpos($field_name_lower, 'phone') !== false || strpos($field_name_lower, 'tel') !== false || 
-            strpos($field_name_lower, 'mobile') !== false || preg_match('/^[\d\s\-\+\(\)]+$/', $field_value)) {
+            strpos($field_name_lower, 'mobile') !== false) {
             return true;
         }
         
@@ -471,6 +476,11 @@ class MaspikMetFormValidation {
     
     private function is_textarea_field($field_name, $field_value) {
         $field_name_lower = strtolower($field_name);
+        
+        //skip if field name is action,id,form_nonce,maspik_spam_key,full-name-maspik-hp
+        if (in_array($field_name, ['action', 'id', 'form_nonce', 'maspik_spam_key', 'full-name-maspik-hp'])) {
+            return false;
+        }
         
         // Textarea detection (longer text)
         if (strlen($field_value) > 100 || strpos($field_name_lower, 'message') !== false || 

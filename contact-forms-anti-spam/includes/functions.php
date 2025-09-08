@@ -594,6 +594,7 @@ function maspik_save_log($type, $value, $detail, $ip, $country, $agent, $date, $
 
 function maspik_Download_log_btn(){
         ?><form method="post" class="downloadform" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+        <?php wp_nonce_field('maspik_download_csv_action', 'maspik_download_csv_nonce'); ?>
         <input type="hidden" name="action" value="Maspik_spamlog_download_csv">
         <input type="submit" value="Download CSV" class="maspik-btn">
     </form><?php
@@ -1317,6 +1318,11 @@ function Maspik_export_settings() {
     if (!isset($_POST['Maspik_export_settings_nonce_field']) || !wp_verify_nonce($_POST['Maspik_export_settings_nonce_field'], 'Maspik_export_settings_nonce')) {
         wp_die('Security check failed');
     }
+    
+    // Check if user has permission to access admin area
+    if (!current_user_can('manage_options')) {
+        wp_die(__('You do not have sufficient permissions to access this page.', 'contact-forms-anti-spam'));
+    }
 
     // Get Maspik settings
     global $wpdb;
@@ -1377,6 +1383,11 @@ function Maspik_import_settings() {
     // Check nonce
     if (!isset($_POST['Maspik_import_settings_nonce_field']) || !wp_verify_nonce($_POST['Maspik_import_settings_nonce_field'], 'Maspik_import_settings_nonce')) {
         wp_die('Security check failed');
+    }
+    
+    // Check if user has permission to access admin area
+    if (!current_user_can('manage_options')) {
+        wp_die(__('You do not have sufficient permissions to access this page.', 'contact-forms-anti-spam'));
     }
 
     // Check if a file was uploaded
@@ -1480,6 +1491,16 @@ function maspik_array_to_html_table($array) {
 add_action('admin_post_Maspik_spamlog_download_csv', 'Maspik_spamlog_download_csv');
 
 function Maspik_spamlog_download_csv() {
+    // Check if user has permission to access admin area (same as spam log page)
+    if (!current_user_can('edit_pages')) {
+        wp_die(__('You do not have sufficient permissions to access this page.', 'contact-forms-anti-spam'));
+    }
+    
+    // Verify nonce to prevent CSRF attacks
+    if (!isset($_POST['maspik_download_csv_nonce']) || !wp_verify_nonce($_POST['maspik_download_csv_nonce'], 'maspik_download_csv_action')) {
+        wp_die(__('Security check failed. Please try again.', 'contact-forms-anti-spam'));
+    }
+    
     global $wpdb;
     $table_name = $wpdb->prefix . 'maspik_spam_logs';
 

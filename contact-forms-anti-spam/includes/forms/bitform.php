@@ -53,8 +53,8 @@ if ( ! defined( 'WPINC' ) ) {
  */
 function maspik_validate_bitform_for_spam($validated, $form_id) {
     //
-    error_log('Maspik BitForm: Starting validation for form ID: ' . $form_id);
-    error_log('Maspik BitForm: POST data: ' . print_r($_POST, true));
+    //error_log('Maspik BitForm: Starting validation for form ID: ' . $form_id);
+    //error_log('Maspik BitForm: POST data: ' . print_r($_POST, true));
     
     // If already invalid, don't check further
     if (!$validated) {
@@ -73,19 +73,19 @@ function maspik_validate_bitform_for_spam($validated, $form_id) {
             $formManager = new \BitCode\BitForm\Core\Form\FormManager($form_id);
             $fields = $formManager->getFields();
             
-            // Debug: Print the fields structure safely
+            /* Debug: Print the fields structure safely
             if (is_array($fields)) {
                 error_log('Maspik BitForm: Fields structure: ' . print_r($fields, true));
             } else {
                 error_log('Maspik BitForm: Fields is not an array: ' . gettype($fields));
-            }
+            }*/
         } else {
-            error_log('Maspik BitForm: FormManager class not found');
+            //error_log('Maspik BitForm: FormManager class not found');
         }
     } catch (Exception $e) {
-        error_log('Maspik BitForm: Error getting fields: ' . $e->getMessage());
+        //error_log('Maspik BitForm: Error getting fields: ' . $e->getMessage());
     } catch (Error $e) {
-        error_log('Maspik BitForm: Fatal error getting fields: ' . $e->getMessage());
+        //error_log('Maspik BitForm: Fatal error getting fields: ' . $e->getMessage());
     }
     
     // Get form data from POST
@@ -223,9 +223,9 @@ function maspik_check_bitform_for_spam($form_data, $form_id) {
             }
         }
     } catch (Exception $e) {
-        error_log('Maspik BitForm: Error checking fields: ' . $e->getMessage());
+        //error_log('Maspik BitForm: Error checking fields: ' . $e->getMessage());
     } catch (Error $e) {
-        error_log('Maspik BitForm: Fatal error checking fields: ' . $e->getMessage());
+        //error_log('Maspik BitForm: Fatal error checking fields: ' . $e->getMessage());
     }
     
     // General check (Country/IP, Honeypot, Time, Year)
@@ -314,7 +314,7 @@ function maspik_add_bitform_fields() {
                     var spamKeyField = '<input type="hidden" name="maspik_spam_key" value="<?php echo $spam_key; ?>" />';
                     $form.append(spamKeyField);
                     
-                    console.log('Maspik fields added to BitForm');
+                    //console.log('Maspik fields added to BitForm');
                 }
             });
             
@@ -333,7 +333,7 @@ function maspik_add_bitform_fields() {
                         var spamKeyField = '<input type="hidden" name="maspik_spam_key" value="<?php echo $spam_key; ?>" />';
                         $form.append(spamKeyField);
                         
-                        console.log('Maspik fields added to dynamically loaded BitForm');
+                        //console.log('Maspik fields added to dynamically loaded BitForm');
                     }
                 });
             });

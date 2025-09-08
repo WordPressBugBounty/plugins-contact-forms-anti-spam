@@ -10,6 +10,15 @@ $spamcounter = maspik_spam_count();
 //$errorlog = get_option( 'errorlog' ) ? get_option( 'errorlog' )  : "Empty";
 
 if(isset($_POST['clear_log'])){
+  // Verify nonce to prevent CSRF attacks
+  if (!isset($_POST['cfes_clear_log_nonce']) || !wp_verify_nonce($_POST['cfes_clear_log_nonce'], 'cfes_clear_log_action')) {
+    wp_die(__('Security check failed. Please try again.', 'contact-forms-anti-spam'));
+  }
+  
+  // Check if user has permission to clear logs (admin only)
+  if (!current_user_can('manage_options')) {
+    wp_die(__('You do not have sufficient permissions to access this page.', 'contact-forms-anti-spam'));
+  }
 
   global $wpdb;
   
