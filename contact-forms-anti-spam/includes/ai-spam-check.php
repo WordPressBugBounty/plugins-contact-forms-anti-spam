@@ -104,7 +104,7 @@ function maspik_ai_check_submission( array $fields ): array {
 
     // Send request to AI API
     $resp = wp_remote_post( $endpoint, [
-        'timeout'   => 6,
+        'timeout'   => 7,
         'headers'   => $headers,
         'body'      => $body,     // keep as string, not array
         'sslverify' => true,
@@ -235,8 +235,30 @@ function maspik_ai_check_submission( array $fields ): array {
     if ( $code === 500 ) {
         $error_result = ['allow' => true, 'reason' => 'AI server error - check server logs'];
         
-        // Save 500 error log
-        $error_response = ['error' => true, 'http_code' => 500, 'error_detail' => 'Server error', 'response_body' => $body];
+        // Enhanced 500 error logging with more details
+        $error_detail = 'Server error';
+        $response_headers = wp_remote_retrieve_headers($resp);
+        
+        // Try to extract more info from response body
+        if ( !empty($body) ) {
+            $json_error = json_decode($body, true);
+            if ( $json_error && isset($json_error['error']) ) {
+                $error_detail = $json_error['error'];
+            } else {
+                $error_detail = 'Server error: ' . substr($body, 0, 200); // First 200 chars
+            }
+        }
+        
+        // Save enhanced 500 error log
+        $error_response = [
+            'error' => true, 
+            'http_code' => 500, 
+            'error_detail' => $error_detail, 
+            'response_body' => $body,
+            'response_headers' => $response_headers ? $response_headers->getAll() : [],
+            'timestamp' => current_time('mysql')
+        ];
+        
         if ( is_array($fields) && is_array($error_response) && is_array($error_result) ) {
             try {
                 maspik_save_ai_log($fields, $error_response, $error_result);
@@ -246,6 +268,12 @@ function maspik_ai_check_submission( array $fields ): array {
                 }
             }
         }
+        
+        // Also log to WordPress error log for immediate visibility
+        if ( defined('WP_DEBUG') && WP_DEBUG ) {
+            error_log('Maspik AI 500 Error: ' . $error_detail . ' | Response: ' . substr($body, 0, 500));
+        }
+        
         return $error_result;
     }
 

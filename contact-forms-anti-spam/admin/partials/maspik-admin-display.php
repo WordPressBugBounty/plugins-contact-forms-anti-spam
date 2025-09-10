@@ -102,7 +102,7 @@ $MASPIK_COUNTRIES_LIST = [
     'Continent:AF' => 'Continent: Africa', 
     'Continent:AN' => 'Continent: Antarctica',
     'Continent:EU' => 'Continent: Europe',
-    'Continent:NA' => 'Continent: North America',
+    'Continent:MA' => 'Continent: Americas',
     'Continent:OC' => 'Continent: Oceania',
     'AL' => 'Albania',
     'DZ' => 'Algeria',
@@ -1792,6 +1792,7 @@ $spamcounter = maspik_spam_count();
                                                              
                                                              <?php
                                                              $ai_logs = maspik_get_ai_logs();
+                                                             
                                                              if ( !empty($ai_logs) ) : ?>
                                                                  <button type="button" class="maspik-clear-ai-logs button button-link-delete">
                                                                      <?php esc_html_e('Clear Logs', 'contact-forms-anti-spam'); ?>
@@ -1815,43 +1816,116 @@ $spamcounter = maspik_spam_count();
                                                                          </tr>
                                                                      </thead>
                                                                      <tbody>
-                                                                         <?php foreach ( $ai_logs as $log ) : ?>
+                                                                         <?php foreach ( $ai_logs as $log ) :
+                                                                            // Extract all log data into convenient variables
+                                                                            
+                                                                            // Basic log info
+                                                                            $timestamp = $log['timestamp'] ?? '';
+                                                                            $ip_address = $log['ip_address'] ?? '';
+                                                                            $fields = $log['fields'] ?? [];
+                                                                            
+                                                                            // AI response data
+                                                                            $ai_response = $log['ai_response'] ?? [];
+                                                                            $is_error = isset($ai_response['error']) && $ai_response['error'] == true;
+                                                                            
+                                                                            // Result data
+                                                                            $result = $log['result'] ?? [];
+                                                                            $is_allowed = $result['allow'] ?? false;
+                                                                            
+                                                                            // AI response details
+                                                                            $response_data = $ai_response['response'] ?? [];
+                                                                            $spam_score = $response_data['spam_score'] ?? 0;
+                                                                            $reason = $response_data['reason'] ?? '';
+                                                                            $field_errors = $response_data['field_errors'] ?? [];
+                                                                            $provider_used = $ai_response['provider_used'] ?? '';
+                                                                            
+                                                                            // Error details (if error)
+                                                                            $error_detail = $ai_response['error_detail'] ?? '';
+                                                                            $http_code = $ai_response['http_code'] ?? '';
+                                                                            $response_body = $ai_response['response_body'] ?? '';
+                                                                            $response_headers = $ai_response['response_headers'] ?? [];
+                                                                            $error_timestamp = $ai_response['timestamp'] ?? '';
+                                                                            
+                                                                            // Format timestamp for display
+                                                                            $formatted_time = $timestamp ? date('Y-m-d H:i:s', strtotime($timestamp)) : 'N/A';
+                                                                            
+                                                                            // Determine result status
+                                                                            $result_status = $is_error ? 'Error' : ($is_allowed ? 'Allowed' : 'Blocked');
+                                                                            $result_class = $is_error ? 'error' : ($is_allowed ? 'allow' : 'block');
+                                                                            
+                                                                            ?>
                                                                              <tr>
-                                                                                 <td><?php echo esc_html(date('Y-m-d H:i:s', strtotime($log['timestamp']))); ?></td>
-                                                                                 <td><?php echo esc_html($log['ip_address']); ?></td>
+                                                                                 <td><?php echo esc_html($formatted_time); ?></td>
+                                                                                 <td><?php echo esc_html($ip_address); ?></td>
                                                                                  <td>
-                                                                                     <button type="button" class="button button-small maspik-view-fields" data-fields='<?php echo esc_attr(wp_json_encode($log['fields'])); ?>'>
+                                                                                     <button type="button" class="button button-small maspik-view-fields" data-fields='<?php echo esc_attr(wp_json_encode($fields)); ?>'>
                                                                                          <?php esc_html_e('View Fields', 'contact-forms-anti-spam'); ?>
                                                                                      </button>
                                                                                  </td>
                                                                                  <td>
-                                                                                     <span class="maspik-score-<?php echo esc_attr($log['ai_response']['response']['spam_score'] ?? 0); ?>">
-                                                                                         <?php echo esc_html($log['ai_response']['response']['spam_score'] ?? 'N/A'); ?>
+                                                                                     <span class="maspik-score-<?php echo esc_attr($spam_score); ?>">
+                                                                                         <?php echo esc_html($spam_score ?: 'N/A'); ?>
                                                                                      </span>
                                                                                  </td>
                                                                                  <td>
-                                                                                     <span class="maspik-result-<?php echo esc_attr($log['result']['allow'] ? 'allow' : 'block'); ?>">
-                                                                                        <?php
-                                                                                         $is_error = isset($log['ai_response']['error']) && $log['ai_response']['error'] == "true" ? true : false;
-                                                                                         echo $is_error ? "Error" : esc_html($log['result']['allow'] ? 'Allowed' : 'Blocked'); 
-                                                                                         ?>
+                                                                                     <span class="maspik-result-<?php echo esc_attr($result_class); ?>">
+                                                                                         <?php echo esc_html($result_status); ?>
                                                                                      </span>
                                                                                  </td>
-                                                                                 <td><?php 
-                                                                                 echo esc_html(
-                                                                                     isset($log['ai_response']['response']['reason']) && $log['ai_response']['response']['reason'] ? 
-                                                                                         $log['ai_response']['response']['reason'] : 
-                                                                                         (isset($log['ai_response']['response_body']) && $log['ai_response']['response_body'] ? 
-                                                                                             $log['ai_response']['response_body'] : 
-                                                                                             'N/A'
-                                                                                         )
-                                                                                 );
-                                                                                 if(isset($log['ai_response'])){
-                                                                                     echo '<br>';
-                                                                                     echo isset($log['ai_response']['response']['field_errors']) ? esc_html(json_encode($log['ai_response']['response']['field_errors'])) : 
-                                                                                          (isset($log['result']['reason']) ? esc_html(json_encode($log['result']['reason'])) : '');
-                                                                                 }
-                                                                                 ?></td>
+                                                                                 <td>
+                                                                                     <?php 
+                                                                                     if ($is_error) {
+                                                                                         // Display error information in a readable format
+                                                                                         echo '<div class="maspik-error-response">';
+                                                                                         echo '<strong>Error:</strong> ' . esc_html($error_detail ?: 'Unknown error') . '<br>';
+                                                                                         
+                                                                                         if ($http_code) {
+                                                                                             echo '<strong>HTTP Code:</strong> ' . esc_html($http_code) . '<br>';
+                                                                                         }
+                                                                                         
+                                                                                         if ($response_body) {
+                                                                                             // Try to decode JSON for better display
+                                                                                             $json_body = json_decode($response_body, true);
+                                                                                             if ($json_body) {
+                                                                                                 echo '<strong>Response:</strong><br>';
+                                                                                                 echo '<pre style="font-size: 11px; background: #f1f1f1; padding: 5px; margin: 5px 0; border-radius: 3px; max-height: 100px; overflow-y: auto;">';
+                                                                                                 echo esc_html(json_encode($json_body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                                                                                                 echo '</pre>';
+                                                                                             } else {
+                                                                                                 echo '<strong>Response:</strong> ' . esc_html(substr($response_body, 0, 200)) . (strlen($response_body) > 200 ? '...' : '');
+                                                                                             }
+                                                                                         }
+                                                                                         
+                                                                                         if ($error_timestamp) {
+                                                                                             echo '<strong>Time:</strong> ' . esc_html($error_timestamp);
+                                                                                         }
+                                                                                         
+                                                                                         echo '</div>';
+                                                                                     } else {
+                                                                                         // Display successful response
+                                                                                         if ($reason) {
+                                                                                             echo '<div class="maspik-success-response">';
+                                                                                             echo '<strong>Reason:</strong> ' . esc_html($reason) . '<br>';
+                                                                                             
+                                                                                             if (!empty($field_errors)) {
+                                                                                                 echo '<strong>Field Errors:</strong><br>';
+                                                                                                 echo '<ul style="margin: 5px 0; padding-left: 15px;">';
+                                                                                                 foreach ($field_errors as $field => $error) {
+                                                                                                     echo '<li><strong>' . esc_html($field) . ':</strong> ' . esc_html($error) . '</li>';
+                                                                                                 }
+                                                                                                 echo '</ul>';
+                                                                                             }
+                                                                                             
+                                                                                             if ($provider_used) {
+                                                                                                 echo '<strong>AI Provider:</strong> ' . esc_html($provider_used);
+                                                                                             }
+                                                                                             
+                                                                                             echo '</div>';
+                                                                                         } else {
+                                                                                             echo '<span class="maspik-no-reason">No detailed reason provided</span>';
+                                                                                         }
+                                                                                     }
+                                                                                     ?></td>
                                                                              </tr>
                                                                          <?php endforeach; ?>
                                                                      </tbody>

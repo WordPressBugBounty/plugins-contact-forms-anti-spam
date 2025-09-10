@@ -484,12 +484,12 @@ function efas_add_to_log($type = '', $input = '', $post = null, $source = "Eleme
         $ip = maspik_get_real_ip();
         $countryName = "Other (Unknown)";
         
-        $response = wp_remote_get("http://www.geoplugin.net/json.gp?ip=" . $ip );
+        $response = wp_remote_get("https://free.freeipapi.com/api/json/" . $ip );
         if ( !is_wp_error($response) && wp_remote_retrieve_response_code($response) == 200 ) {
             $body = wp_remote_retrieve_body($response);
             $geoData = json_decode($body, true);
-            if ( isset($geoData['geoplugin_countryName']) && !empty($geoData['geoplugin_countryName']) ) {
-                $countryName = sanitize_text_field($geoData['geoplugin_countryName']);
+            if ( isset($geoData['countryName']) && !empty($geoData['countryName']) ) {
+                $countryName = sanitize_text_field($geoData['countryName']);
             }
         }
         
@@ -839,6 +839,8 @@ function efas_if_plugin_is_affective($plugin , $status = "no"){
       return efas_if_plugin_is_active('fluentforms')  && maspik_get_settings( "maspik_support_fluentforms_forms", 'form-toggle' ) != $status ;
     }else if($plugin == 'Bricks'){
       return efas_if_plugin_is_active('bricks')  && maspik_get_settings( "maspik_support_bricks_forms", 'form-toggle' ) != $status ;
+    }else if($plugin == 'Breakdance'){
+      return efas_if_plugin_is_active('breakdance')  && maspik_get_settings( "maspik_support_breakdance_forms", 'form-toggle' ) != $status ;
     }else if($plugin == 'Forminator'){
       return efas_if_plugin_is_active('forminator')  && maspik_get_settings( "maspik_support_forminator_forms", 'form-toggle' ) != $status ;
     }else if($plugin == 'Wordpress Registration'){
@@ -893,7 +895,14 @@ function efas_if_plugin_is_active($plugin){
         return maspik_is_plugin_active('everest-forms/everest-forms.php');
     }else if($plugin == 'Wordpress Registration'){
       return get_option('users_can_register') == 1;
-    }else{
+    }else if($plugin == 'bitform'){
+        return maspik_is_plugin_active('bit-form/bitforms.php');
+    }else if($plugin == 'metform'){
+        return maspik_is_plugin_active('metform/metform.php');
+    }else if($plugin == 'breakdance'){
+        return maspik_is_plugin_active('breakdance/plugin.php');
+    }
+    else{
       return 1;
     }
 }

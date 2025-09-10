@@ -3312,3 +3312,65 @@ td.column-ip.column-entries {
     transform: translateY(-3px);
   }
 }
+
+/* AI Response Styling */
+.maspik-error-response {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  padding: 8px;
+  margin: 2px 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.maspik-error-response strong {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.maspik-success-response {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 4px;
+  padding: 8px;
+  margin: 2px 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.maspik-success-response strong {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.maspik-no-reason {
+  color: #6b7280;
+  font-style: italic;
+  font-size: 12px;
+}
+
+.maspik-ai-logs-table pre {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 10px !important;
+  line-height: 1.3;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  background: #f8f9fa !important;
+  border: 1px solid #e5e7eb;
+  border-radius: 3px;
+  padding: 6px !important;
+  margin: 4px 0 !important;
+  max-height: 80px !important;
+  overflow-y: auto;
+}
+
+.maspik-ai-logs-table ul {
+  margin: 4px 0 !important;
+  padding-left: 12px !important;
+}
+
+.maspik-ai-logs-table li {
+  margin: 2px 0 !important;
+  font-size: 11px;
+}

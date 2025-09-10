@@ -123,11 +123,12 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
 
     // Check country blacklist only if is pro user
     if( cfes_is_supporting("country_location") && !empty($country_blacklist) ){ 
-        $xml_data = @file_get_contents("http://www.geoplugin.net/xml.gp?ip=" . $ip);
-        if ($xml_data) {
-            $xml = simplexml_load_string($xml_data);
-            $countryCode = $xml && $xml->geoplugin_countryCode && $xml->geoplugin_countryCode != "" ? (string) $xml->geoplugin_countryCode : "Unknown";
-            $continentCode = $xml && $xml->geoplugin_continentCode && $xml->geoplugin_continentCode != "" ? (string) $xml->geoplugin_continentCode : "Unknown";
+        $response = wp_remote_get("https://free.freeipapi.com/api/json/" . $ip);
+        if ( !is_wp_error($response) && wp_remote_retrieve_response_code($response) == 200 ) {
+            $body = wp_remote_retrieve_body($response);
+            $data = json_decode($body, true);
+            $countryCode = isset($data['countryCode']) && $data['countryCode'] != "" ? $data['countryCode'] : "Unknown";
+            $continentCode = isset($data['continentCode']) && $data['continentCode'] != "" ? $data['continentCode'] : "Unknown";
             
             $selected_country_codes = array();
             $selected_continent_codes = array();

@@ -4,7 +4,7 @@
  * Plugin Name:       Maspik - Ultimate Spam Protection
  * Plugin URI:        https://wpmaspik.com/
  * Description:       The best spam protection plugin. Block spam using advanced filters, AI, blacklists, and IP verification and honeypot fields...
- * Version:           2.5.7
+ * Version:           2.5.8
  * Author:            WpMaspik
  * Author URI:        https://wpmaspik.com/?readme
  * Text Domain:       contact-forms-anti-spam
@@ -32,7 +32,7 @@ if (!defined('ABSPATH')) exit;
 /**
  * Currently plugin version.
  */
-define( 'MASPIK_VERSION', '2.5.7' );
+define( 'MASPIK_VERSION', '2.5.8' );
 define('MASPIK_PLUGIN_FILE', __FILE__);
 
 /**
@@ -496,11 +496,11 @@ function maspik_deactivation_survey() {
                 spam_count: '<?php echo esc_js(get_option("spamcounter", 0)); ?>'
             };
 
-            console.log('Sending data:', data);
+            //console.log('Sending data:', data);
 
             try {
                 var ajaxTimeout = setTimeout(function() {
-                    console.log('Timeout reached - no response after 4 seconds');
+                    //console.log('Timeout reached - no response after 4 seconds');
                     isSubmitting = false;
                     $('#maspik-loader').fadeOut(200, function() {
                         proceedWithDeactivation();
@@ -513,19 +513,19 @@ function maspik_deactivation_survey() {
                     data: data,
                     timeout: 3500,
                     success: function(response) {
-                        console.log('Success response:', response);
+                    //    console.log('Success response:', response);
                         clearTimeout(ajaxTimeout);
                         $('#maspik-loader').fadeOut(200, function() {
                             proceedWithDeactivation();
                         });
                     },
                     error: function(xhr, status, error) {
-                        console.log('Error details:', {
+                        /*console.log('Error details:', {
                             status: status,
                             error: error,
                             response: xhr.responseText,
                             statusCode: xhr.status
-                        });
+                        });*/
                         clearTimeout(ajaxTimeout);
                         $('#maspik-loader').fadeOut(200, function() {
                             proceedWithDeactivation();
@@ -533,7 +533,7 @@ function maspik_deactivation_survey() {
                     }
                 });
             } catch (e) {
-                console.log('Exception in AJAX:', e);
+                //console.log('Exception in AJAX:', e);
                 $('#maspik-loader').fadeOut(200, function() {
                     proceedWithDeactivation();
                 });
