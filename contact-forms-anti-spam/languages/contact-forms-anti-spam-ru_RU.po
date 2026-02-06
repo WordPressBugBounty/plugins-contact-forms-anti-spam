@@ -533,7 +533,7 @@ msgstr "Норвежский (ÆæØøÅå)"
 #: admin/partials/maspik-admin-display.php:985
 msgid ""
 "Note that when blocking Latin languages in an individual (such as: Dutch, "
-"French), the chack is in the punctuation letters (But they are not always in "
+"French), the check is in the punctuation letters (But they are not always in "
 "use). Its to prevent false positive."
 msgstr ""
 "Обратите внимание, что при блокировке латинских языков по отдельности (например: голландский, "

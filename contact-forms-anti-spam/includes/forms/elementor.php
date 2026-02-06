@@ -160,23 +160,6 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
         }
     }
 
-    // General Check
-    $meta = $record->get_form_meta( [ 'page_url', 'remote_ip' ] );
-    $ip = isset($meta['remote_ip']['value']) && $meta['remote_ip']['value'] ? $meta['remote_ip']['value'] : maspik_get_real_ip();
-    // Country IP Check 
-    $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST, "elementor");
-    $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false;
-    $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false;
-    $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false;
-    $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : "General";
-    $error_message = cfas_get_error_text($message);
-    $spam_val = isset($GeneralCheck['value']) && $GeneralCheck['value'] ? $GeneralCheck['value'] : false;
-    if($spam){
-        efas_add_to_log($type,$reason, $form_data,"Elementor forms", $message,  $spam_val);
-        $ajax_handler->add_error( $lastKeyId, $error_message );
-        return;
-    }
-
     // Page URL Check
     $NeedPageurl = maspik_get_settings('NeedPageurl') ? maspik_get_settings('NeedPageurl') : efas_get_spam_api('NeedPageurl', 'bool');
 
@@ -188,5 +171,41 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
         efas_add_to_log('General', $reason, $form_data, 'Elementor forms', $message_key, $reason);
         $ajax_handler->add_error( $lastKeyId, $error_message );
         return;
+    }
+
+    // General Check
+    try {
+        $meta = $record->get_form_meta( [ 'page_url', 'remote_ip' ] );
+        $ip = isset($meta['remote_ip']['value']) && $meta['remote_ip']['value'] ? $meta['remote_ip']['value'] : maspik_get_real_ip();
+        // Country IP Check 
+        $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST, "elementor");
+        $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false;
+        $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false;
+        $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false;
+        $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : "General";
+        $error_message = cfas_get_error_text($message);
+        $spam_val = isset($GeneralCheck['value']) && $GeneralCheck['value'] ? $GeneralCheck['value'] : false;
+        
+        if($spam){
+            efas_add_to_log($type,$reason, $form_data,"Elementor forms", $message,  $spam_val);
+            $ajax_handler->add_error( $lastKeyId, $error_message );
+            return;
+        }
+    } catch ( Exception $e ) {
+        // On exception, don't block the form - log error and allow submission
+        if ( defined('WP_DEBUG') && WP_DEBUG ) {
+            error_log('Maspik Elementor GeneralCheck Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+        }
+        // Log to spam log for debugging
+        efas_add_to_log('General', 'Exception in GeneralCheck: ' . $e->getMessage(), $form_data, 'Elementor forms', 'general_check_exception', '');
+        // Don't block - allow submission to continue
+    } catch ( Error $e ) {
+        // On fatal error, don't block the form - log error and allow submission
+        if ( defined('WP_DEBUG') && WP_DEBUG ) {
+            error_log('Maspik Elementor GeneralCheck Fatal Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+        }
+        // Log to spam log for debugging
+        efas_add_to_log('General', 'Fatal Error in GeneralCheck: ' . $e->getMessage(), $form_data, 'Elementor forms', 'general_check_fatal_error', '');
+        // Don't block - allow submission to continue
     }
 }

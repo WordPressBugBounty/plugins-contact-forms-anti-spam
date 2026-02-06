@@ -46,10 +46,13 @@ function maspik_delete_filter() {
         $update_data = array('spam_tag' => 'not spam');
         $where = array('id' => $row_id);
 
-        // Convert textarea_field to textarea_blacklist for consistency
-        $spam_label = ($spam_label === "textarea_field") ? "textarea_blacklist" : $spam_label;
+        // Convert textarea_field to text_blacklist (merged fields)
+        // textarea_blacklist has been merged into text_blacklist
+        if ($spam_label === "textarea_field" || $spam_label === "textarea_blacklist") {
+            $spam_label = "text_blacklist";
+        }
 
-        if($spam_label == "text_blacklist" || $spam_label == "textarea_blacklist" || $spam_label == "emails_blacklist" || $spam_label == "ip_blacklist"){
+        if($spam_label == "text_blacklist" || $spam_label == "emails_blacklist" || $spam_label == "ip_blacklist"){
             
             $option_arval = efas_makeArray(maspik_get_settings($spam_label));
 
@@ -170,6 +173,143 @@ function maspik_delete_filter() {
         ]);
     }
     add_action('wp_ajax_maspik_delete_row', 'maspik_delete_row');
+
+/**
+ * Mark log entry as not spam and optionally report AI false positive.
+ * Always fail-open: marking succeeds even if the report call fails.
+ */
+function maspik_not_spam() {
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(array('message' => 'Permission denied'));
+    }
+
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'maspik_delete_action')) {
+        wp_send_json_error(array('message' => 'Invalid security token'));
+    }
+
+    $row_id      = isset($_POST['row_id']) ? absint($_POST['row_id']) : 0;
+    $send_report = !empty($_POST['send_report']);
+
+    if (!$row_id) {
+        wp_send_json_error(array('message' => 'Invalid row ID.'));
+    }
+
+    global $wpdb;
+    $table = maspik_get_logtable();
+    $row   = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $row_id), ARRAY_A);
+
+    if (!$row) {
+        wp_send_json_error(array('message' => 'Row not found.'));
+    }
+    
+    // Get spam_type from row data (source of truth)
+    $spam_type = '';
+    if (isset($row['spam_type']) && !empty($row['spam_type'])) {
+        $spam_type = sanitize_text_field(trim($row['spam_type']));
+    }
+    
+    // Fallback to POST value if row doesn't have it
+    if (empty($spam_type)) {
+        $spam_type = isset($_POST['spam_type']) ? sanitize_text_field(wp_unslash($_POST['spam_type'])) : '';
+    }
+    
+    // Final fallback
+    if (empty($spam_type)) {
+        $spam_type = 'mark_not_spam';
+    }
+
+    $update = $wpdb->update(
+        $table,
+        array('spam_tag' => 'not spam'),
+        array('id' => $row_id),
+        array('%s'),
+        array('%d')
+    );
+
+    if ($update === false) {
+        wp_send_json_error(array('message' => 'Failed to update row.', 'wpdb_error' => $wpdb->last_error));
+    }
+
+    $report_sent  = false;
+    $report_error = null;
+
+    // Always send report if user requested it, regardless of spam type
+    if ($send_report) {
+        try {
+            $server_ip = isset($_SERVER['SERVER_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_ADDR'])) : '';
+            if (!$server_ip && function_exists('gethostbyname')) {
+                $server_ip = gethostbyname(parse_url(home_url(), PHP_URL_HOST));
+            }
+
+            $payload = array(
+                'plugin_report'  => true,
+                'site_url'       => home_url(),
+                'server_ip'      => $server_ip,
+                'server_host'    => isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '',
+                'wp_version'     => get_bloginfo('version'),
+                'plugin_version' => defined('MASPIK_VERSION') ? MASPIK_VERSION : '',
+                'marked_at'      => current_time('mysql'),
+                'action'         => $spam_type,
+                'log_entry'      => $row,
+            );
+
+            $headers = array(
+                'Content-Type'  => 'application/json',
+                'plugin_report' => 'true',
+            );
+
+            $body_json = wp_json_encode($payload);
+            
+            // Validate JSON encoding
+            if ($body_json === false || json_last_error() !== JSON_ERROR_NONE) {
+                $report_error = 'JSON encoding failed';
+            } else {
+                $response = wp_remote_post(
+                    'https://ipapi.wpmaspik.com/report',
+                    array(
+                        'headers'   => $headers,
+                        'body'      => $body_json,
+                        'timeout'   => 5,
+                        'sslverify' => true,
+                    )
+                );
+
+                if (is_wp_error($response)) {
+                    $report_error = $response->get_error_message();
+                } else {
+                    $code = wp_remote_retrieve_response_code($response);
+                    $response_body = wp_remote_retrieve_body($response);
+                    if ($code >= 200 && $code < 300) {
+                        $report_sent = true;
+                    } else {
+                        $report_error = 'HTTP ' . $code . ( !empty($response_body) ? ': ' . substr($response_body, 0, 200) : '' );
+                    }
+                }
+            }
+        } catch ( Exception $e ) {
+            // On exception, don't break the site - just log error and continue
+            $report_error = 'Exception: ' . $e->getMessage();
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Maspik False Positive Report Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            }
+        } catch ( Error $e ) {
+            // On fatal error, don't break the site - just log error and continue
+            $report_error = 'Fatal Error: ' . $e->getMessage();
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Maspik False Positive Report Fatal Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            }
+        }
+    }
+
+    wp_send_json_success(
+        array(
+            'row_id'       => $row_id,
+            'report_sent'  => $report_sent,
+            'report_error' => $report_error,
+        )
+    );
+}
+add_action('wp_ajax_maspik_not_spam', 'maspik_not_spam');
 
 //Spam log delete functions -- END
 
@@ -641,8 +781,12 @@ function efas_makeArray($string,$type="") {
         return  array_filter($array); //removes all null values
     }
 
-    $string = strtolower($string);
-    return explode("\n", str_replace("\r", "", $string));
+    // Split first, then lowercase each item separately
+    // This approach is better for non-ASCII characters (e.g., Cyrillic, Arabic)
+    // as it preserves encoding better than doing strtolower() on the entire string
+    $array = explode("\n", str_replace("\r", "", $string));
+    $array = array_map('strtolower', $array);
+    return $array;
 }
 
 // Check if field value exists in string
@@ -686,8 +830,6 @@ function efas_get_spam_api($field = "text_field",$type = "array") {
 
     $api_field = $spamapi_option[$field];
 
-    //$api_field = "";
-
     if ($type != "array") {
             // Keep the field value if it's not an array
             $api_field = is_array($spamapi_option[$field]) ? $spamapi_option[$field][0] : $spamapi_option[$field] ;
@@ -695,14 +837,26 @@ function efas_get_spam_api($field = "text_field",$type = "array") {
             if ($api_field === "0" || $api_field === 0) {
                 return 0;
             }
-            $clean = sanitize_text_field($api_field);
+            // Note: We don't use sanitize_text_field here because:
+            // 1. Data from WordPress (text_blacklist) doesn't go through sanitize_text_field after retrieval
+            // 2. sanitize_text_field can corrupt non-ASCII characters (e.g., Cyrillic, Arabic)
+            // 3. Data is displayed with esc_html() in admin, which is sufficient for XSS protection
+            // 4. Data is only used for string comparison, not direct output to users
+            $clean = trim($api_field);
             return $clean;
     } else {
         // Convert non-array fields to an array using efas_makeArray 
         $api_field = efas_makeArray($spamapi_option[$field],$type);
 
-        //Better to sanitize
-        $clean = array_map('sanitize_text_field', $api_field);
+        // Note: We don't use sanitize_text_field here because:
+        // 1. Data from WordPress (text_blacklist) doesn't go through sanitize_text_field after retrieval
+        // 2. sanitize_text_field can corrupt non-ASCII characters (e.g., Cyrillic, Arabic)
+        //    This causes mismatches when comparing API data vs WordPress data
+        // 3. Data is displayed with esc_html() in admin (maspik_spam_api_list), which is sufficient for XSS protection
+        // 4. Data is only used for string comparison (maspik_is_field_value_exist_in_string), not direct output
+        // 5. WordPress automatically escapes data stored in options table
+        // Just trim whitespace to match how WordPress data is processed
+        $clean = array_map('trim', $api_field);
 
         // Remove empty values from Array
         $clean = array_filter($clean, function($value) {
@@ -1252,7 +1406,7 @@ function Maspik_admin_notice() {
                             location.reload();
                         },
                         error: function(error) {
-                            console.log(error);
+                            // Error handled silently
                         }
                     });
                 });
@@ -1270,7 +1424,7 @@ function Maspik_admin_notice() {
                             $('.notice.is-dismissible').remove();
                         },
                         error: function(error) {
-                            console.log(error);
+                            // Error handled silently
                         }
                     });
                 });
@@ -1454,8 +1608,46 @@ function Maspik_import_settings() {
 
     global $MASPIK_IMPORT_OPTIONS;
     
+    // Handle textarea_blacklist merge if it exists in imported data
+    if (isset($sanitized_data['textarea_blacklist']) && !empty($sanitized_data['textarea_blacklist'])) {
+        $textarea_blacklist = str_replace(",,," , "\n" ,$sanitized_data['textarea_blacklist']);
+        $text_blacklist = isset($sanitized_data['text_blacklist']) ? str_replace(",,," , "\n" ,$sanitized_data['text_blacklist']) : maspik_get_settings('text_blacklist');
+        
+        // Convert both to arrays
+        $text_array = !empty($text_blacklist) ? efas_makeArray($text_blacklist) : array();
+        $textarea_array = efas_makeArray($textarea_blacklist);
+        
+        // Merge arrays, removing duplicates (case-insensitive)
+        foreach ($textarea_array as $item) {
+            $item_trimmed = trim($item);
+            if (!empty($item_trimmed)) {
+                // Check if item already exists (case-insensitive)
+                $exists = false;
+                foreach ($text_array as $existing_item) {
+                    if (strtolower(trim($existing_item)) === strtolower($item_trimmed)) {
+                        $exists = true;
+                        break;
+                    }
+                }
+                if (!$exists) {
+                    $text_array[] = $item_trimmed;
+                }
+            }
+        }
+        
+        // Update text_blacklist with merged content
+        $sanitized_data['text_blacklist'] = str_replace("\n" , ",,," , implode("\n", $text_array));
+        // Remove textarea_blacklist from import
+        unset($sanitized_data['textarea_blacklist']);
+    }
+    
     // Iterate over each option
     foreach ($MASPIK_IMPORT_OPTIONS as $option) {
+        // Skip textarea_blacklist as it's been merged
+        if ($option === 'textarea_blacklist') {
+            continue;
+        }
+        
         // Check if the option exists in $sanitized_data and is not empty
         if (isset($sanitized_data[$option]) && !empty($sanitized_data[$option])) {
             // Perform replacements only if the option exists and is not empty
@@ -2232,8 +2424,46 @@ function maspik_handle_load_template() {
         // Delete existing settings
         //$wpdb->query("DELETE FROM $table");
 
+        // Merge textarea_blacklist into text_blacklist if both exist in template
+        if (isset($template_settings['textarea_blacklist']) && !empty($template_settings['textarea_blacklist'])) {
+            $text_blacklist = isset($template_settings['text_blacklist']) ? $template_settings['text_blacklist'] : '';
+            $textarea_blacklist = $template_settings['textarea_blacklist'];
+            
+            // Convert both to arrays
+            $text_array = !empty($text_blacklist) ? efas_makeArray($text_blacklist) : array();
+            $textarea_array = efas_makeArray($textarea_blacklist);
+            
+            // Merge arrays, removing duplicates (case-insensitive)
+            foreach ($textarea_array as $item) {
+                $item_trimmed = trim($item);
+                if (!empty($item_trimmed)) {
+                    // Check if item already exists (case-insensitive)
+                    $exists = false;
+                    foreach ($text_array as $existing_item) {
+                        if (strtolower(trim($existing_item)) === strtolower($item_trimmed)) {
+                            $exists = true;
+                            break;
+                        }
+                    }
+                    if (!$exists) {
+                        $text_array[] = $item_trimmed;
+                    }
+                }
+            }
+            
+            // Update template settings
+            $template_settings['text_blacklist'] = implode("\n", $text_array);
+            // Remove textarea_blacklist from template settings
+            unset($template_settings['textarea_blacklist']);
+        }
+
         // Insert new template settings
         foreach ($template_settings as $key => $value) {
+            // Skip textarea_blacklist if it still exists (shouldn't happen after merge above)
+            if ($key === 'textarea_blacklist') {
+                continue;
+            }
+            
             $result = $wpdb->replace(
                 $table,
                 array(
@@ -2269,8 +2499,10 @@ function maspik_enqueue_admin_scripts() {
         wp_enqueue_script('maspik-spamlog', plugin_dir_url(__FILE__) . '../admin/js/maspik-spamlog.js', array('jquery'), MASPIK_VERSION, true);
         
         wp_localize_script('maspik-spamlog', 'maspikAdmin', array(
-        'nonce' => wp_create_nonce('maspik_delete_action'),
-        'ajaxurl' => admin_url('admin-post.php')
+            'nonce'    => wp_create_nonce('maspik_delete_action'),
+            // Provide both keys for compatibility; JS will prefer ajax_url
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'ajaxurl'  => admin_url('admin-ajax.php'),
         ));
     }
 }
@@ -2367,3 +2599,125 @@ function maspik_handle_clear_ai_logs() {
     }
 }
 add_action('wp_ajax_maspik_clear_ai_logs', 'maspik_handle_clear_ai_logs');
+
+/**
+ * Merge textarea_blacklist into text_blacklist
+ * This function runs once on admin_init to migrate existing data
+ */
+function maspik_merge_textarea_blacklist() {
+    // Check if migration has already been done
+    $migration_done = get_option('maspik_blacklist_merged', false);
+    if ($migration_done) {
+        return;
+    }
+
+    // Get current values
+    $text_blacklist = maspik_get_settings('text_blacklist');
+    $textarea_blacklist = maspik_get_settings('textarea_blacklist');
+
+    // Check if textarea_blacklist has content
+    if (!empty($textarea_blacklist)) {
+        // Convert both to arrays
+        $text_array = !empty($text_blacklist) ? efas_makeArray($text_blacklist) : array();
+        $textarea_array = efas_makeArray($textarea_blacklist);
+
+        // Merge arrays, removing duplicates (case-insensitive)
+        $merged_array = $text_array;
+        foreach ($textarea_array as $item) {
+            $item_trimmed = trim($item);
+            if (!empty($item_trimmed)) {
+                // Check if item already exists (case-insensitive)
+                $exists = false;
+                foreach ($merged_array as $existing_item) {
+                    if (strtolower(trim($existing_item)) === strtolower($item_trimmed)) {
+                        $exists = true;
+                        break;
+                    }
+                }
+                if (!$exists) {
+                    $merged_array[] = $item_trimmed;
+                }
+            }
+        }
+
+        // Convert back to newline-separated string
+        $merged_string = implode("\n", $merged_array);
+
+        // Save merged content to text_blacklist
+        maspik_save_settings('text_blacklist', $merged_string);
+
+        // Set flag to show notice
+        update_option('maspik_blacklist_merge_notice', true);
+    }
+
+    // Mark migration as done
+    update_option('maspik_blacklist_merged', time());
+}
+add_action('admin_init', 'maspik_merge_textarea_blacklist', 1);
+
+/**
+ * Show admin notice about blacklist fields merge
+ */
+function maspik_show_blacklist_merge_notice() {
+    // Check if we should show the notice
+    $show_notice = get_option('maspik_blacklist_merge_notice', false);
+    if (!$show_notice) {
+        return;
+    }
+
+    // Only show on Maspik admin pages
+    if (!isset($_GET['page']) || strpos($_GET['page'], 'maspik') === false) {
+        return;
+    }
+
+    // Check if notice was dismissed
+    $dismissed = get_transient('maspik_blacklist_merge_notice_dismissed');
+    if ($dismissed) {
+        return;
+    }
+
+    ?>
+    <div class="notice notice-success is-dismissible maspik-blacklist-merge-notice">
+        <p>
+            <strong><?php esc_html_e('Maspik: Blacklist Fields Merged', 'contact-forms-anti-spam'); ?></strong><br>
+            <?php esc_html_e('The textarea blacklist field has been merged into the text blacklist field. All keywords from the textarea field have been added to the text field, and both fields now use the same unified blacklist. You can manage all keywords in the "Text Fields" section.', 'contact-forms-anti-spam'); ?>
+        </p>
+    </div>
+    <script>
+    jQuery(document).ready(function($) {
+        $(document).on('click', '.maspik-blacklist-merge-notice .notice-dismiss', function() {
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'maspik_dismiss_blacklist_merge_notice',
+                    nonce: '<?php echo wp_create_nonce('maspik_dismiss_blacklist_merge_notice'); ?>'
+                }
+            });
+        });
+    });
+    </script>
+    <?php
+}
+add_action('admin_notices', 'maspik_show_blacklist_merge_notice');
+
+/**
+ * AJAX handler to dismiss the blacklist merge notice
+ */
+function maspik_dismiss_blacklist_merge_notice_handler() {
+    check_ajax_referer('maspik_dismiss_blacklist_merge_notice', 'nonce');
+    
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Permission denied');
+        return;
+    }
+
+    // Set transient to dismiss notice for 30 days
+    set_transient('maspik_blacklist_merge_notice_dismissed', true, 30 * DAY_IN_SECONDS);
+    
+    // Clear the flag
+    delete_option('maspik_blacklist_merge_notice');
+    
+    wp_send_json_success();
+}
+add_action('wp_ajax_maspik_dismiss_blacklist_merge_notice', 'maspik_dismiss_blacklist_merge_notice_handler');

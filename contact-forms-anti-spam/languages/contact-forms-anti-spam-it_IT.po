@@ -1922,7 +1922,7 @@ msgstr "Cos'è la Verifica IP?"
 #: admin/partials/maspik-admin-display.php:1074
 msgid ""
 "When blocking Latin languages in an individual (such as: Dutch, French), the "
-"chack is in the punctuation letters (But they are not always in use). Its to "
+"check is in the punctuation letters (But they are not always in use). Its to "
 "prevent false positive."
 msgstr ""
 "Quando si bloccano le lingue latine in un individuo (come: olandese, "

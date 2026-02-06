@@ -221,35 +221,52 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
     if ( !$spam && $form && is_array($post) ) {
         $ai_enabled = maspik_get_settings('maspik_ai_enabled');
         if ( $ai_enabled ) {
-            // Prepare fields for AI analysis
-            //add log
-            $fields = maspik_prepare_fields_for_ai($post, $form);
+            try {
+                // Prepare fields for AI analysis
+                $fields = maspik_prepare_fields_for_ai($post, $form);
 
-            if ( !empty($fields) ) {
-                $ai_result = maspik_ai_check_submission($fields);
-                //add log
-                //error_log("AI-based spam check result: " . json_encode($ai_result));
-                if ( isset($ai_result['allow']) && !$ai_result['allow'] ) {
-                    $spam = true;
-                    $reason = isset($ai_result['reason']) ? $ai_result['reason'] : 'AI detected spam';
-                    $message = 'ai_spam_check';
-                    return array('spam' => $spam, 'reason' => $reason, 'message' => $message, 'value' => 1, 'type' => 'AI check');
+                if ( !empty($fields) ) {
+                    $ai_result = maspik_ai_check_submission($fields,$form);
+                    
+                    // Only block if AI explicitly says it's spam AND we got a valid result
+                    if ( isset($ai_result['allow']) && $ai_result['allow'] === false ) {
+                        $spam = true;
+                        $reason = isset($ai_result['reason']) ? $ai_result['reason'] : 'AI detected spam';
+                        $message = 'ai_spam_check';
+                        return array('spam' => $spam, 'reason' => $reason, 'message' => $message, 'value' => 1, 'type' => 'maspik_matrix');
+                    }
+                    // If AI check failed or returned allow=true, continue (don't block)
                 }
+            } catch ( Exception $e ) {
+                // On exception, don't block the form - log error and allow submission
+                if ( defined('WP_DEBUG') && WP_DEBUG ) {
+                    error_log('Maspik AI Check Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+                }
+                // Don't block - allow submission to continue
+            } catch ( Error $e ) {
+                // On fatal error, don't block the form - log error and allow submission
+                if ( defined('WP_DEBUG') && WP_DEBUG ) {
+                    error_log('Maspik AI Check Fatal Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+                }
+                // Don't block - allow submission to continue
             }
         }
     }
 
-    //start check IP in api
-    $do_ip_api_check = maspik_get_settings('maspikDbCheck');
-    if ($do_ip_api_check && !$spam && $form) {
-        $exists = check_ip_in_api($ip,$form);
-        if($exists){
-            $reason = "Ip: $ip, exists in Maspik blacklist" ;
-            $message = "maspikDbCheck" ;
+    // Check IP in Maspik API blacklist (only if AI check is disabled)
+    // This check is skipped when AI is enabled to avoid duplicate checks
+    $ip_api_check_enabled = maspik_get_settings('maspikDbCheck');
+    $ai_check_enabled = maspik_get_settings('maspik_ai_enabled');
+    
+    // Only perform IP API check if it's enabled AND AI check is disabled
+    if ( $ip_api_check_enabled && !$ai_check_enabled && !$spam && $form ) {
+        $exists = check_ip_in_api($ip, $form);
+        if ( $exists ) {
+            $reason = "Ip: $ip, exists in Maspik blacklist";
+            $message = "maspikDbCheck";
             return array('spam' => true, 'reason' => $reason, 'message' => $message, 'value' => 1);
         }
-    } 
-    //end check IP in api
+    }
 
     return array('spam' => $spam, 'reason' => $reason, 'message' => $message, 'value' => "");
 }
@@ -315,6 +332,54 @@ function validateTextField($field_value) {
                 $spam = "Less than *!$MinCharacters!* characters";
                 return array('spam' => $spam, 'message' => $message,"option_value" =>$MinCharacters, 'label' => "MinCharactersInTextField");
             }
+        }
+    }
+
+    // Check for emojis (applies to both text and textarea fields)
+    if(maspik_get_settings('emoji_check')){
+        if (maspik_is_contains_emoji($field_value)) {
+            return array(
+                'spam' => "Emoji found in the field",
+                'message' => "emoji_check",
+                'option_value' => $field_value,
+                'label' => "emoji_check"
+            );
+        }
+    }
+
+    // Check for maximum number of links (applies to both text and textarea fields)
+    $max_linksAPI = is_numeric( efas_get_spam_api('contain_links', $type = "bool") ) ? efas_get_spam_api('contain_links', $type = "bool") : false;
+    $max_links = is_numeric( maspik_get_settings('contain_links') ) ? maspik_get_settings('contain_links') : $max_linksAPI;
+    
+    if (is_numeric($max_links) && maspik_get_settings('textarea_link_limit_toggle')) {
+        $max_links = intval($max_links);
+        
+        // Count HTML links and http(s) links
+        $patterns = array(
+            '/<a[^>]*href[^>]*>/i',            // HTML links (<a href="...")
+            '/https?:\/\/[^\s<>"\']+/i',       // http(s):// links with any valid URL chars
+            '/www\.[a-z0-9][-a-z0-9.]+\.[a-z0-9-]+/i'  // www.domain.tld with www.
+        );
+        
+        $num_links = 0;
+        foreach ($patterns as $pattern) {
+            $matches = array();
+            $count = preg_match_all($pattern, $field_value, $matches);
+            $num_links += ($count ? $count : 0);            
+        }
+        
+        // If max_links is 0, block any links. Otherwise, block if more than max_links
+        if (($max_links === 0 && $num_links > 0) || ($max_links > 0 && $num_links > $max_links)) {
+            $message = $max_links === 0 ? 
+                "Links are not allowed" : 
+                "Contains *!more than $max_links links!*";
+            
+            return array(
+                'spam' => $message,
+                'message' => "contain_links",
+                'option_value' => $num_links,
+                'label' => "contain_links"
+            );
         }
     }
 
@@ -556,10 +621,17 @@ function checkTextareaForSpam($field_value) {
 
 
     // Get the blacklist from options and merge with API data if available
-    $textarea_blacklist = maspik_get_settings('textarea_blacklist') ? efas_makeArray(maspik_get_settings('textarea_blacklist')) : array();
+    // Using text_blacklist for both text and textarea fields (unified)
+    $textarea_blacklist = maspik_get_settings('text_blacklist') ? efas_makeArray(maspik_get_settings('text_blacklist')) : array();
+    
+    // Merge API data from both text_field and textarea_field
+    if (efas_get_spam_api('text_field')) {
+        $text_blacklist_json = efas_get_spam_api('text_field');
+        $textarea_blacklist = array_merge($textarea_blacklist, $text_blacklist_json);
+    }
     if (efas_get_spam_api('textarea_field')) {
-        $blacklist_json = efas_get_spam_api('textarea_field');
-        $textarea_blacklist = array_merge($textarea_blacklist, $blacklist_json);
+        $textarea_blacklist_json = efas_get_spam_api('textarea_field');
+        $textarea_blacklist = array_merge($textarea_blacklist, $textarea_blacklist_json);
     }
     
     foreach ($textarea_blacklist as $bad_string) {
@@ -576,7 +648,7 @@ function checkTextareaForSpam($field_value) {
                         'spam' => "field value matches pattern *!$bad_string!*", 
                         'message' => "textarea_field",
                         'option_value' => $bad_string,
-                        'label' => "textarea_blacklist"
+                        'label' => "text_blacklist"
                     );
                 }
             }
@@ -587,7 +659,7 @@ function checkTextareaForSpam($field_value) {
                 'spam' => "field value includes *!$bad_string!*",
                 'message' => "textarea_field",
                 'option_value' => $bad_string,
-                'label' => "textarea_blacklist"
+                'label' => "text_blacklist"
             );
         }
     }

@@ -164,7 +164,7 @@ function cfes_build_table() {
                 echo "<tr class='row-entries row-$row_class $not_spam_tag'>
                         <td class='column-type column-entries'>
                             " . $spam_type . "
-                            " . maspik_spam_item_option($row_id, $spam_value, $spamsrc_label) . "
+                            " . maspik_spam_item_option($row_id, $spam_value, $spam_type) . "
 
                         </td>
                         <td class='column-value column-entries'>
@@ -335,6 +335,143 @@ function maspik_process_spam_source($source) {
     </div> 
 </div>
 
+<!-- False Positive Report Modal -->
+<div id="false-positive-modal" class="modal">
+    <div class="modal-content fp-modal-content">
+      <div class="modal-content-inner fp-modal-inner">
+        <span class="close-button">&times;</span>
+        <div class="fp-modal-header">
+          <span class="dashicons dashicons-flag fp-icon"></span>
+          <h3 class="fp-modal-title"><?php esc_html_e('Mark as Not Spam', 'contact-forms-anti-spam'); ?></h3>
+        </div>
+        <div class="fp-modal-body">
+          <p class="fp-main-message"><?php esc_html_e('This entry was incorrectly flagged as spam. Help us improve Maspik by reporting this false positive.', 'contact-forms-anti-spam'); ?></p>
+          <p class="fp-sub-message"><?php esc_html_e('Your report will help us improve our spam detection algorithms and prevent similar false positives in the future.', 'contact-forms-anti-spam'); ?></p>
+        </div>
+        <div class="fp-modal-actions">
+          <button id="fp-send-report" class="fp-button fp-button-primary">
+            <span class="dashicons dashicons-yes-alt"></span>
+            <?php esc_html_e('Yes, Send Report', 'contact-forms-anti-spam'); ?>
+          </button>
+          <button id="fp-skip-report" class="fp-button fp-button-secondary">
+            <span class="dashicons dashicons-flag"></span>
+            <?php esc_html_e('Mark as Not Spam Only', 'contact-forms-anti-spam'); ?>
+          </button>
+          <button id="fp-cancel" class="fp-button fp-button-link"><?php esc_html_e('Cancel', 'contact-forms-anti-spam'); ?></button>
+        </div>
+      </div>
+    </div>
+</div>
+
+<style>
+.fp-modal-content {
+  max-width: 500px;
+}
+
+.fp-modal-inner {
+  padding: 30px;
+  text-align: center;
+}
+
+.fp-modal-header {
+  margin-bottom: 20px;
+}
+
+.fp-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #2271b1;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.fp-modal-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.fp-modal-body {
+  margin-bottom: 25px;
+  text-align: left;
+}
+
+.fp-main-message {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #1d2327;
+  margin: 0 0 12px 0;
+}
+
+.fp-sub-message {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #646970;
+  margin: 0;
+}
+
+.fp-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fp-button {
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.fp-button .dashicons {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.fp-button-primary {
+  background-color: #2271b1;
+  color: #fff;
+}
+
+.fp-button-primary:hover {
+  background-color: #135e96;
+  color: #fff;
+}
+
+.fp-button-secondary {
+  background-color: #f0f0f1;
+  color: #2c3338;
+}
+
+.fp-button-secondary:hover {
+  background-color: #dcdcde;
+  color: #2c3338;
+}
+
+.fp-button-link {
+  background: transparent;
+  color: #646970;
+  padding: 8px;
+  font-weight: 400;
+}
+
+.fp-button-link:hover {
+  color: #2271b1;
+  background: transparent;
+}
+</style>
+
 
           
   <div id="icon-themes" class="icon32"></div>   
@@ -382,11 +519,9 @@ for (var i = 0; i < acc.length; i++) {
         var panel = this.parentElement.parentElement.nextElementSibling;
         if (panel.style.maxHeight) {
             panel.style.maxHeight = null;
-            // todo: remove class from the row
             this.parentElement.parentElement.parentElement.classList.remove("expanded");
         } else {
             panel.style.maxHeight = (panel.scrollHeight) + 'px';
-            // todo: add class to the row
             this.parentElement.parentElement.parentElement.classList.add("expanded");
         }
     });
@@ -400,7 +535,6 @@ toggleAllBtn.addEventListener("click", function() {
             var panel = acc[i].parentElement.parentElement.nextElementSibling;
             acc[i].classList.remove("active");
             panel.style.maxHeight = null;
-            // todo: remove class from the row
             acc[i].parentElement.parentElement.parentElement.classList.remove("expanded");
         }
         toggleAllBtn.textContent = "Expand All";  // Change button text
@@ -410,7 +544,6 @@ toggleAllBtn.addEventListener("click", function() {
             var panel = acc[i].parentElement.parentElement.nextElementSibling;
             acc[i].classList.add("active");
             panel.style.maxHeight = panel.scrollHeight + 'px';
-            // todo: add class to the row
             acc[i].parentElement.parentElement.parentElement.classList.add("expanded");
         }
         toggleAllBtn.textContent = "Collapse All";  // Change button text
@@ -437,90 +570,93 @@ document.addEventListener('DOMContentLoaded', function() {
     let rowIdToDelete = null; // Add a global variable
     let spamValueToDelete = null;
     let spamTypeToDelete = null;
+    const filterDeleteModal = document.getElementById('filter-delete-modal');
+    const fpReportModal = document.getElementById('false-positive-modal');
+    const fpSendBtn = document.getElementById('fp-send-report');
+    const fpSkipBtn = document.getElementById('fp-skip-report');
+    const fpCancelBtn = document.getElementById('fp-cancel');
+    const ajaxUrl = (typeof maspikAdmin !== 'undefined' && (maspikAdmin.ajax_url || maspikAdmin.ajaxurl)) ? (maspikAdmin.ajax_url || maspikAdmin.ajaxurl) : (typeof ajaxurl !== 'undefined' ? ajaxurl : '');
 
-    // Handle Delete Action
-    document.querySelectorAll('.delete-actionXXX').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            // Save the data in variables
-            rowIdToDelete = this.dataset.rowId;
-            spamValueToDelete = this.dataset.spamValue;
-            spamTypeToDelete = this.dataset.spamType;
-            
-            const modal = document.getElementById('confirmation-modal');
-            modal.style.display = 'block';
-            
-            document.getElementById('confirm-delete').onclick = function() {
-                // Delete logic using the saved variables
-                jQuery.ajax({
-                    url: maspikAdmin.ajax_url,
-                    type: 'POST',
-                    data: {
-                        action: 'maspik_delete_row',
-                        nonce: maspikAdmin.nonce,
-                        row_id: rowIdToDelete,
-                        spam_value: spamValueToDelete,
-                        spam_type: spamTypeToDelete
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            // Delete the row from the DOM
-                            const rowToDelete = document.querySelector(`[data-row-id="${rowIdToDelete}"]`).closest('tr');
-                            if (rowToDelete) {
-                                rowToDelete.remove();
-                            }
-                        }
-                    }
-                });
-                modal.style.display = 'none';
-            };
-            
-            document.getElementById('cancel-delete').onclick = function() {
-                modal.style.display = 'none';
-            };
+    function closeFpModal() {
+        if (fpReportModal) {
+            fpReportModal.style.display = 'none';
+        }
+    }
+
+    function closeFilterModal() {
+        if (filterDeleteModal) {
+            filterDeleteModal.style.display = 'none';
+        }
+    }
+
+    function markRowNotSpamInDom(rowId) {
+        const rowToUpdate = document.querySelector(`[data-row-id="${rowId}"]`)?.closest('tr');
+        if (rowToUpdate) {
+            rowToUpdate.classList.add('not-a-spam');
+        }
+    }
+
+    function sendNotSpamRequest(sendReport) {
+        // Ensure spam_type is set
+        var spamType = spamTypeToDelete || '';
+        
+        jQuery.ajax({
+            url: ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'maspik_not_spam',
+                nonce: maspikAdmin.nonce,
+                row_id: rowIdToDelete,
+                spam_value: spamValueToDelete,
+                spam_type: spamType,
+                send_report: sendReport ? 1 : 0
+            },
+            success: function(response) {
+                if (response && response.success) {
+                    markRowNotSpamInDom(rowIdToDelete);
+                }
+            }
         });
-    });
+    }
+
+    // Handle Delete Action - handled by maspik-spamlog.js (spam-delete-button)
 
     // Handle Not Spam Action
     document.querySelectorAll('.not-spam-action').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
+            e.stopPropagation(); // Stop event from bubbling to jQuery handlers
+            e.stopImmediatePropagation(); // Stop other handlers on the same element
             // Save the data in variables
             rowIdToDelete = this.dataset.rowId;
             spamValueToDelete = this.dataset.spamValue;
-            spamTypeToDelete = this.dataset.spamType;
-            
-            const modal = document.getElementById('filter-delete-modal');
-            modal.style.display = 'block';
-            
-            document.getElementById('confirm-del-filter').onclick = function() {
-                // Not spam logic using the saved variables
-                jQuery.ajax({
-                    url: maspikAdmin.ajax_url,
-                    type: 'POST',
-                    data: {
-                        action: 'maspik_not_spam',
-                        nonce: maspikAdmin.nonce,
-                        row_id: rowIdToDelete,
-                        spam_value: spamValueToDelete,
-                        spam_type: spamTypeToDelete
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            // Update the row in the DOM
-                            const rowToUpdate = document.querySelector(`[data-row-id="${rowIdToDelete}"]`).closest('tr');
-                            if (rowToUpdate) {
-                                rowToUpdate.classList.add('not-a-spam');
-                            }
-                        }
-                    }
-                });
-                modal.style.display = 'none';
-            };
-            
-            document.getElementById('cancel-del-filter').onclick = function() {
-                modal.style.display = 'none';
-            };
+            // Get spam_type from data attribute (data-spam-type becomes dataset.spamType in JavaScript)
+            spamTypeToDelete = this.dataset.spamType || this.getAttribute('data-spam-type') || '';
+
+            // Always show false positive report modal for all spam types
+            if (fpReportModal) {
+                fpReportModal.style.display = 'block';
+
+                if (fpSendBtn) {
+                    fpSendBtn.onclick = function() {
+                        sendNotSpamRequest(true);
+                        closeFpModal();
+                    };
+                }
+
+                if (fpSkipBtn) {
+                    fpSkipBtn.onclick = function() {
+                        sendNotSpamRequest(false);
+                        closeFpModal();
+                    };
+                }
+
+                if (fpCancelBtn) {
+                    fpCancelBtn.onclick = function() {
+                        closeFpModal();
+                    };
+                }
+            }
         });
     });
 

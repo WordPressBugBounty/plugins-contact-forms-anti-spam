@@ -1818,7 +1818,7 @@ msgstr "IP検証とは何ですか？"
 #: admin/partials/maspik-admin-display.php:1074
 msgid ""
 "When blocking Latin languages in an individual (such as: Dutch, French), the "
-"chack is in the punctuation letters (But they are not always in use). Its to "
+"check is in the punctuation letters (But they are not always in use). Its to "
 "prevent false positive."
 msgstr "個別の言語（例：オランダ語、フランス語）をブロックする場合、チェックは句読点にあります（ただし常に使用されるわけではありません）。これは誤検出を防ぐためです。"
 

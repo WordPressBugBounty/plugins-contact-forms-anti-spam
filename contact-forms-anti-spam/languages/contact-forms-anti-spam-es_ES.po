@@ -1878,7 +1878,7 @@ msgstr "¿Qué es la verificación de IP?"
 #: admin/partials/maspik-admin-display.php:1074
 msgid ""
 "When blocking Latin languages in an individual (such as: Dutch, French), the "
-"chack is in the punctuation letters (But they are not always in use). Its to "
+"check is in the punctuation letters (But they are not always in use). Its to "
 "prevent false positive."
 msgstr ""
 "Cuando se bloquean idiomas latinos en un individuo (como: holandés, francés),"

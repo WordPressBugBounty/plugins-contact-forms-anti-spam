@@ -3,7 +3,7 @@
 if (!defined('ABSPATH')) exit;
 
 // AI Spam Check Constants (Beta feature - will be Pro-only in future versions)
-define('MASPIK_AI_ENDPOINT', 'https://api.wpmaspik.com/ai/v1/ai-spam-check');
+define('MASPIK_AI_ENDPOINT', 'https://ipapi.wpmaspik.com/check');
 
 // Toggle mapping constants
 $MASPIK_TOGGLE_MAP = [
@@ -44,8 +44,8 @@ $MASPIK_FIELD_DISPLAY_NAMES = [
     // URL fields
     "url_blacklist" => "URL Field",
     
-    // Textarea fields
-    "textarea_blacklist" => "Textarea Field",
+    // Textarea fields (merged into text_blacklist)
+    // "textarea_blacklist" => "Textarea Field", // Deprecated - merged into text_blacklist
     "MinCharactersInTextAreaField" => "Textarea Field Min Character",
     "MaxCharactersInTextAreaField" => "Textarea Field Max Character",
     
@@ -67,8 +67,7 @@ $MASPIK_FIELD_DISPLAY_NAMES = [
     "emoji_check" => "Emoji Check",
     
          // AI spam check fields (Beta feature - will be Pro-only in future versions)
-     "maspik_ai_enabled" => "AI Spam Check",
-     "maspik_ai_threshold" => "AI Spam Threshold",
+     "maspik_ai_enabled" => "Maspik Matrix",
      "maspik_ai_context" => "Business Context",
      "maspik_ai_client_secret" => "AI Client Secret",
 ]; 
@@ -117,7 +116,7 @@ $MASPIK_IMPORT_OPTIONS = [
     'url_blacklist',
     
     // Textarea options
-    'textarea_blacklist',
+    // 'textarea_blacklist', // Deprecated - merged into text_blacklist
     'textarea_limit_toggle',
     'textarea_link_limit_toggle',
     'textarea_custom_message_toggle',
@@ -164,7 +163,6 @@ $MASPIK_IMPORT_OPTIONS = [
     
     // AI spam check options (Beta feature - will be Pro-only in future versions)
     'maspik_ai_enabled',
-    'maspik_ai_threshold',
     'maspik_ai_context',
     'maspik_ai_client_secret',
 ];
@@ -215,24 +213,24 @@ $MASPIK_DEFAULT_SETTINGS = [
 const MASPIK_TEMPLATES = array(
     'ecommerce' => array(
         'description' => 'Optimized for online stores with enhanced protection against spam queries, fake reviews, and automated form submissions. Includes specific filters for common e-commerce spam patterns.',
-        'text_blacklist' => "\nseo\ncripto\ndiscount\nfree shipping\norder now\npromo code",
+        'text_blacklist' => "\nseo\ncripto\ndiscount\nfree shipping\norder now\npromo code\nbuy now\ncheck out\norder today\nspecial offer",
         'emails_blacklist' => "*@spam.com\n*@temp-mail.*\n/^sales.*@/",
         'url_blacklist' => "bit.ly\nbitly\nrb.gy\ntinyurl.com",
-        'textarea_blacklist' => "buy now\ncheck out\norder today\nspecial offer\ndiscount code",
+        // 'textarea_blacklist' merged into text_blacklist above
     ),
     'blog' => array(
         'description' => 'Perfect for blogs, portfolios and service websites. Balanced protection that keeps your forms accessible while blocking common spam patterns and automated submissions.',
-        'text_blacklist' => "seo\nbacklink\nrank\nranking\ntraffic\nvisitor\nclick here\nlink exchange\nlink building\nbitcoin\nbtc",
+        'text_blacklist' => "seo\nbacklink\nrank\nranking\ntraffic\nvisitor\nclick here\nlink exchange\nlink building\nbitcoin\nbtc\ncheck my blog\nnice article\ngreat post",
         'emails_blacklist' => "*@spam.com\n*@temp.*\n/^marketing.*@/",
         'url_blacklist' => "bit.ly\nbitly\nrb.gy\ntinyurl.com",
-        'textarea_blacklist' => "check my blog\nnice article\ngreat post\nbacklink exchange",
+        // 'textarea_blacklist' merged into text_blacklist above
     ),
     'seo' => array(
         'description' => 'Specially configured for SEO, marketing and web agencies. Enhanced protection And allow SEO professionals to get more traffic and backlinks.',
-        'text_blacklist' => "seo\nranking\ntraffic\nbacklinks\nmarketing",
+        'text_blacklist' => "seo\nranking\ntraffic\nbacklinks\nmarketing\nincrease traffic\nimprove ranking\nseo services",
         'emails_blacklist' => "*@spam.com\n*@temp.*\n/^seo.*@/",
         'url_blacklist' => "bit.ly\nbitly\nrb.gy\ntinyurl.com",
-        'textarea_blacklist' => "increase traffic\nimprove ranking\nseo services",
+        // 'textarea_blacklist' merged into text_blacklist above
     ),
     'onlyusa' => array(
         'description' => 'Restricts form submissions to US-based users only. Perfect for businesses that exclusively serve the United States market. (Pro Feature)',
@@ -256,9 +254,9 @@ const MASPIK_TEMPLATES = array(
     ),
     'general' => array(
         'description' => 'A balanced configuration suitable for most websites. Provides good overall protection against common spam patterns while maintaining form accessibility, not for SEO agencies. link wont be allowed in text area fields',
-        'text_blacklist' => "\nbinance\nspam\nscam\nfree\nurgent\nmoney\nSEO\nRanking\nGoogle Ads\nFiverr\nCrypto\nviagra\npoker\ncasino\nxxx\nsex\nporn\nfuck\ndating\npenis\nbitch\nhacker\npussy",
+        'text_blacklist' => "\nbinance\nspam\nscam\nfree\nurgent\nmoney\nSEO\nRanking\nGoogle Ads\nFiverr\nCrypto\nviagra\npoker\ncasino\nxxx\nsex\nporn\nfuck\ndating\npenis\nbitch\nhacker\npussy\nleads\nInvestment\nINSTANTLY\nInstagram growth\nyour website\nYouTube channel\nSubscribe\nunsubcribe\nClick here\nscotsindallas\nwork from home\nmake money fast\nget rich quick\nno experience\ntoo good to be true\nwinner\nbonus\ncongratulations\nrb.gy/\n✅\n⮕\n→\nUnlock the\n(SMS)\n365/24\nLearn More\nGet 50% off\nthem today!\nhigh-quality content\nAI Tools\ncontent generation\nAI tools\ninstant access\nAI power\nno limits\nNo subscriptions\n$100+\nMidJourney\nDALL·E 3\nChatGPT-4",
         'emails_blacklist' => "ericjones\n*@temp.*\n*t.me*",
         'url_blacklist' => "bit.ly\nbitly\nrb.gy\ntinyurl.com",
-        'textarea_blacklist' => "\nnbinance\nleads\nInvestment\nINSTANTLY\nInstagram growth\nyour website\nYouTube channel\nSubscribe\nunsubcribe\nbit.ly\nbitly\nClick here\nscotsindallas\nwork from home\nmake money fast\nget rich quick\nno experience\ntoo good to be true\nwinner\nbonus\ncongratulations\nrb.gy/\n✅\n⮕\n→\nUnlock the\n(SMS)\n365/24\nLearn More\nGet 50% off\nthem today!\nhigh-quality content\nAI Tools\ncontent generation\nAI tools\ninstant access\nAI power\nno limits\nNo subscriptions\n$100+\nMidJourney\nDALL·E 3\nChatGPT-4",
+        // 'textarea_blacklist' merged into text_blacklist above
     )
 );

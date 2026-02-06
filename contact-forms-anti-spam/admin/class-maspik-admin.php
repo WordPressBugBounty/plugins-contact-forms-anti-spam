@@ -146,8 +146,12 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
                 <input type='checkbox' id=". esc_attr($id) ." name='". esc_attr($name) . "' " . esc_attr($checked) . " class='". esc_attr($class) ."'> 
                 <span class='maspik-toggle-slider'></span>
                 </label>";
-    $apitext = __('Active from Dashboard', 'contact-forms-anti-spam');
-    $toggle .= maspik_is_contain_api($api_array) ? "<span class='limit-api-value'>$apitext</span>" : "";
+    $apitext = __('Dashboard rules', 'contact-forms-anti-spam');
+    if (maspik_is_contain_api($api_array)) {
+        $toggle .= "<span class='limit-api-chip'>
+                        <span class='limit-api-label'>$apitext</span>
+                    </span>";
+    }
     return $toggle;
 }
 
@@ -226,11 +230,14 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
                     step='1' 
                     value='" . esc_attr($value) . "'>";
 
-            // Add API value if it exists and has a value (including 0)
+            // Add Dashboard value (API value) if it exists and has a value (including 0)
             if($api_value !== null && $api_value !== '' && trim($api_value) !== '') {
                 $numbox .= "<div class='limit-api-wrap'>
-                    <span class='limit-api-label'>API: </span>
-                    <span class='limit-api-value'>" . esc_html($api_value) . "</span>
+                    <span class='limit-api-chip'>
+                        <span class='dashicons dashicons-cloud limit-api-icon' aria-hidden='true'></span>
+                        <span class='limit-api-label'>" . esc_html__('Dashboard value', 'contact-forms-anti-spam') . "</span>
+                        <span class='limit-api-value'>" . esc_html($api_value) . "</span>
+                    </span>
                 </div>";
             }
             
@@ -302,6 +309,40 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
     }
     //Check if DB has toggle rows, if none, make them - END --
 
+    // Helper: mask sensitive dashboard values (API keys, tokens, etc.)
+        function maspik_mask_dashboard_value( $value, $field_name ) {
+            $sensitive_fields = array(
+                'abuseipdb_api',
+                'proxycheck_io_api',
+                'numverify_api',
+            );
+
+            $value = trim( (string) $value );
+
+            if ( $value === '' ) {
+                return $value;
+            }
+
+            // Only mask specific sensitive fields
+            if ( ! in_array( $field_name, $sensitive_fields, true ) ) {
+                return $value;
+            }
+
+            $len = strlen( $value );
+
+            // For very short values, just replace everything with asterisks
+            if ( $len <= 8 ) {
+                return str_repeat( '*', $len );
+            }
+
+            // Keep first 6 and last 4 characters, mask the rest
+            $start = substr( $value, 0, 6 );
+            $end   = substr( $value, -4 );
+            $mask_length = max( 3, $len - 10 );
+
+            return $start . str_repeat( '•', $mask_length ) . $end;
+        }
+
     //Maspik API
         function maspik_spam_api_list($name, $array = "") {
             $api = efas_get_spam_api($name);
@@ -310,8 +351,15 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
                 return;
             }
 
+            $toggle_id = 'maspik-api-toggle-' . esc_attr($name);
+
             echo '<div class="maspik-form-api-list">';
-            echo '<h5 class="maspik-api-title">' . esc_html__('From Maspik Dashboard & Auto-populate', 'contact-forms-anti-spam') . '</h5>';
+            echo '<input type="checkbox" id="' . $toggle_id . '" class="maspik-api-toggle" hidden>';
+            echo '<label for="' . $toggle_id . '" class="maspik-api-chip">';
+            echo '<span class="dashicons dashicons-cloud maspik-api-icon" aria-hidden="true"></span>';
+            echo '<span class="maspik-api-chip-text">' . esc_html__('Dashboard rules', 'contact-forms-anti-spam') . '</span>';
+            echo '<span class="dashicons dashicons-arrow-down-alt2 maspik-api-chip-caret" aria-hidden="true"></span>';
+            echo '</label>';
             
             // Convert string to array if needed
             if (!is_array($api)) {
@@ -327,15 +375,18 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
                     foreach ($api as $line) {
                         $key = preg_replace('/\s+/', '', $line);
                         if (isset($array[$key])) {
-                            echo '<span class="api-entry">' . esc_html($array[$key]) . '</span>';
+                            $display_value = maspik_mask_dashboard_value( $array[$key], $name );
+                            echo '<span class="api-entry">' . esc_html( $display_value ) . '</span>';
                         }
                     }
                 } else {
                     // Handle simple array case
                     echo '<ul class="api-entries-list">';
                     foreach ($api as $line) {
-                        if (!empty(trim($line))) {
-                            echo '<li>' . esc_html($line) . '</li>';
+                        $line = trim($line);
+                        if (!empty($line)) {
+                            $display_value = maspik_mask_dashboard_value( $line, $name );
+                            echo '<li>' . esc_html( $display_value ) . '</li>';
                         }
                     }
                     echo '</ul>';

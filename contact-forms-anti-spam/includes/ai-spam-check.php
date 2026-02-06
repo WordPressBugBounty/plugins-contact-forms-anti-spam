@@ -20,9 +20,11 @@ if ( ! defined( 'WPINC' ) ) {
  * @param array $fields Array of form fields and their values
  * @return array Array containing spam check results
  */
-function maspik_ai_check_submission( array $fields ): array {
-    // Get AI settings from options/DB with fallbacks to constants
-    $endpoint = MASPIK_AI_ENDPOINT;
+function maspik_ai_check_submission( array $fields, string $form_type = '' ): array {
+    // Wrap entire function in try-catch to prevent any exceptions from breaking the site
+    try {
+        // Get AI settings from options/DB with fallbacks to constants
+        $endpoint = defined('MASPIK_AI_ENDPOINT') ? MASPIK_AI_ENDPOINT : '';
 
     // Pull license & token from the DLM option first
     $dlm = get_option('maspik_dlm_license'); // array with keys: key, token, expires_at, etc.
@@ -36,9 +38,10 @@ function maspik_ai_check_submission( array $fields ): array {
     //error_log('Maspik AI: Endpoint=' . $endpoint . ', Mode=' . (maspik_is_ai_beta_mode() ? 'beta' : 'live'));
     
 
-    $threshold = (int) maspik_get_settings('maspik_ai_threshold', 60 ) ;
-    $threshold = $threshold < 3 ? 50 : $threshold;
-    $context   = (string) maspik_get_settings('maspik_ai_context', '' );
+    $threshold = (int) maspik_get_settings('maspik_ai_threshold', 70 );
+    $threshold = $threshold < 3 ? 70 : $threshold;
+    $context   = maspik_get_settings('maspik_ai_context', '' );
+    $context   = is_string($context) ? $context : '';
     
     // Limit context to 170 characters
     if ( strlen($context) > 170 ) {
@@ -62,20 +65,37 @@ function maspik_ai_check_submission( array $fields ): array {
         return ['allow' => true, 'reason' => 'AI disabled: missing site token'];
     }
 
-    // Build request payload
+    // Build request payload with safe fallbacks
+    $site_name = get_bloginfo('name');
+    $site_desc = get_bloginfo('description');
+    $site_title_tagline = (is_string($site_name) ? $site_name : '') . ' ' . (is_string($site_desc) ? $site_desc : '');
+    
+    $site_languages = maspik_detect_languages_array();
+    if (!is_array($site_languages)) {
+        $site_languages = [];
+    }
+    
+    $client_ip = maspik_get_real_ip();
+    if (!is_string($client_ip) || empty($client_ip)) {
+        $client_ip = '127.0.0.1';
+    }
+    
     $payload = [
         'fields'        => $fields,
         'context'       => [
-            'business_info' => $context,
+            'business_info' => $context, // max 170 characters
             'site_url'      => home_url(),
             'plugin_version'=> defined('MASPIK_VERSION') ? MASPIK_VERSION : 'dev',
-            'site_title_and_tagline' => get_bloginfo('name') . ' ' . get_bloginfo('description'),
-            'site_language' => get_locale(),
+            'site_title_and_tagline' => $site_title_tagline,
+            'site_languages' => $site_languages, // V2 array of languages in the site
+            'client_ip' => $client_ip, //V2 - Check if the IP is in the API blacklist
+            'site_language' => get_locale(), // V1 Deprecated: site language
+            'form_type' => $form_type,
         ],
     ];
     
     // JSON string (not array!) - important for Lambda to receive proper structure
-    $body = wp_json_encode( $payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+    $request_body = wp_json_encode( $payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
     
     // Verify JSON is valid
     if ( json_last_error() !== JSON_ERROR_NONE ) {
@@ -83,9 +103,6 @@ function maspik_ai_check_submission( array $fields ): array {
         return ['allow' => true, 'reason' => 'AI error: JSON encoding failed'];
     }
     
-    //error_log('Maspik AI: Sending fields: ' . print_r($fields, true));
-    //error_log('Maspik AI: Context: ' . $context. ' License: ' . $license. ' Token: ' . $token);
-
     // Set up headers with authentication (License + site token + HMAC)
     $headers = [
         'Content-Type'      => 'application/json',
@@ -97,16 +114,22 @@ function maspik_ai_check_submission( array $fields ): array {
     
 
     // Add signature (HMAC over raw body using the per-site token)
-    if ( ! empty($secret) ) {
-        $raw_sig = hash_hmac('sha256', $body, $secret, true);
-        $headers['X-Maspik-Signature'] = base64_encode($raw_sig);
+    if ( ! empty($secret) && !empty($request_body) ) {
+        $raw_sig = hash_hmac('sha256', $request_body, $secret, true);
+        if ($raw_sig !== false) {
+            $sig_encoded = base64_encode($raw_sig);
+            if ($sig_encoded !== false) {
+                $headers['X-Maspik-Signature'] = $sig_encoded;
+            }
+        }
     }
 
     // Send request to AI API
+    // Reduced timeout to 7 seconds to prevent long waits that could cause form submission issues
     $resp = wp_remote_post( $endpoint, [
         'timeout'   => 7,
         'headers'   => $headers,
-        'body'      => $body,     // keep as string, not array
+        'body'      => $request_body,     // keep as string, not array
         'sslverify' => true,
     ]);
 
@@ -114,57 +137,96 @@ function maspik_ai_check_submission( array $fields ): array {
     if ( is_wp_error($resp) ) {
         // On failure, don't block - allow submission and log error
         $error_msg = $resp->get_error_message();
-        //error_log('Maspik AI Error: ' . $error_msg);
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( 'Maspik AI: HTTP error - ' . $error_msg );
+        }
         return ['allow' => true, 'reason' => 'AI unavailable: ' . $error_msg];
     }
 
     $code = wp_remote_retrieve_response_code($resp);
-    $body = wp_remote_retrieve_body($resp);
+    $response_body = wp_remote_retrieve_body($resp);
     
-    // Log only important response info
-    //error_log('Maspik AI Response: ' . $code . ' - ' .$body);
-    // error_log('Maspik AI Response Headers: ' . print_r(wp_remote_retrieve_headers($resp), true));
+    // Ensure code is valid integer
+    if (!is_numeric($code)) {
+        $code = 0;
+    } else {
+        $code = (int) $code;
+    }
+    
+    // Ensure response_body is string
+    if (!is_string($response_body)) {
+        $response_body = '';
+    }
     
     // Try to decode JSON response
     $json = null;
-    if ( !empty($body) ) {
-        $json = json_decode( $body, true );
+    if ( !empty($response_body) && is_string($response_body) ) {
+        $json = json_decode( $response_body, true );
         if ( json_last_error() !== JSON_ERROR_NONE ) {
-            //error_log('Maspik AI: JSON decode failed - ' . json_last_error_msg());
+            if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                error_log('Maspik AI: JSON decode failed - ' . json_last_error_msg());
+            }
+            $json = null; // Ensure json is null on error
         }
     }
 
-    // Process successful response
+    // Process successful response (new API format only)
     if ( $code === 200 && is_array($json) && !empty($json) ) {
-        // Validate required fields in response
-        if ( !isset($json['response']['spam_score']) ) {
-                //error_log('Maspik AI: Missing spam_score in response');
-            return ['allow' => true, 'reason' => 'AI response invalid: missing spam_score'];
-        }
-        
-        $score  = (int)$json['response']['spam_score'];
-        
-        // Validate score is within valid range
-        if ( $score < 0 || $score > 100 ) {
-            //error_log('Maspik AI: Invalid score ' . $score . ' (0-100 expected)');
-            return ['allow' => true, 'reason' => 'AI response invalid: spam_score out of range (0-100)'];
-        }
-        
-        $reason = isset($json['response']['reason']) ? (string)$json['response']['reason'] : '';
-        $errors = !empty($json['response']['field_errors']) && is_array($json['response']['field_errors']) ? $json['response']['field_errors'] : [];
+        /**
+         * New Maspik AI / ipapi.wpmaspik.com response format (no backward compatibility):
+         * {
+         *   "is_spam": true|false,
+         *   "spam_score": 0-100|null,
+         *   "reasons": ["..."],
+         *   "model": "sms-spam-classifier",
+         *   ...
+         * }
+         *
+         * - `is_spam` is the single source of truth for block/allow.
+         * - `spam_score` is used only for UI / logs (optional).
+         */
 
-        $block = ( $score >= $threshold );
-        
-        //error_log('Maspik AI Result: Score=' . $score . ', Threshold=' . $threshold . ', Block=' . ($block ? 'yes' : 'no') . ', Provider=' . ($json['provider_used'] ?? 'unknown'));
-        
+        // Require at least is_spam or spam_score to make a decision
+        if ( ! isset( $json['is_spam'] ) && ! isset( $json['spam_score'] ) ) {
+            return ['allow' => true, 'reason' => 'AI response invalid: missing is_spam / spam_score'];
+        }
+
+        // Score is optional – use it only if it's valid, otherwise null
+        $score = null;
+        if ( isset( $json['spam_score'] ) ) {
+            $tmp_score = (int) $json['spam_score'];
+            if ( $tmp_score >= 0 && $tmp_score <= 100 ) {
+                $score = $tmp_score;
+            }
+        }
+
+        // Build human-friendly reason string:
+        // 1. Prefer `user_reason` from the new API (already localized & readable for humans)
+        // 2. Fallback to reasons[] / reason (technical reasons)
+        $reason = '';
+        if ( isset( $json['user_reason'] ) && is_string( $json['user_reason'] ) && $json['user_reason'] !== '' ) {
+            $reason = $json['user_reason'];
+        } elseif ( ! empty( $json['reasons'] ) && is_array( $json['reasons'] ) ) {
+            $reason = implode( ', ', $json['reasons'] );
+        } elseif ( isset( $json['reason'] ) && is_string( $json['reason'] ) ) {
+            $reason = $json['reason'];
+        }
+
+        // Block decision: ONLY by is_spam when it exists, otherwise by score + threshold as fallback
+        if ( isset( $json['is_spam'] ) ) {
+            $block = (bool) $json['is_spam'];
+        } else {
+            // Fallback: treat high score as spam if is_spam is missing (should be rare)
+            $block = ( $score !== null && $score >= $threshold );
+        }
+
         $result = [
-            'allow'        => !$block,
-            'score'        => $score,
+            'allow'        => ! $block,
+            'score'        => $score !== null ? $score : 0,
             'reason'       => $reason,
-            'field_errors' => $errors,
-            'provider'     => $json['provider_used'] ?? 'ai',
-            "prompt"      => $json['aiprompt'] ?? [],
-            "business_info_preview" => $json['business_info_preview'] ?? [],
+            'field_errors' => [], // not used in new API
+            'provider'     => $json['model'] ?? 'ai',
+            'business_info_preview' => [],
         ];
         
         // Save AI log to database (only if we have valid data)
@@ -172,7 +234,7 @@ function maspik_ai_check_submission( array $fields ): array {
             try {
                 maspik_save_ai_log($fields, $json, $result);
             } catch ( Exception $e ) {
-                //error_log('Maspik AI: Failed to save log: ' . $e->getMessage());
+                error_log('Maspik AI: Failed to save log: ' . $e->getMessage());
             }
         }
         
@@ -188,7 +250,7 @@ function maspik_ai_check_submission( array $fields ): array {
         }
         
         // Save 401 error log
-        $error_response = ['error' => true, 'http_code' => 401, 'error_detail' => 'Unauthorized', 'response_body' => $body];
+        $error_response = ['error' => true, 'http_code' => 401, 'error_detail' => 'Unauthorized', 'response_body' => $response_body];
         if ( is_array($fields) && is_array($error_response) && is_array($error_result) ) {
             try {
                 maspik_save_ai_log($fields, $error_response, $error_result);
@@ -205,7 +267,7 @@ function maspik_ai_check_submission( array $fields ): array {
         $error_result = ['allow' => true, 'reason' => 'AI live mode: license invalid or expired'];
         
         // Save 403 error log
-        $error_response = ['error' => true, 'http_code' => 403, 'error_detail' => 'License invalid or expired', 'response_body' => $body];
+        $error_response = ['error' => true, 'http_code' => 403, 'error_detail' => 'License invalid or expired', 'response_body' => $response_body];
         if ( is_array($fields) && is_array($error_response) && is_array($error_result) ) {
             try {
                 maspik_save_ai_log($fields, $error_response, $error_result);
@@ -219,7 +281,7 @@ function maspik_ai_check_submission( array $fields ): array {
         $error_result = ['allow' => true, 'reason' => 'AI: rate limit exceeded'];
         
         // Save 429 error log
-        $error_response = ['error' => true, 'http_code' => 429, 'error_detail' => 'Rate limit exceeded', 'response_body' => $body];
+        $error_response = ['error' => true, 'http_code' => 429, 'error_detail' => 'Rate limit exceeded', 'response_body' => $response_body];
         if ( is_array($fields) && is_array($error_response) && is_array($error_result) ) {
             try {
                 maspik_save_ai_log($fields, $error_response, $error_result);
@@ -238,14 +300,27 @@ function maspik_ai_check_submission( array $fields ): array {
         // Enhanced 500 error logging with more details
         $error_detail = 'Server error';
         $response_headers = wp_remote_retrieve_headers($resp);
+        $headers_array = [];
+        
+        // Safely extract headers
+        if ($response_headers && is_object($response_headers) && method_exists($response_headers, 'getAll')) {
+            try {
+                $headers_array = $response_headers->getAll();
+                if (!is_array($headers_array)) {
+                    $headers_array = [];
+                }
+            } catch (Exception $e) {
+                $headers_array = [];
+            }
+        }
         
         // Try to extract more info from response body
-        if ( !empty($body) ) {
-            $json_error = json_decode($body, true);
-            if ( $json_error && isset($json_error['error']) ) {
+        if ( !empty($response_body) && is_string($response_body) ) {
+            $json_error = json_decode($response_body, true);
+            if ( is_array($json_error) && isset($json_error['error']) && is_string($json_error['error']) ) {
                 $error_detail = $json_error['error'];
             } else {
-                $error_detail = 'Server error: ' . substr($body, 0, 200); // First 200 chars
+                $error_detail = 'Server error: ' . substr($response_body, 0, 200); // First 200 chars
             }
         }
         
@@ -254,8 +329,8 @@ function maspik_ai_check_submission( array $fields ): array {
             'error' => true, 
             'http_code' => 500, 
             'error_detail' => $error_detail, 
-            'response_body' => $body,
-            'response_headers' => $response_headers ? $response_headers->getAll() : [],
+            'response_body' => is_string($response_body) ? $response_body : '',
+            'response_headers' => $headers_array,
             'timestamp' => current_time('mysql')
         ];
         
@@ -271,19 +346,27 @@ function maspik_ai_check_submission( array $fields ): array {
         
         // Also log to WordPress error log for immediate visibility
         if ( defined('WP_DEBUG') && WP_DEBUG ) {
-            error_log('Maspik AI 500 Error: ' . $error_detail . ' | Response: ' . substr($body, 0, 500));
+            error_log('Maspik AI 500 Error: ' . $error_detail . ' | Response: ' . $response_body);
+            // Try to extract user_reason from response
+            if ( !empty($response_body) ) {
+                $response_json = json_decode($response_body, true);
+                if ( is_array($response_json) && isset($response_json['user_reason']) ) {
+                    error_log( 'Maspik AI: user_reason = ' . $response_json['user_reason'] );
+                } else {
+                    error_log( 'Maspik AI: user_reason = N/A (not found in response)' );
+                }
+            }
         }
         
         return $error_result;
     }
 
     // Handle unknown error codes
-    $error_body = wp_remote_retrieve_body($resp);
     $error_detail = '';
     
-    if ( !empty($error_body) ) {
-        $error_json = json_decode($error_body, true);
-        if ( is_array($error_json) && isset($error_json['error']) ) {
+    if ( !empty($response_body) && is_string($response_body) ) {
+        $error_json = json_decode($response_body, true);
+        if ( is_array($error_json) && isset($error_json['error']) && is_string($error_json['error']) ) {
             $error_detail = ' - ' . $error_json['error'];
         }
     }
@@ -295,7 +378,7 @@ function maspik_ai_check_submission( array $fields ): array {
         'error' => true,
         'http_code' => $code,
         'error_detail' => $error_detail,
-        'response_body' => $error_body
+        'response_body' => $response_body
     ];
     
     if ( is_array($fields) && is_array($error_response) && is_array($error_result) ) {
@@ -309,6 +392,20 @@ function maspik_ai_check_submission( array $fields ): array {
     }
     
     return $error_result;
+    
+    } catch ( Exception $e ) {
+        // On any exception, don't block the form - log error and allow submission
+        if ( defined('WP_DEBUG') && WP_DEBUG ) {
+            error_log('Maspik AI Check Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+        }
+        return ['allow' => true, 'reason' => 'AI check error: ' . $e->getMessage()];
+    } catch ( Error $e ) {
+        // On fatal error, don't block the form - log error and allow submission
+        if ( defined('WP_DEBUG') && WP_DEBUG ) {
+            error_log('Maspik AI Check Fatal Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+        }
+        return ['allow' => true, 'reason' => 'AI check fatal error: ' . $e->getMessage()];
+    }
 }
 
 /**
@@ -409,23 +506,14 @@ function maspik_prepare_fields_for_ai( array $form_data, string $form_type = '' 
         if ( strpos($key, '_') === 0 ) {
             continue;
         }
-        
-        // Skip specific unwanted keys
-        if ( in_array($key, ['maspik_spam_key', 'full-name-maspik-hp'], true) ) {
-            continue;
-        }
-        
-        // Skip keys that contain unwanted terms
-        $unwanted_terms = ['action', 'nonce', 'submit', 'referrer','captcha','time'];
-        $skip_field = false;
+                
+        // Skip keys that contain unwanted terms (case-insensitive)
+        $unwanted_terms = ['action', 'nonce', 'submit', 'referrer', 'captcha', 'time', 'key', 'gclid', 'utm_', 'url', 'redirect', 'link', 'ref','hash','maspik','full-name-maspik-hp','honeypot','token','wc_','password'];
+        $key_lower = strtolower($key);
         foreach ( $unwanted_terms as $term ) {
-            if ( strpos($key, $term) !== false ) {
-                $skip_field = true;
-                break;
+            if ( strpos($key_lower, strtolower($term)) !== false ) {
+                continue 2; // Skip to next field in outer loop
             }
-        }
-        if ( $skip_field ) {
-            continue;
         }
         
         // Extract value from nested structures
@@ -460,3 +548,116 @@ function maspik_prepare_fields_for_ai( array $form_data, string $form_type = '' 
     
     return $processed_fields;
 } 
+
+
+/**
+ * Fast lightweight language detector for WordPress sites.
+ *
+ * Returns only short 2-letter codes (['he','en','fr']).
+ * Optimized for running on every form submission.
+ *
+ *
+ * @return array
+ */
+function maspik_detect_languages_array() {
+    static $runtime_cache = null;
+
+    // Cache to avoid recomputing inside same request
+    if ( is_array( $runtime_cache ) ) {
+        return $runtime_cache;
+    }
+
+    $codes = array();
+
+    // Extract "he_IL" → "he"
+    $extract = function( $locale ) {
+        if ( empty( $locale ) || ! is_string( $locale ) ) {
+            return null;
+        }
+
+        $parts = explode( '_', $locale );
+        return strtolower( $parts[0] );
+    };
+
+    // Add safely
+    $add = function( $locale ) use ( &$codes, $extract ) {
+        $code = $extract( $locale );
+        if ( $code && ! in_array( $code, $codes, true ) ) {
+            $codes[] = $code;
+        }
+    };
+
+    // 1. Site locale
+    $add( get_locale() );
+
+    // 2. User locale
+    if ( function_exists( 'get_user_locale' ) ) {
+        $add( get_user_locale() );
+    }
+
+    // 3. WPML
+    if ( has_filter( 'wpml_active_languages' ) ) {
+        $wpml = apply_filters( 'wpml_active_languages', null );
+        if ( is_array( $wpml ) ) {
+            foreach ( $wpml as $data ) {
+                if ( ! empty( $data['default_locale'] ) ) {
+                    $add( $data['default_locale'] );
+                } elseif ( ! empty( $data['language_code'] ) ) {
+                    $add( $data['language_code'] );
+                }
+            }
+        }
+    }
+
+    // 4. Polylang
+    if ( function_exists( 'pll_the_languages' ) ) {
+        $pll = pll_the_languages( array( 'raw' => 1 ) );
+        if ( is_array( $pll ) ) {
+            foreach ( $pll as $lang ) {
+                if ( ! empty( $lang['locale'] ) ) {
+                    $add( $lang['locale'] );
+                }
+            }
+        }
+    }
+
+    // 5. TranslatePress
+    if ( class_exists( 'TRP_Languages' ) ) {
+        $trp = TRP_Languages::get_languages();
+        if ( is_array( $trp ) ) {
+            foreach ( $trp as $info ) {
+                if ( ! empty( $info['default_locale'] ) ) {
+                    $add( $info['default_locale'] );
+                } elseif ( ! empty( $info['code'] ) ) {
+                    $add( $info['code'] );
+                }
+            }
+        }
+    }
+
+    // 6. Weglot
+    if ( function_exists( 'weglot_get_languages_available' ) ) {
+        $weglot = weglot_get_languages_available();
+        if ( is_array( $weglot ) ) {
+            foreach ( array_keys( $weglot ) as $code ) {
+                $code = strtolower( $code );
+                if ( ! in_array( $code, $codes, true ) ) {
+                    $codes[] = $code;
+                }
+            }
+        }
+    }
+
+    // Final cleanup: keep exactly 2-letter codes
+    $codes = array_filter( $codes, function( $code ) {
+        return is_string( $code ) && strlen( $code ) === 2 && ctype_alpha( $code );
+    } );
+
+    sort( $codes );
+    $codes = array_values( $codes );
+
+    // Save in single-request runtime cache
+    $runtime_cache = $codes;
+
+    return $codes;
+}

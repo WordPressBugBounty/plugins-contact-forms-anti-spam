@@ -205,7 +205,7 @@
 
 ## 2.0.3 - 12/07/2024 ##
 * Improvement - Improve Dashboard(Maspik API) - add more fields in WpMaspik site for Pro users  
-* Bug fix - Fix languages chack   
+* Bug fix - Fix languages check   
 * Bug fix - Fix toggel option for some condition 
 
 ## 2.0.2 - 11/07/2024 ##

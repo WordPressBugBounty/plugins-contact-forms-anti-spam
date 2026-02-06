@@ -21,12 +21,8 @@ jQuery(document).ready(function($) {
     // Confirm delete
     confirmButton.on('click', function() {
         if (!rowIdToDelete) {
-            console.log('No row ID to delete');
             return;
         }
-
-        console.log('Sending delete request for row:', rowIdToDelete);
-        console.log('Using nonce:', maspikAdmin.nonce);
 
         $.ajax({
             url: maspikAdmin.ajaxurl,
@@ -44,7 +40,6 @@ jQuery(document).ready(function($) {
                 });
             },
             success: function(response) {
-                console.log('Response:', response);
                 if (response.success) {
                     $('tr[class*="row-entries"]').each(function() {
                         if ($(this).find('.spam-delete-button').data('row-id') == rowIdToDelete) {
@@ -101,7 +96,13 @@ jQuery(document).ready(function($) {
     var closeButton = $('.close-button');
 
     // Show the modal and set the confirmation message
+    // Skip if it's a not-spam-action button (handled by the new false positive modal)
     $(document).on('click', '.row-entries:not(.not-a-spam) .filter-delete-button', function() {
+        // Don't show old modal for not-spam-action buttons - they're handled by the false positive modal
+        if ($(this).hasClass('not-spam-action')) {
+            return; // Let the new handler in maspik-log.php handle it
+        }
+        
         rowIdToDelete = $(this).data('row-id');
         spamValue = $(this).data('spam-value'); // Assume spam_value is added to data attributes
         spamType = $(this).data('spam-type');   // Assume spam_type is added to data attributes

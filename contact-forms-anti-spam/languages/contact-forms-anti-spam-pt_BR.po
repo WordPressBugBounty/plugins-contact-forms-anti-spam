@@ -2193,7 +2193,7 @@ msgstr ""
 #: admin/partials/maspik-admin-display.php:1074
 msgid ""
 "When blocking Latin languages in an individual (such as: Dutch, French), the "
-"chack is in the punctuation letters (But they are not always in use). Its to "
+"check is in the punctuation letters (But they are not always in use). Its to "
 "prevent false positive."
 msgstr ""
 "Quando bloquear idiomas latinos em um indivíduo (como: Holandês, Francês), a verificação é nos caracteres de pontuação (Mas eles nem sempre são usados). É para evitar falsos positivos."

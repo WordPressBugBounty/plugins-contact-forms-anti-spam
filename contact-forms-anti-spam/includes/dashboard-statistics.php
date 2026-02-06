@@ -222,27 +222,46 @@ function maspik_render_dashboard_widget() {
 
     // Get max value for Y axis and calculate nice step size
     $max_value = max(array_column($all_dates, 'value'));
-    $nice_max = ceil($max_value);
-    $step_count = 5; // We want approximately 5 steps
-    $rough_step = $nice_max / $step_count;
-    $magnitude = pow(10, floor(log10($rough_step)));
-    $step_size = ceil($rough_step / $magnitude) * $magnitude;
-    if ($step_size * $step_count < $nice_max) {
-        $step_size = ceil($rough_step / ($magnitude / 2)) * ($magnitude / 2);
+    $nice_max = max(1, ceil($max_value)); // Prevent division by zero, minimum 1
+    
+    // If there's no data, skip the calculation
+    if ($nice_max <= 1) {
+        $step_size = 1;
+    } else {
+        $step_count = 5; // We want approximately 5 steps
+        $rough_step = $nice_max / $step_count;
+        $magnitude = pow(10, floor(log10($rough_step)));
+        
+        // Prevent division by zero
+        if ($magnitude > 0) {
+            $step_size = ceil($rough_step / $magnitude) * $magnitude;
+            if ($step_size * $step_count < $nice_max) {
+                $sub_magnitude = $magnitude / 2;
+                if ($sub_magnitude > 0) {
+                    $step_size = ceil($rough_step / $sub_magnitude) * $sub_magnitude;
+                }
+            }
+        } else {
+            $step_size = max(1, ceil($rough_step));
+        }
     }
 
     // Select evenly spaced dates for X axis
     $dates_array = array_keys($all_dates);
     $date_count = count($dates_array);
     $display_count = 8; // Number of dates to display
-    $step = max(1, floor($date_count / ($display_count - 1)));
+    
+    // Prevent division by zero
+    $step = ($date_count > 1) ? max(1, floor($date_count / max(1, $display_count - 1))) : 1;
     $display_dates = array();
 
     for ($i = 0; $i < $date_count; $i += $step) {
         $display_dates[$dates_array[$i]] = true;
     }
     // Ensure the last date is included
-    $display_dates[$dates_array[$date_count - 1]] = true;
+    if ($date_count > 0) {
+        $display_dates[$dates_array[$date_count - 1]] = true;
+    }
 
     ?>
     <div class="maspik-dashboard-widget">
