@@ -9,22 +9,23 @@ add_filter('bricks/form/validate', 'maspik_validate_bricks_form', 10, 2);
 
 function maspik_validate_bricks_form($errors, $form) {
     $settings = $form->get_settings();
-    $form_fields = $settings['fields'];
-	$values   = $form->get_fields();
+    $form_fields = isset($settings['fields']) && is_array($settings['fields']) ? $settings['fields'] : array();
+    $values = $form->get_fields();
     $error_message = cfas_get_error_text();
     $spam = false;
     $reason ="";
     $ip =  maspik_get_real_ip();
 
-    // Country IP Check 
+    // General check (Country/IP, honeypot, spam key, AI Matrix, etc.)
     $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"bricks");
     $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
-    $reason = $GeneralCheck['reason']? $GeneralCheck['reason'] : false ;
+    $reason = $GeneralCheck['reason'] ? $GeneralCheck['reason'] : false ;
     $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
-    $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
-    
+    $spam_val = isset($GeneralCheck['value']) ? $GeneralCheck['value'] : false ;
+    $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : 'General';
+
     if ( $spam) {
-        efas_add_to_log($type = "Country/IP",$reason, $values, "Bricks", $message,  $spam_val );
+        efas_add_to_log($type, $reason, $values, "Bricks", $message, $spam_val);
         $errors[] = cfas_get_error_text($message);
         return $errors;
     }

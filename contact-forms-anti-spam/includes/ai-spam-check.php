@@ -508,7 +508,7 @@ function maspik_prepare_fields_for_ai( array $form_data, string $form_type = '' 
         }
                 
         // Skip keys that contain unwanted terms (case-insensitive)
-        $unwanted_terms = ['action', 'nonce', 'submit', 'referrer', 'captcha', 'time', 'key', 'gclid', 'utm_', 'url', 'redirect', 'link', 'ref','hash','maspik','full-name-maspik-hp','honeypot','token','wc_','password'];
+        $unwanted_terms = ['action', 'nonce', 'submit', 'referrer', 'captcha', 'time', 'key', 'gclid', 'utm_', 'url', 'redirect', 'link', 'ref','hash','maspik','full-name-maspik-hp','honeypot','token','wc_','password','productid','formId','postId','campaign','date'];
         $key_lower = strtolower($key);
         foreach ( $unwanted_terms as $term ) {
             if ( strpos($key_lower, strtolower($term)) !== false ) {
@@ -595,7 +595,17 @@ function maspik_detect_languages_array() {
         $add( get_user_locale() );
     }
 
-    // 3. WPML
+    // 3. All installed core languages (Settings → Site Language list)
+    if ( function_exists( 'get_available_languages' ) ) {
+        $installed = get_available_languages();
+        if ( is_array( $installed ) ) {
+            foreach ( $installed as $locale ) {
+                $add( $locale );
+            }
+        }
+    }
+
+    // 4. WPML
     if ( has_filter( 'wpml_active_languages' ) ) {
         $wpml = apply_filters( 'wpml_active_languages', null );
         if ( is_array( $wpml ) ) {
@@ -609,7 +619,7 @@ function maspik_detect_languages_array() {
         }
     }
 
-    // 4. Polylang
+    // 5. Polylang
     if ( function_exists( 'pll_the_languages' ) ) {
         $pll = pll_the_languages( array( 'raw' => 1 ) );
         if ( is_array( $pll ) ) {
@@ -621,7 +631,7 @@ function maspik_detect_languages_array() {
         }
     }
 
-    // 5. TranslatePress
+    // 6. TranslatePress
     if ( class_exists( 'TRP_Languages' ) ) {
         $trp = TRP_Languages::get_languages();
         if ( is_array( $trp ) ) {
@@ -635,7 +645,7 @@ function maspik_detect_languages_array() {
         }
     }
 
-    // 6. Weglot
+    // 7. Weglot
     if ( function_exists( 'weglot_get_languages_available' ) ) {
         $weglot = weglot_get_languages_available();
         if ( is_array( $weglot ) ) {
@@ -661,3 +671,7 @@ function maspik_detect_languages_array() {
 
     return $codes;
 }
+
+
+
+

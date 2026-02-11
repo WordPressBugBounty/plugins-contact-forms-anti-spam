@@ -16,8 +16,9 @@ if ( ! defined( 'WPINC' ) ) {
 add_action('wpforms_process_before', function( $entry, $form_data ) {
   $error_message = cfas_get_error_text();
   $spam = false;
-  $reversed = array_reverse($form_data['fields']);
-  $last = $reversed[0];
+  $fields = isset($form_data['fields']) && is_array($form_data['fields']) ? $form_data['fields'] : array();
+  $reversed = array_reverse($fields);
+  $last = !empty($reversed) ? $reversed[0] : null;
 
   // ip
   $ip = maspik_get_real_ip();
@@ -26,17 +27,19 @@ add_action('wpforms_process_before', function( $entry, $form_data ) {
   // Add key 'maspik_spam_key' with value from $_POST['maspik_spam_key'] if exists to the entry fields
   $all_fields = array_merge($entry['fields'], isset($_POST['maspik_spam_key']) ? ['maspik_spam_key' => $_POST['maspik_spam_key']] : []);
 
-    // Country IP Check 
+    // General check (Country/IP, honeypot, spam key, AI Matrix, etc.)
     $GeneralCheck = GeneralCheck($ip,$spam,$reason,$all_fields,"wpforms");
     $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
-    $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;  
+    $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
     $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
-    $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
+    $spam_val = isset($GeneralCheck['value']) ? $GeneralCheck['value'] : false ;
+    $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : 'General';
 
-    //If country or ip is in blacklist
-  if ( $spam ) {
-    efas_add_to_log($type = "General",$reason, $entry['fields'] , "Wpforms", $message,  $spam_val );
-    wpforms()->process->errors[ $form_data['id'] ][ $last['id'] ] = cfas_get_error_text($message);
+    if ( $spam ) {
+    efas_add_to_log($type, $reason, $entry['fields'], "Wpforms", $message, $spam_val);
+    if ($last && isset($last['id'])) {
+        wpforms()->process->errors[ $form_data['id'] ][ $last['id'] ] = cfas_get_error_text($message);
+    }
       return;
   }
   

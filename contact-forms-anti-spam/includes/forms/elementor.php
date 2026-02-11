@@ -63,8 +63,9 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
     
     // Get all form fields
     $form_fields = $record->get( 'fields' );
+    $form_fields = is_array($form_fields) ? $form_fields : array();
     $keys = array_keys($form_fields);
-    $lastKeyId = end($keys);
+    $lastKeyId = !empty($keys) ? end($keys) : '';
 
     
     // Loop through all fields

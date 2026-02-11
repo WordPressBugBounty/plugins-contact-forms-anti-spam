@@ -2656,8 +2656,218 @@ function maspik_merge_textarea_blacklist() {
 add_action('admin_init', 'maspik_merge_textarea_blacklist', 1);
 
 /**
- * Show admin notice about blacklist fields merge
+ * Maspik Matrix (AI) rollout bootstrap.
+ *
+ * For existing sites: we do NOT auto-enable. We only set a timestamp once
+ * so we can show an opt-in notice (~30 days). New installations get
+ * Matrix on by default via MASPIK_SETTINGS in consts.php.
  */
+function maspik_enable_matrix_by_default() {
+    if (get_option('maspik_matrix_enabled_notice', false)) {
+        return;
+    }
+    update_option('maspik_matrix_enabled_notice', time());
+}
+add_action('admin_init', 'maspik_enable_matrix_by_default', 2);
+
+/**
+ * Show admin notice offering to enable Maspik Matrix (opt-in for existing users).
+ *
+ * Shown only when Matrix is currently off, notice not dismissed, and within ~30 days.
+ */
+function maspik_show_matrix_enabled_notice() {
+    $notice_set = get_option('maspik_matrix_enabled_notice', false);
+    if (!$notice_set) {
+        return;
+    }
+    if (get_option('maspik_matrix_enabled_notice_dismissed', false)) {
+        return;
+    }
+    $ai_enabled = maspik_get_settings('maspik_ai_enabled');
+    // If Matrix is enabled, don't show notice
+    if ($ai_enabled === '1' || $ai_enabled === 1) {
+        delete_option('maspik_matrix_enabled_notice');
+        return;
+    }
+    // If null (not set in DB yet) and notice timestamp was just set (new install), 
+    // assume default '1' applies and don't show notice
+    if ($ai_enabled === null) {
+        $notice_time = get_option('maspik_matrix_enabled_notice', false);
+        if ($notice_time && (time() - (int)$notice_time) < 60) {
+            // Very recent timestamp = likely new install, default is '1', don't show notice
+            delete_option('maspik_matrix_enabled_notice');
+            return;
+        }
+    }
+    $set_at = is_numeric($notice_set) ? (int) $notice_set : 0;
+    if ($set_at && (time() - $set_at) > 30 * DAY_IN_SECONDS) {
+        delete_option('maspik_matrix_enabled_notice');
+        return;
+    }
+
+    $settings_url = admin_url('admin.php?page=maspik');
+    ?>
+    <div class="notice notice-info is-dismissible maspik-matrix-enabled-notice" style="position: relative;">
+        <p>
+            <strong><?php esc_html_e('Maspik', 'contact-forms-anti-spam'); ?>:</strong>
+            <?php esc_html_e('Without Maspik Matrix your site is only partially protected. Most of the spam and bot blocking comes from this engine — we strongly recommend turning it on.', 'contact-forms-anti-spam'); ?>
+        </p>
+        <p>
+            <button type="button" class="button button-primary maspik-matrix-notice-activate">
+                <?php esc_html_e('Enable Maspik Matrix now', 'contact-forms-anti-spam'); ?>
+            </button>
+            <a href="<?php echo esc_url($settings_url); ?>" class="button">
+                <?php esc_html_e('Go to Maspik settings', 'contact-forms-anti-spam'); ?>
+            </a>
+            <button type="button" class="button maspik-matrix-notice-dismiss">
+                <?php esc_html_e('Not now', 'contact-forms-anti-spam'); ?>
+            </button>
+        </p>
+    </div>
+    <script>
+    jQuery(document).ready(function($) {
+        $(document).on('click', '.maspik-matrix-enabled-notice .maspik-matrix-notice-activate', function(e) {
+            e.preventDefault();
+            var $notice = $('.maspik-matrix-enabled-notice');
+            var $btn = $(this);
+            $btn.prop('disabled', true);
+            $.post(ajaxurl, {
+                action: 'maspik_enable_matrix_from_notice',
+                nonce: '<?php echo wp_create_nonce('maspik_enable_matrix_from_notice'); ?>'
+            }).done(function() { $notice.slideUp(); }).fail(function() { $btn.prop('disabled', false); });
+        });
+        $(document).on('click', '.maspik-matrix-enabled-notice .notice-dismiss, .maspik-matrix-enabled-notice .maspik-matrix-notice-dismiss', function(e) {
+            e.preventDefault();
+            var $notice = $('.maspik-matrix-enabled-notice');
+            $notice.slideUp();
+            $.post(ajaxurl, {
+                action: 'maspik_dismiss_matrix_enabled_notice',
+                nonce: '<?php echo wp_create_nonce('maspik_dismiss_matrix_enabled_notice'); ?>'
+            });
+        });
+    });
+    </script>
+    <?php
+}
+add_action('admin_notices', 'maspik_show_matrix_enabled_notice');
+
+/**
+ * AJAX handler to dismiss the Maspik Matrix enabled notice (permanent).
+ */
+function maspik_dismiss_matrix_enabled_notice_handler() {
+    check_ajax_referer('maspik_dismiss_matrix_enabled_notice', 'nonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error();
+        return;
+    }
+    update_option('maspik_matrix_enabled_notice_dismissed', true);
+    delete_option('maspik_matrix_enabled_notice');
+    wp_send_json_success();
+}
+add_action('wp_ajax_maspik_dismiss_matrix_enabled_notice', 'maspik_dismiss_matrix_enabled_notice_handler');
+
+/**
+ * AJAX handler to enable Maspik Matrix (AI) from the rollout notice.
+ */
+function maspik_enable_matrix_from_notice_handler() {
+    check_ajax_referer('maspik_enable_matrix_from_notice', 'nonce');
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error();
+        return;
+    }
+
+    // Turn on Maspik Matrix for this site.
+    maspik_save_settings('maspik_ai_enabled', '1');
+
+    // Also stop showing the notice.
+    update_option('maspik_matrix_enabled_notice_dismissed', true);
+    delete_option('maspik_matrix_enabled_notice');
+
+    wp_send_json_success();
+}
+add_action('wp_ajax_maspik_enable_matrix_from_notice', 'maspik_enable_matrix_from_notice_handler');
+
+/**
+ * Dashboard widget: nudge to enable Maspik Matrix when it's off.
+ * Can be hidden forever by the user.
+ */
+function maspik_matrix_dashboard_widget_render() {
+    // This function only renders when Matrix is off (widget is only added when off)
+    // Double-check: if somehow Matrix got enabled, don't render
+    $ai_enabled = maspik_get_settings('maspik_ai_enabled');
+    if ($ai_enabled === '1' || $ai_enabled === 1) {
+        return;
+    }
+    $settings_url = admin_url('admin.php?page=maspik');
+    $nonce_activate = wp_create_nonce('maspik_enable_matrix_from_notice');
+    $nonce_hide    = wp_create_nonce('maspik_hide_matrix_widget');
+    ?>
+    <p><?php esc_html_e('Maspik Matrix (spam protection engine) is off. Turn it on for much stronger spam and bot blocking.', 'contact-forms-anti-spam'); ?></p>
+    <p>
+        <button type="button" class="button button-primary maspik-dashboard-widget-enable-matrix" data-nonce="<?php echo esc_attr($nonce_activate); ?>">
+            <?php esc_html_e('Enable Maspik Matrix', 'contact-forms-anti-spam'); ?>
+        </button>
+        <a href="<?php echo esc_url($settings_url); ?>" class="button"><?php esc_html_e('Open settings', 'contact-forms-anti-spam'); ?></a>
+    </p>
+    <p class="maspik-widget-hide-wrap" style="margin-bottom:0;">
+        <a href="#" class="maspik-dashboard-widget-hide-forever" data-nonce="<?php echo esc_attr($nonce_hide); ?>"><?php esc_html_e('Hide this widget forever', 'contact-forms-anti-spam'); ?></a>
+    </p>
+    <script>
+    jQuery(document).ready(function($) {
+        $('.maspik-dashboard-widget-enable-matrix').on('click', function() {
+            var $w = $('#maspik_matrix_widget').closest('.postbox');
+            var n = $(this).data('nonce');
+            $(this).prop('disabled', true);
+            $.post(ajaxurl, { action: 'maspik_enable_matrix_from_notice', nonce: n }).done(function() {
+                $w.find('.inside').html('<p><?php echo esc_js(__('Maspik Matrix is enabled. Your forms are protected.', 'contact-forms-anti-spam')); ?></p>');
+            }).fail(function() { $('.maspik-dashboard-widget-enable-matrix').prop('disabled', false); });
+        });
+        $('.maspik-dashboard-widget-hide-forever').on('click', function(e) {
+            e.preventDefault();
+            var $w = $('#maspik_matrix_widget').closest('.postbox');
+            $.post(ajaxurl, { action: 'maspik_hide_matrix_widget', nonce: $(this).data('nonce') }).done(function() {
+                $w.slideUp();
+            });
+        });
+    });
+    </script>
+    <?php
+}
+
+function maspik_add_matrix_dashboard_widget() {
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+    if (get_option('maspik_matrix_widget_hidden', false)) {
+        return;
+    }
+    // Don't show widget if Matrix is already enabled
+    $ai_enabled = maspik_get_settings('maspik_ai_enabled');
+    if ($ai_enabled === '1' || $ai_enabled === 1) {
+        return;
+    }
+    wp_add_dashboard_widget(
+        'maspik_matrix_widget',
+        __('Maspik – Enable Matrix', 'contact-forms-anti-spam'),
+        'maspik_matrix_dashboard_widget_render'
+    );
+}
+add_action('wp_dashboard_setup', 'maspik_add_matrix_dashboard_widget');
+
+/**
+ * AJAX: hide the Maspik Matrix dashboard widget forever.
+ */
+function maspik_hide_matrix_widget_handler() {
+    check_ajax_referer('maspik_hide_matrix_widget', 'nonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error();
+        return;
+    }
+    update_option('maspik_matrix_widget_hidden', true);
+    wp_send_json_success();
+}
+add_action('wp_ajax_maspik_hide_matrix_widget', 'maspik_hide_matrix_widget_handler');
 function maspik_show_blacklist_merge_notice() {
     // Check if we should show the notice
     $show_notice = get_option('maspik_blacklist_merge_notice', false);

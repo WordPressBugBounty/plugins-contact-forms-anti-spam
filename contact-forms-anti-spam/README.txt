@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.9
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.6.1
+Stable tag: 2.6.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -34,12 +34,12 @@ Trusted by thousands of websites worldwide. Works automatically on activation.
 
 ✅ Works instantly with popular form plugins and core WordPress forms  
 ✅ No CAPTCHA required – silent protection for your visitors  
-✅ Smart blacklist system – block any word, phrase, or pattern you want  
+✅ Forbidden keywords list system (Blacklist/Blocklist) – block any word, phrase, or pattern you want per field type
 ✅ IP blacklist & API integrations  
 ✅ Phone number validation  
 ✅ Multiple honeypot methods and advanced key checks  
 ✅ Multi-language support  
-✅ AI spam check (optional) – Enable it from the Maspik settings page
+✅ Maspik Matrix – Cloud-based Multi-layer spam protection engine
 
 ---
 
@@ -62,9 +62,9 @@ Maspik Matrix provides stronger, faster, and more reliable spam detection by eva
 
 ### Blacklisting by Field Type
 
-* **Text fields** (e.g. name, subject)
+* **Text fields/Text area fields** (e.g. name, subject, message)
 * **Email fields** (supports regex/wildcard patterns)
-* **Text area fields**
+* **URL fields**
 * **Phone number fields** (regex/wildcard support)
 
 ### Blocking Capabilities
@@ -275,6 +275,7 @@ You can customize:
 * Character limits
 * Link restrictions
 * IP blocking rules
+* Phone number patterns
 * Country-based filtering (Pro)
 * Language-based filtering (Pro)
 
@@ -392,6 +393,9 @@ Then Maspik is an excellent choice for your WordPress spam protection.
 7. Spam filter and statistics dashboard
 
 == Changelog ==
+
+= 2.6.2 - 11/02/2026 =
+* Improvement – Maspik Matrix is now enabled by default for new installations. Existing sites will see an opt-in notice encouraging them to enable it for stronger spam protection. Users can enable or disable it from the Maspik settings page at any time.
 
 = 2.6.1 - 04/02/2026 =
 * Change – Unified text and textarea blacklist into a single “Forbidden keywords” field that applies to both short text and textarea fields, including seamless migration of existing settings.
@@ -564,5 +568,5 @@ Then Maspik is an excellent choice for your WordPress spam protection.
 
 == Upgrade Notice ==
 
-= 2.6.0 =
-New spam block system (Maspik Matrix!) is now live, you can activate it from the Maspik settings page.
+= 2.6.2 =
+Maspik Matrix is now enabled by default for better protection. You can disable it in settings, checking the Spam Log from time to time is recommended.

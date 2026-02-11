@@ -14,25 +14,28 @@ function maspik_validate_fluentform_general( $errors, $formData, $form, $fields)
   // ip
   $ip =  maspik_get_real_ip();
 
-// Parse the query string data from Fluent Forms
-parse_str($_POST['data'], $parsed_data);
+  // Parse the query string data from Fluent Forms
+  $parsed_data = array();
+  if (isset($_POST['data']) && is_string($_POST['data'])) {
+      parse_str($_POST['data'], $parsed_data);
+  }
 
-// Remove fields that start with underscore
-$parsed_data = array_filter($parsed_data, function($value, $key) {
-    return strpos($key, '_') !== 0;
-}, ARRAY_FILTER_USE_BOTH);
+  // Remove fields that start with underscore
+  $parsed_data = array_filter($parsed_data, function($value, $key) {
+      return strpos($key, '_') !== 0;
+  }, ARRAY_FILTER_USE_BOTH);
 
 
-  // Country IP Check 
+  // General check (Country/IP, honeypot, spam key, AI Matrix, etc.)
   $GeneralCheck = GeneralCheck($ip,$spam,$reason,$parsed_data,"fluentforms");
   $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
   $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
   $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
-  $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
+  $spam_val = isset($GeneralCheck['value']) ? $GeneralCheck['value'] : false ;
+  $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : 'General';
 
-   
   if ( $spam) {
-    efas_add_to_log($type = "General",$reason, $parsed_data, "Fluent Forms", $message,  $spam_val );
+    efas_add_to_log($type, $reason, $parsed_data, "Fluent Forms", $message, $spam_val);
     $errors['spam'] = cfas_get_error_text($message);
   }
 return $errors;

@@ -191,7 +191,7 @@ function maspik_check_wp_registration_form($errors) {
             $message = $GeneralCheck['message'] ?? '';
             $spam_val = $GeneralCheck['value'] ?? '';
             $spam_lbl = $GeneralCheck['message'] ?? '';
-            $type = "General";
+            $type = $GeneralCheck['type'] ?? 'General';
         }
 
         // Email check
@@ -245,10 +245,10 @@ function maspik_register_form_honeypot_check_in_woocommerce_registration($errors
         $spam = $GeneralCheck['spam'] ?? false;
         $reason = $GeneralCheck['reason'] ?? '';
         $message = $GeneralCheck['message'] ?? '';
-        $spam_val = $GeneralCheck['message'] ?? '';
+        $spam_val = $GeneralCheck['value'] ?? '';
         $spam_lbl = $GeneralCheck['message'] ?? '';
         $error_message = cfas_get_error_text($message);
-        $type = "General";
+        $type = $GeneralCheck['type'] ?? 'General';
         if ($user_email && !$spam) {
             $spam = checkEmailForSpam($user_email);
             if ($spam && !$reason) {

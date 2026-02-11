@@ -204,7 +204,7 @@ $MASPIK_DEFAULT_SETTINGS = [
     'maspik_support_bitform_forms' => 'yes',
     
     // AI spam check settings (Beta feature - will be Pro-only in future versions)
-    'maspik_ai_enabled' => '0',
+    'maspik_ai_enabled' => '1', // Default enabled for new installations
     'maspik_ai_threshold' => '60',
     'maspik_ai_context' => '',
 ];

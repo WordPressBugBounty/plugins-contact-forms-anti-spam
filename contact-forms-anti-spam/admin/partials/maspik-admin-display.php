@@ -926,7 +926,33 @@ $spamcounter = maspik_spam_count();
                                 <!--  Main check -->
                                 <div class="main-spam-check togglewrap maspik-main-check--wrap maspik-accordion-content-wrap">
                                     <h3 class="maspik-header maspik-accordion-subtitle"><?php esc_html_e('Main Options', 'contact-forms-anti-spam'); ?></h3>
-                                    <p><?php esc_html_e('Our recommendation: Take a few moments to browse through the settings, see what works best for your site, and customize your spam protection accordingly. Most features work automatically, but you can maximize protection by setting custom keywords.', 'contact-forms-anti-spam'); ?></p>
+                                    <p><?php esc_html_e('Our recommendation: Take a few moments to browse through the settings, see what works best for your site, and customize your spam protection accordingly. Most features work automatically, but you can maximize protection by setting custom keywords.', 'contact-forms-anti-spam'); ?> <span style="color: #666; font-size: 0.95em;"><?php esc_html_e('Check your spam log from time to time to review blocked submissions and fine-tune your protection.', 'contact-forms-anti-spam'); ?></span></p>
+
+                                    <!-- AI Spam Check Toggle - First in list -->
+                                    <div class="maspik-ai-toggle-wrap togglewrap">
+                                        <?php echo maspik_toggle_button('maspik_ai_enabled', 'maspik_ai_enabled', 'maspik_ai_enabled', 'maspik-ai-toggle togglebutton', "ai-toggle", maspik_get_settings('maspik_ai_enabled')); ?>
+                                        <div>
+                                            <h4>
+                                                <svg class="maspik-ai-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect class="ai-head" x="4" y="6" width="16" height="14" rx="2" fill="#F48722"/>
+                                                    <circle class="ai-eye" cx="8" cy="12" r="1.5" fill="#ffffff"/>
+                                                    <circle class="ai-eye" cx="16" cy="12" r="1.5" fill="#ffffff"/>
+                                                    <rect class="ai-mouth" x="10" y="16" width="4" height="2" rx="1" fill="#ffffff"/>
+                                                    <line class="ai-antenna" x1="12" y1="6" x2="12" y2="2" stroke="#F48722" stroke-width="2" stroke-linecap="round"/>
+                                                    <circle class="ai-signal" cx="12" cy="2" r="1" fill="#F48722"/>
+                                                </svg>
+                                                <?php esc_html_e('Maspik Matrix', 'contact-forms-anti-spam'); ?>
+                                            </h4>
+                                            <span>
+                                                <?php esc_html_e('Cloud-based protection.', 'contact-forms-anti-spam'); ?>
+                                                <br>
+                                                <?php esc_html_e('Every submission is analyzed in real-time through several detection layers: IP reputation, behavior patterns, heuristics, and AI scoring — for maximum accuracy with minimal false positives.', 'contact-forms-anti-spam'); ?>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- IP Verification - hidden, to be removed in a future version -->
+                                    <div style="display:none;" class="maspik-ip-verification-wrap">
                                     <div class="maspik-txt-custom-msg-head togglewrap maspik-db-check--wrap">
                                         <?php echo maspik_toggle_button('maspikDbCheck', 'maspikDbCheck', 'maspikDbCheck', 'maspik-DbCheck togglebutton',"",""); ?>
                                         <div>
@@ -963,6 +989,7 @@ $spamcounter = maspik_spam_count();
                                             </span>
                                         </div>
                                     </div><!-- end of maspik-db-check--wrap -->
+                                    </div><!-- end maspik-ip-verification-wrap (hidden) -->
                                     <div class="maspik-txt-custom-msg-head togglewrap maspik-honeypot-wrap">
                                         <?php 
                                             echo maspik_toggle_button(
@@ -986,7 +1013,7 @@ $spamcounter = maspik_spam_count();
                                             <?php echo maspik_toggle_button('NeedPageurl', 'NeedPageurl', 'NeedPageurl', 'maspik-needpageurl togglebutton',"","",['NeedPageurl']); ?>
                                                 <div>
                                                     <h4> <?php esc_html_e('Elementor Bot detector', 'contact-forms-anti-spam'); ?> </h4>
-                                                    <span><?php esc_html_e('In this option we block bots from sending spam automatically, its mostly succeed to catch about 30% of the spam', 'contact-forms-anti-spam'); ?></span>
+                                                    <span><?php esc_html_e('Blocks form submissions that are sent from outside your site (e.g. bots sending POST requests from an external source).', 'contact-forms-anti-spam'); ?></span>
                                             </div>  
                                         </div><!-- end of maspik-block-inquiry-wrap -->
                                     <?php  } ?>
@@ -997,36 +1024,11 @@ $spamcounter = maspik_spam_count();
                                         <div>
                                             <h4> <?php esc_html_e('Advance key check', 'contact-forms-anti-spam'); ?>
                                             </h4>
-                                            <span><?php esc_html_e('Advanced key check - This feature adds a hidden field that is automatically filled with a unique key. If the submitted key does not match the expected key, it likely means the form was submitted by a bot or automated script. The submission will be blocked as a security measure.', 'contact-forms-anti-spam'); ?></span>
+                                            <span><?php esc_html_e('Adds a hidden field with a unique key that is generated when the form is loaded. Blocks submissions that have no key or a wrong key — e.g. forms sent from outside your site (direct POST), cached pages, or old copies of the form. Complements the Honeypot: the key blocks "no key" submissions; the honeypot blocks bots that fill the invisible field.', 'contact-forms-anti-spam'); ?></span>
                                             <br>
-                                            <span><?php esc_html_e('Please clear cache after activate this feature.', 'contact-forms-anti-spam'); ?></span>
+                                            <span><?php esc_html_e('Please clear cache after activating this feature.', 'contact-forms-anti-spam'); ?></span>
                                         </div>  
                                     </div><!-- end of Advance key check -->
-
-                                    <!-- AI Spam Check Toggle -->
-                                    <div class="maspik-ai-toggle-wrap togglewrap">
-                                        <?php echo maspik_toggle_button('maspik_ai_enabled', 'maspik_ai_enabled', 'maspik_ai_enabled', 'maspik-ai-toggle togglebutton', "ai-toggle", maspik_get_settings('maspik_ai_enabled')); ?>
-                                        <div>
-                                            <h4>
-                                                <svg class="maspik-ai-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <rect class="ai-head" x="4" y="6" width="16" height="14" rx="2" fill="#F48722"/>
-                                                    <circle class="ai-eye" cx="8" cy="12" r="1.5" fill="#ffffff"/>
-                                                    <circle class="ai-eye" cx="16" cy="12" r="1.5" fill="#ffffff"/>
-                                                    <rect class="ai-mouth" x="10" y="16" width="4" height="2" rx="1" fill="#ffffff"/>
-                                                    <line class="ai-antenna" x1="12" y1="6" x2="12" y2="2" stroke="#F48722" stroke-width="2" stroke-linecap="round"/>
-                                                    <circle class="ai-signal" cx="12" cy="2" r="1" fill="#F48722"/>
-                                                </svg>
-                                                <?php esc_html_e('Maspik Matrix', 'contact-forms-anti-spam'); ?>
-                                            </h4>
-                                            <span>
-                                                <?php esc_html_e('Advanced multi-layer spam protection engine.', 'contact-forms-anti-spam'); ?>
-                                                <br>
-                                                <?php esc_html_e('A powerful layered spam filter that combines multiple detection methods into one smart protection system — including IP reputation, pattern analysis, heuristics, and AI scoring checks.', 'contact-forms-anti-spam'); ?>
-                                    </span>
-
-                                        </div>
-                                    </div>
-
 
                                     <?php maspik_save_button_show() ?>
                                 </div>
@@ -1319,7 +1321,7 @@ $spamcounter = maspik_spam_count();
                                         <div class="mpk-acc-header-texts">
                                             <h4 class="maspik-header maspik-accordion-header-text"><?php esc_html_e('Text Fields', 'contact-forms-anti-spam');?></h4><!--Accordion Title-->
                                             <span class="maspik-accordion-subheader">
-                                                <?php esc_html_e('(Usually Name/Subject)', 'contact-forms-anti-spam');?></span>
+                                                <?php esc_html_e('(Text inputs & text areas, e.g. Name, Subject, Message)', 'contact-forms-anti-spam');?></span>
                                         </div>
                                             <span class="maspik-acc-arrow">
                                                 <span class="dashicons dashicons-arrow-right"></span>

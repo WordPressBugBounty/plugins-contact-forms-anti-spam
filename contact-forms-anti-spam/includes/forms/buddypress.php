@@ -30,7 +30,7 @@ function maspik_check_bp_registration_form() {
         $message      = $GeneralCheck['message'] ?? '';
         $spam_val     = $GeneralCheck['value'] ?? '';
         $spam_lbl     = $GeneralCheck['reason'] ?? '';
-        $type         = "General";
+        $type         = $GeneralCheck['type'] ?? 'General';
     }
 
     // Email check

@@ -123,14 +123,15 @@ function cfes_build_table() {
             return;
         }
         
-        echo maspik_Download_log_btn();
-        
         if (empty($results)) {
             echo "<p>" . esc_html__('No spam attempts were recorded and stored in the spam log during the selected time period.', 'contact-forms-anti-spam') . "</p>";
             echo "<p>Debug: Found " . count($results) . " results</p>";
             return;
         }
         
+        ?>
+        <button class="button log-expand maspik-btn" type="submit" name="expand-all" id="expand-all"><?php esc_html_e('Expand all', 'contact-forms-anti-spam' ); ?></button>
+        <?php
         echo "<table class='maspik-log-table'>";
         echo "<tr class='header-row'>
                 <th class='maspik-log-column column-type'>" . esc_html__('Type', 'contact-forms-anti-spam') . "</th>
@@ -279,7 +280,7 @@ function maspik_process_spam_source($source) {
         <button class="button log-reset maspik-btn" type="submit" name="clear_log" id="clear_log"><?php esc_html_e('Reset Log', 'contact-forms-anti-spam' ); ?></button>
       </form>
 
-      <button class="button log-expand maspik-btn" type="submit" name="expand-all" id="expand-all"><?php esc_html_e('Expand all', 'contact-forms-anti-spam' ); ?></button>
+      <?php echo maspik_Download_log_btn(); ?>
 
       <a href="<?php echo esc_url(admin_url('admin.php?page=maspik-statistics')); ?>" class="maspik-btn-self maspik-btn maspik-stats-btn">
         <span class="dashicons dashicons-chart-bar"></span>
@@ -359,6 +360,10 @@ function maspik_process_spam_source($source) {
           </button>
           <button id="fp-cancel" class="fp-button fp-button-link"><?php esc_html_e('Cancel', 'contact-forms-anti-spam'); ?></button>
         </div>
+        <div id="fp-modal-feedback" class="fp-modal-feedback" style="display:none;">
+          <span class="dashicons dashicons-yes-alt fp-feedback-icon"></span>
+          <p id="fp-modal-feedback-text"></p>
+        </div>
       </div>
     </div>
 </div>
@@ -410,6 +415,24 @@ function maspik_process_spam_source($source) {
   line-height: 1.5;
   color: #646970;
   margin: 0;
+}
+
+.fp-modal-feedback {
+  text-align: center;
+  padding: 20px 0;
+}
+.fp-modal-feedback .fp-feedback-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #00a32a;
+  display: block;
+  margin: 0 auto 12px;
+}
+.fp-modal-feedback p {
+  margin: 0;
+  font-size: 1.05em;
+  color: #1d2327;
 }
 
 .fp-modal-actions {
@@ -577,9 +600,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const fpCancelBtn = document.getElementById('fp-cancel');
     const ajaxUrl = (typeof maspikAdmin !== 'undefined' && (maspikAdmin.ajax_url || maspikAdmin.ajaxurl)) ? (maspikAdmin.ajax_url || maspikAdmin.ajaxurl) : (typeof ajaxurl !== 'undefined' ? ajaxurl : '');
 
+    const fpModalInner = fpReportModal ? fpReportModal.querySelector('.fp-modal-inner') : null;
+    const fpModalHeader = fpReportModal ? fpReportModal.querySelector('.fp-modal-header') : null;
+    const fpModalBody = fpReportModal ? fpReportModal.querySelector('.fp-modal-body') : null;
+    const fpModalActions = fpReportModal ? fpReportModal.querySelector('.fp-modal-actions') : null;
+    const fpModalFeedback = document.getElementById('fp-modal-feedback');
+    const fpModalFeedbackText = document.getElementById('fp-modal-feedback-text');
+
+    function showFpFeedback(message) {
+        if (!fpModalFeedback || !fpModalFeedbackText) return;
+        if (fpModalHeader) fpModalHeader.style.display = 'none';
+        if (fpModalBody) fpModalBody.style.display = 'none';
+        if (fpModalActions) fpModalActions.style.display = 'none';
+        fpModalFeedbackText.textContent = message;
+        fpModalFeedback.style.display = 'block';
+    }
+
+    function resetFpModalContent() {
+        if (fpModalHeader) fpModalHeader.style.display = '';
+        if (fpModalBody) fpModalBody.style.display = '';
+        if (fpModalActions) fpModalActions.style.display = '';
+        if (fpModalFeedback) fpModalFeedback.style.display = 'none';
+    }
+
     function closeFpModal() {
         if (fpReportModal) {
             fpReportModal.style.display = 'none';
+            resetFpModalContent();
         }
     }
 
@@ -639,15 +686,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (fpSendBtn) {
                     fpSendBtn.onclick = function() {
+                        showFpFeedback('<?php echo esc_js(__('Report sent. Thank you!', 'contact-forms-anti-spam')); ?>');
                         sendNotSpamRequest(true);
-                        closeFpModal();
+                        setTimeout(closeFpModal, 1500);
                     };
                 }
 
                 if (fpSkipBtn) {
                     fpSkipBtn.onclick = function() {
+                        showFpFeedback('<?php echo esc_js(__('Marked as not spam.', 'contact-forms-anti-spam')); ?>');
                         sendNotSpamRequest(false);
-                        closeFpModal();
+                        setTimeout(closeFpModal, 1500);
                     };
                 }
 

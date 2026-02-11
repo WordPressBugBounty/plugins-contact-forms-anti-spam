@@ -14,11 +14,12 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
     $is_spam = false;
     $error_fields = array();
     $form_data = array_map('sanitize_text_field', $_POST['form_fields'] ?? []);
-    $NeedPageurl = maspik_get_settings( 'NeedPageurl' );   
+    $NeedPageurl = maspik_get_settings( 'NeedPageurl' );
     // Get all form fields
     $form_fields = $record->get( 'fields' );
+    $form_fields = is_array($form_fields) ? $form_fields : array();
     $keys = array_keys($form_fields);
-    $lastKeyId = end($keys);
+    $lastKeyId = !empty($keys) ? end($keys) : '';
     
     
     
@@ -109,9 +110,10 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
         $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
         $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
         $error_message = cfas_get_error_text($message);
-        $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
+        $spam_val = isset($GeneralCheck['value']) ? $GeneralCheck['value'] : false ;
+        $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : 'General';
         if($spam){
-        efas_add_to_log($type = "General",$reason, $form_data,"Hello Plus", $message,  $spam_val);
+        efas_add_to_log($type, $reason, $form_data, "Hello Plus", $message, $spam_val);
         $ajax_handler->add_error( $lastKeyId, $error_message );
         return;
         }

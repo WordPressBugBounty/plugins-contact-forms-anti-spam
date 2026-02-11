@@ -66,23 +66,24 @@ function my_ninja_forms_submit_data( $form_data ) {
     // ip
     $ip =  maspik_get_real_ip();
 
-    $fields = $form_data['fields'];
+    $fields = isset($form_data['fields']) && is_array($form_data['fields']) ? $form_data['fields'] : array();
     $new_fields = maspik_ninjaforms_flatten_fields($fields);
 
-    // Country IP Check 
+    // General check (Country/IP, honeypot, spam key, AI Matrix, etc.)
     $GeneralCheck = GeneralCheck($ip,$spam,$reason,$new_fields,"ninjaforms");
     $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
     $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
     $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
-    $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
+    $spam_val = isset($GeneralCheck['value']) ? $GeneralCheck['value'] : false ;
+    $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : 'General';
 
-
-    // Iterate through the first key ID
-    $first_key = array_keys($fields)[0] ? array_keys($fields)[0] : $form_data['fields'][1];
+    // First field key for error placement (fallback to first array key or 0)
+    $field_keys = array_keys($fields);
+    $first_key = !empty($field_keys) ? $field_keys[0] : 0;
 
     if ( $spam ) {
-        efas_add_to_log($type = "Country/IP",$reason , $new_fields, "Ninja Forms", $message,  $spam_val );
-        $form_data['errors']['fields'][$first_key] =  __('General: ', 'contact-forms-anti-spam').cfas_get_error_text($message);
+        efas_add_to_log($type, $reason, $new_fields, "Ninja Forms", $message, $spam_val);
+        $form_data['errors']['fields'][$first_key] = __('General: ', 'contact-forms-anti-spam') . cfas_get_error_text($message);
         return $form_data;
     }
     

@@ -12,15 +12,16 @@ function maspik_validate_everest_forms($errors, $form_data) {
     $entry = $form_data['entry']['form_fields'];
     
 
-    // Country IP Check
+    // General check (Country/IP, honeypot, spam key, AI Matrix, etc.)
     $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST,"everest");
     $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false;
     $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false;
     $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false;
-    $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
+    $spam_val = isset($GeneralCheck['value']) ? $GeneralCheck['value'] : false;
+    $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : 'General';
 
     if ($spam) {
-        efas_add_to_log("Country/IP", $reason, $entry, "Everest Forms", $message,  $spam_val);
+        efas_add_to_log($type, $reason, $entry, "Everest Forms", $message, $spam_val);
         $errors[$form_id][] = cfas_get_error_text($message);
         return $errors;
     }

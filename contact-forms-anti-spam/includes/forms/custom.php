@@ -155,7 +155,7 @@ add_filter('maspik_validate_custom_form_fields', function($is_spam, $fields, $fo
     $ip = maspik_get_real_ip();
 
     $hidden_fields = ['maspik_spam_key', 'Maspik-currentYear', 'full-name-maspik-hp'];
-    $hidden_data = false;
+    $hidden_data = array();
     foreach ($fields as $field) {
         if (isset($field['field_name']) && in_array($field['field_name'], $hidden_fields)) {
             $hidden_data[$field['field_name']] = $field['value'];

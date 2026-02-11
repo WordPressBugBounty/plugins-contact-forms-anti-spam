@@ -9,11 +9,11 @@ add_filter('forminator_custom_form_submit_errors', 'maspik_validate_forminator_g
 function maspik_validate_forminator_general($submit_errors, $form_id, $field_data_array){
     $spam = false;
     $reason ="";
+    $field_id = 0;
     // ip
     $ip =  maspik_get_real_ip();
 
-
-    
+    $field_data_array = is_array($field_data_array) ? $field_data_array : array();
     foreach( $field_data_array as $current ) {
         $field_id = $current['name'];
         $field_value = is_array($current['value'])  ?  strtolower( implode( " ", $current['value'] ) ) : strtolower( $current['value'] ) ; 
@@ -82,18 +82,17 @@ function maspik_validate_forminator_general($submit_errors, $form_id, $field_dat
     // end foreach   
     }
 
-    // Country IP Check 
+    // General check (Country/IP, honeypot, spam key, AI Matrix, etc.)
     $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"forminator");
     $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
     $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
     $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
-    $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
-    $field_id = $field_id ? $field_id : 0 ;
-    
+    $spam_val = isset($GeneralCheck['value']) ? $GeneralCheck['value'] : false ;
+    $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : 'General';
 
     if ($spam) {
         $submit_errors[][$field_id] = cfas_get_error_text($message);
-        efas_add_to_log($type = "Country/IP",$reason, $_POST, "Forminator", $message,  $spam_val );
+        efas_add_to_log($type, $reason, $_POST, "Forminator", $message, $spam_val);
         return $submit_errors;
     }
 

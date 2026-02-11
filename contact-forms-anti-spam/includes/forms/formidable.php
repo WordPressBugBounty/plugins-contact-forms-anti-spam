@@ -15,15 +15,16 @@ function maspik_validate_formidable_general($errors, $values){
   // Add $_POST['maspik_spam_key'] to the $_POST['item_meta']
   $datatocheck = maspik_add_spam_keys_to_array($_POST['item_meta'],$_POST);
 
-  // Country IP Check 
+  // General check (Country/IP, honeypot, spam key, AI Matrix, etc.)
   $GeneralCheck = GeneralCheck($ip,$spam,$reason,$datatocheck,"formidable");
   $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
   $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
   $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
-  $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
-    
+  $spam_val = isset($GeneralCheck['value']) ? $GeneralCheck['value'] : false ;
+  $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : 'General';
+
   if ( $spam) {
-    efas_add_to_log($type = "Country/IP",$reason, $_POST['item_meta'], "Formidable" , $message,  $spam_val);
+    efas_add_to_log($type, $reason, $_POST['item_meta'], "Formidable", $message, $spam_val);
     $errors['spam'] = cfas_get_error_text($message);
   }
 return $errors;

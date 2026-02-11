@@ -28,20 +28,20 @@ function maspik_validation_process_breakdance($canExecute, $action, $extra, $for
     
     // Use static variable to remember validation results per form submission
     static $validation_results = array();
-    
+
+    // Get form fields from the correct location
+    $form_fields = isset($extra['fields']) && is_array($extra['fields']) ? $extra['fields'] : array();
+
     // Create unique key for this form submission
-    $submission_key = $extra['formId'] . '_' . $extra['postId'] . '_' . md5(serialize($extra['fields']));
-    
+    $submission_key = (isset($extra['formId']) ? $extra['formId'] : '') . '_' . (isset($extra['postId']) ? $extra['postId'] : '') . '_' . md5(serialize($form_fields));
+
     // If we already validated this submission, return the cached result
     if (isset($validation_results[$submission_key])) {
         return $validation_results[$submission_key];
     }
-    
+
     $spam = false;
     $reason = '';
-    
-    // Get form fields from the correct location
-    $form_fields = isset($extra['fields']) && is_array($extra['fields']) ? $extra['fields'] : array();
     $form_id = isset($extra['formId']) ? $extra['formId'] : 0;
     $datatocheck = maspik_add_spam_keys_to_array($form_fields, $_POST);
 
@@ -197,11 +197,12 @@ function maspik_validation_process_breakdance($canExecute, $action, $extra, $for
     $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false;
     $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false;
     $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false;
-    $spam_val = isset($GeneralCheck['value']) && $GeneralCheck['value'] ? $GeneralCheck['value'] : false;
-    
+    $spam_val = isset($GeneralCheck['value']) ? $GeneralCheck['value'] : false;
+    $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : 'General';
+
     if ($spam) {
         $error_message = cfas_get_error_text($message);
-        efas_add_to_log("General", $reason, $datatocheck, "Breakdance Builder", $message, $spam_val);
+        efas_add_to_log($type, $reason, $datatocheck, "Breakdance Builder", $message, $spam_val);
         
         // Cache the error result
         $validation_results[$submission_key] = new WP_Error('spam_detected', $error_message);

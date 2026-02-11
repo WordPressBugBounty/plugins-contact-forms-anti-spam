@@ -2145,12 +2145,36 @@ td.column-ip.column-entries {
 }
 
 .spam-log-wrap .log-expand {
-  background-color: #6c757d;
+  background: linear-gradient(135deg, #F48722 0%, #e06f0f 100%);
   color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 500;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 8px rgba(244, 135, 34, 0.35);
+  transition: all 0.25s ease;
 }
 
 .spam-log-wrap .log-expand:hover {
-  background-color: #5a6268;
+  background: linear-gradient(135deg, #e06f0f 0%, #c95f0c 100%);
+  box-shadow: 0 4px 12px rgba(244, 135, 34, 0.45);
+  transform: translateY(-1px);
+}
+
+.spam-log-wrap .spam-log-button-wrapper .downloadform .maspik-btn {
+  border: 2px solid #F48722 !important;
+  color: #F48722;
+  background-color: #fff;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.spam-log-wrap .spam-log-button-wrapper .downloadform .maspik-btn:hover {
+  background-color: #fff8f3;
+  border-color: #e06f0f !important;
+  color: #e06f0f;
 }
 
 .spam-log-wrap .maspik-stats-btn {

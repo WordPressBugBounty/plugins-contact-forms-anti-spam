@@ -17,10 +17,11 @@ function validate_jet_form_for_spam($form_handler) {
         $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false;
         $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : "";
         $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : "";
-        $spam_val = $GeneralCheck['value'] ? $GeneralCheck['value'] : false ;
+        $spam_val = isset($GeneralCheck['value']) ? $GeneralCheck['value'] : false;
+        $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : 'General';
 
         if ($spam) {
-            efas_add_to_log("Country/IP", $reason, $_POST, "JetFormBuilder", $message,  $spam_val);
+            efas_add_to_log($type, $reason, $_POST, "JetFormBuilder", $message, $spam_val);
             throw new \Jet_Form_Builder\Exceptions\Request_Exception(
                 $error_message,
                 array('ip_check' => cfas_get_error_text($message))
