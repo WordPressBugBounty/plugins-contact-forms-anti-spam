@@ -211,7 +211,7 @@ function maspik_validation_process_breakdance($canExecute, $action, $extra, $for
 
     // Page URL Check
     /*
-    $NeedPageurl = maspik_get_settings('NeedPageurl') ? maspik_get_settings('NeedPageurl') : efas_get_spam_api('NeedPageurl', 'bool');
+    $NeedPageurl = efas_get_spam_api('NeedPageurl', 'bool');
 
     if (!isset($_POST['referrer']) && $NeedPageurl) {
         $reason = 'Page source url is empty';

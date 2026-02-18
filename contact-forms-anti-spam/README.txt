@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.9
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.6.2
+Stable tag: 2.7.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -314,6 +314,7 @@ It currently supports:
 * WordPress registration form
 * WooCommerce registration form (Maspik Pro license required)
 * WooCommerce review (Maspik Pro license required)
+* WooCommerce orders (Maspik Pro license required)
 
 More forms will be supported in future releases.  
 Looking for specific plugin support? Let us know at [wpmaspik.com](https://wpmaspik.com/#contact).
@@ -393,6 +394,12 @@ Then Maspik is an excellent choice for your WordPress spam protection.
 7. Spam filter and statistics dashboard
 
 == Changelog ==
+
+= 2.7.0 - 18/02/2026 =
+* Added: WooCommerce orders spam check support (Pro feature) - validate checkout submissions before order processing
+* Added: Maspik Matrix enabled by default for all users - can be disabled from settings page
+* Enhanced: Improved client IP detection security - only trusts forwarded headers from known proxy services (Cloudflare, Sucuri)
+* Enhanced: Code performance optimizations and improvements
 
 = 2.6.2 - 11/02/2026 =
 * Improvement – Maspik Matrix is now enabled by default for new installations. Existing sites will see an opt-in notice encouraging them to enable it for stronger spam protection. Users can enable or disable it from the Maspik settings page at any time.
@@ -568,5 +575,5 @@ Then Maspik is an excellent choice for your WordPress spam protection.
 
 == Upgrade Notice ==
 
-= 2.6.2 =
+= 2.7.0 =
 Maspik Matrix is now enabled by default for better protection. You can disable it in settings, checking the Spam Log from time to time is recommended.

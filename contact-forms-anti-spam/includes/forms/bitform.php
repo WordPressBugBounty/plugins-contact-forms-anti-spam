@@ -289,7 +289,7 @@ add_action('wp_footer', 'maspik_add_bitform_fields', 100);
 
 function maspik_add_bitform_fields() {
     // if honeypot or key check is not active, don't add fields
-    if( maspik_get_settings('maspikHoneypot') || maspik_get_settings('maspikTimeCheck') ){
+    if( efas_get_spam_api('maspikHoneypot', 'bool') || efas_get_spam_api('maspikTimeCheck', 'bool') ){
 
 
         $spam_key = maspik_get_spam_key();

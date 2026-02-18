@@ -142,10 +142,10 @@ add_filter('preprocess_comment', 'maspik_comments_checker');
 
 
 function add_custom_html_to_comment_form( $submit_button, $args ) {
-    if ( maspik_get_settings('maspikHoneypot') || maspik_get_settings('maspikTimeCheck') || maspik_get_settings('maspikYearCheck') ) {
+    if ( efas_get_spam_api('maspikHoneypot', 'bool') || efas_get_spam_api('maspikTimeCheck', 'bool') || maspik_get_settings('maspikYearCheck') ) {
         $custom_html = "";
 
-        if (maspik_get_settings('maspikHoneypot')) {
+        if (efas_get_spam_api('maspikHoneypot', 'bool')) {
             $custom_html .= '<div class="comment-form maspik-field" style="display: none;">
                 <label for="full-name-maspik-hp" class="comment-form-label">Leave this field empty</label>
                 <input size="1" type="text" autocomplete="off" autocomplete="new-password" autocomplete="false" aria-hidden="true" tabindex="-1" name="full-name-maspik-hp" id="full-name-maspik-hp" class="comment-form-input" placeholder="Leave this field empty" data-form-type="other" data-lpignore="true">
@@ -230,9 +230,48 @@ add_filter('registration_errors', 'maspik_check_wp_registration_form', 10, 1);
 
 /**
  * Check WooCommerce registration form for spam
+ * 
+ * IMPORTANT: This hook fires both during:
+ * 1. Explicit registration form submissions (wp-login.php?action=register)
+ * 2. Automatic account creation during checkout (when "create account" is enabled)
+ * 
+ * We use $errors->add() instead of wp_die() to properly integrate with WooCommerce's
+ * error handling system and prevent fatal errors during checkout account creation.
+ * 
+ * CRITICAL: We skip validation entirely when registration happens during checkout.
+ * During checkout, billing fields (billing_first_name, billing_email, etc.) are present
+ * in $_POST, which indicates this is checkout account creation. In this case, we rely
+ * solely on checkout validation (woocommerce_after_checkout_validation) to prevent spam.
+ * This prevents double validation and reduces risk of false positives blocking legitimate purchases.
  */
 function maspik_register_form_honeypot_check_in_woocommerce_registration($errors, $username, $email) {
     if ( maspik_if_woo_support_is_enabled() ) {
+        
+        // SAFEGUARD: Skip spam checks if this is being called for an existing logged-in user
+        // (shouldn't happen during normal registration, but protects against edge cases)
+        if ( is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
+            return $errors;
+        }
+        
+        // CRITICAL: Skip validation if this registration is happening during checkout
+        // During checkout, $_POST contains billing fields (billing_first_name, billing_email, etc.)
+        // If we detect billing fields, this is checkout account creation - skip registration validation
+        // and rely solely on checkout validation to prevent spam
+        $has_billing_fields = false;
+        if ( isset( $_POST ) && is_array( $_POST ) ) {
+            foreach ( $_POST as $key => $value ) {
+                if ( is_string( $key ) && strpos( $key, 'billing_' ) === 0 ) {
+                    $has_billing_fields = true;
+                    break;
+                }
+            }
+        }
+        
+        if ( $has_billing_fields ) {
+            // This is checkout account creation - skip registration validation
+            // Checkout validation (woocommerce_after_checkout_validation) will handle spam detection
+            return $errors;
+        }
 
         $user_email = sanitize_email($email);
         $user_login = sanitize_text_field($username);
@@ -273,7 +312,14 @@ function maspik_register_form_honeypot_check_in_woocommerce_registration($errors
         if ($spam) {
             $error_message = cfas_get_error_text($message);
             efas_add_to_log("$type", $reason, $_POST, 'Woocommerce registration', $spam_lbl, $spam_val);
-            wp_die($error_message, "Spam error", ['response' => 200]);
+            
+            // FIXED: Use $errors->add() instead of wp_die() to properly integrate with WooCommerce
+            // This prevents fatal errors during checkout account creation and allows proper error display
+            // wp_die() was causing issues when accounts are created during checkout
+            if ( ! is_wp_error( $errors ) ) {
+                $errors = new WP_Error();
+            }
+            $errors->add('maspik_spam_registration', $error_message);
         }
     }
     return $errors;

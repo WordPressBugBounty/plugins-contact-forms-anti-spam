@@ -200,7 +200,7 @@ function add_maspikhp_html_to_gform($button, $form) {
     }
     $addhtml = "";
 
-    if (maspik_get_settings('maspikHoneypot')) {
+    if (efas_get_spam_api('maspikHoneypot', 'bool')) {
         $honeypot_name = maspik_HP_name();
         $addhtml .= '<div class="gfield gfield--type-text maspik-field">
             <label for="' . $honeypot_name . '" class="ginput_container_text">Leave this field empty</label>

@@ -114,7 +114,7 @@ function add_maspikhp_html_to_everest($form_data) {
 
     $addhtml = "";
 
-    if (maspik_get_settings('maspikHoneypot')) {
+    if (efas_get_spam_api('maspikHoneypot', 'bool')) {
         $honeypot_name = maspik_HP_name();
         $addhtml .= '<div class="evf-honeypot-container evf-field-hp maspik-field">
             <label for="' . esc_attr($honeypot_name) . '" class="evf-field-label">Leave this field empty</label>

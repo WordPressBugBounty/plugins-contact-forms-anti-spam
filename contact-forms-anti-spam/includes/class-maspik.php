@@ -60,6 +60,8 @@ class Maspik {
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-maspik-admin.php';
+
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-maspik-client-ip.php';
       
 		// functions
       	require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/functions.php';
@@ -96,6 +98,11 @@ class Maspik {
 
       // wp-general
       	require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/wp-general.php';
+
+      	// WooCommerce checkout (orders) spam check – Pro only, off by default; file always loaded when WC active
+      	if ( maspik_is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
+      		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/woocommerce-orders.php';
+      	}
 
       	require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/playground.php';
       

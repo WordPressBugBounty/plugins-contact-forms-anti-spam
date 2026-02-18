@@ -5,6 +5,9 @@ if (!defined('ABSPATH')) exit;
 // AI Spam Check Constants (Beta feature - will be Pro-only in future versions)
 define('MASPIK_AI_ENDPOINT', 'https://ipapi.wpmaspik.com/check');
 
+/** What's New popup: bump this when you change the popup content so users see it again. */
+define('MASPIK_WHATS_NEW_VERSION', '1');
+
 // Toggle mapping constants
 $MASPIK_TOGGLE_MAP = [
     // Text related toggles
@@ -70,9 +73,18 @@ $MASPIK_FIELD_DISPLAY_NAMES = [
      "maspik_ai_enabled" => "Maspik Matrix",
      "maspik_ai_context" => "Business Context",
      "maspik_ai_client_secret" => "AI Client Secret",
-]; 
+];
 
-
+/**
+ * Dashboard boolean fields synced with plugin (OR logic: active if dashboard OR site is active).
+ * API key (from dashboard) => local option key (maspik_get_settings).
+ */
+$MASPIK_SYNC_BOOL_API_TO_LOCAL = array(
+    'maspik_ai_enabled'  => 'maspik_ai_enabled',
+    'NeedPageurl'        => 'NeedPageurl',
+    'maspikhoneypot'     => 'maspikHoneypot',
+    'advancekeycheck'    => 'maspikTimeCheck',
+);
 
 // Plugin mapping array for maspik_if_plugin_is_active()
 $MASPIK_PLUGIN_MAP = [
@@ -82,6 +94,7 @@ $MASPIK_PLUGIN_MAP = [
     'Contact form 7' => 'contact-form-7',
     'Woocommerce Review' => 'woocommerce',
     'Woocommerce Registration' => 'woocommerce',
+    'Woocommerce Orders' => 'woocommerce',
     'Wpforms' => 'wpforms',
     'Gravityforms' => 'gravityforms',
     'Formidable' => 'formidable',
@@ -171,7 +184,6 @@ $MASPIK_IMPORT_OPTIONS = [
 // Default settings array
 $MASPIK_DEFAULT_SETTINGS = [
     // General settings
-    'maspikDbCheck' => '1',
     'maspikHoneypot' => '1',
     'NeedPageurl' => '1',
     'maspikTimeCheck' => '1', // Spam key check, default on from 2.4.5
@@ -198,6 +210,10 @@ $MASPIK_DEFAULT_SETTINGS = [
     'maspik_support_Wpforms' => 'yes',
     'maspik_support_woocommerce_review' => 'yes',
     'maspik_support_Woocommerce_registration' => 'yes',
+    'maspik_support_woocommerce_orders' => 'no',
+    'maspik_woo_orders_error_message' => '',
+    'maspik_woo_orders_gateways_to_check' => '[]',
+    'maspik_woo_orders_check_zero_total' => 'yes',
     'maspik_support_buddypress_forms' => 'yes',
     'maspik_support_helloplus_forms' => 'yes',
     'maspik_support_metform_forms' => 'yes',

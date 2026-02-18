@@ -140,7 +140,7 @@ add_filter('wpforms_display_submit_before', 'add_maspikhp_html_to_wpforms' );
 function add_maspikhp_html_to_wpforms() {
     if ( !is_admin() ){
 
-        if (maspik_get_settings('maspikHoneypot')) {
+        if (efas_get_spam_api('maspikHoneypot', 'bool')) {
             $honeypot_name = maspik_HP_name();
             echo  '<div class="wpforms-field wpforms-field-name maspik-field">
                 <label for="' . $honeypot_name . '" class="wpforms-field-label">Leave this field empty</label>

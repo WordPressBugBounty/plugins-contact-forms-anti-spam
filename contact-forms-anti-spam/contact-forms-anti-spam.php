@@ -4,7 +4,7 @@
  * Plugin Name:       Maspik - Ultimate Spam Protection
  * Plugin URI:        https://wpmaspik.com/
  * Description:       The best spam protection plugin. Block spam using advanced filters, AI, blacklists, and IP verification and honeypot fields...
- * Version:           2.6.2
+ * Version:           2.7.0
  * Author:            WpMaspik
  * Author URI:        https://wpmaspik.com/?readme
  * Text Domain:       contact-forms-anti-spam
@@ -32,7 +32,7 @@ if (!defined('ABSPATH')) exit;
 /**
  * Currently plugin version.
  */
-define( 'MASPIK_VERSION', '2.6.2' );
+define( 'MASPIK_VERSION', '2.7.0' );
 define('MASPIK_PLUGIN_FILE', __FILE__);
 
 /**
@@ -206,6 +206,7 @@ function maspik_check_and_update_log_table($upgrader_object = null, $options = a
 
 // Run during plugin update
 add_action('upgrader_process_complete', 'maspik_check_and_update_log_table', 10, 2);
+
 
 // Run during plugin activation
 register_activation_hook(__FILE__, function() {

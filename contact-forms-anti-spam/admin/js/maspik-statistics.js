@@ -85,7 +85,7 @@ jQuery(document).ready(function($) {
             }
         });
     } else {
-        console.log('Timeline chart not created - missing data or dependencies');
+        if ( typeof maspikStatsDebug !== 'undefined' && maspikStatsDebug ) { console.log( 'Timeline chart not created - missing data or dependencies' ); }
     }
 
     // Create Countries Chart
@@ -119,7 +119,7 @@ jQuery(document).ready(function($) {
             }
         });
     } else {
-        console.log('Countries chart not created - missing data or dependencies');
+        if ( typeof maspikStatsDebug !== 'undefined' && maspikStatsDebug ) { console.log( 'Countries chart not created - missing data or dependencies' ); }
     }
 
     // Create Sources Chart
@@ -149,7 +149,7 @@ jQuery(document).ready(function($) {
             }
         });
     } else {
-        console.log('Sources chart not created - missing data or dependencies');
+        if ( typeof maspikStatsDebug !== 'undefined' && maspikStatsDebug ) { console.log( 'Sources chart not created - missing data or dependencies' ); }
     }
 
     // Create World Map Chart
@@ -314,7 +314,7 @@ jQuery(document).ready(function($) {
             }
         }
     } else {
-        console.log('GeoChart not created - missing data or dependencies');
+        if ( typeof maspikStatsDebug !== 'undefined' && maspikStatsDebug ) { console.log( 'GeoChart not created - missing data or dependencies' ); }
         if ($('#worldMapChart').length) {
             $('#worldMapChart').html('<div class="notice notice-warning"><p>Missing data for geographical visualization.</p></div>');
         }

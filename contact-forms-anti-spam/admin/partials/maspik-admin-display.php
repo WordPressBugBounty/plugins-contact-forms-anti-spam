@@ -529,6 +529,11 @@ global $MASPIK_TEMPLATES;
 
 
 $spamcounter = maspik_spam_count();
+
+$whats_new_version = function_exists('maspik_whats_new_version') ? maspik_whats_new_version() : '1';
+$whats_new_seen = get_user_meta(get_current_user_id(), 'maspik_whats_new_seen_version', true);
+$show_whats_new_auto = ($whats_new_seen !== $whats_new_version);
+$whats_new_nonce = wp_create_nonce('maspik_whats_new_seen');
 ?>
 <div class="wrap maspik-mainpage">
     <div class="maspik-settings">
@@ -541,6 +546,9 @@ $spamcounter = maspik_spam_count();
                     $version_status = function_exists('maspik_check_version_status') ? maspik_check_version_status() : array('is_latest' => true, 'latest_version' => MASPIK_VERSION);
                     $version_class = $version_status['is_latest'] ? 'version-latest' : 'version-outdated';
                     ?>
+                    <?php if( cfes_is_supporting() ): ?>
+                        <h3 class="maspik-protag <?php echo esc_attr(maspik_add_pro_class("country_location")); ?>">Pro</h3>
+                    <?php endif; ?>
                     <span class="maspik-version <?php echo esc_attr($version_class); ?>">
                         v<?php echo esc_html(MASPIK_VERSION); ?>
                         <?php if (!$version_status['is_latest']): ?>
@@ -549,9 +557,6 @@ $spamcounter = maspik_spam_count();
                             </a>
                         <?php endif; ?>
                     </span>
-                    <?php if( cfes_is_supporting() ): ?>
-                        <h3 class="maspik-protag <?php echo esc_attr(maspik_add_pro_class("country_location")); ?>">Pro</h3>
-                    <?php endif; ?>
                 </div>
                 
                 <?php 
@@ -583,6 +588,10 @@ $spamcounter = maspik_spam_count();
                                     <span class="dashicons dashicons-list-view"></span>
                                     <?php esc_html_e('Spam Log', 'contact-forms-anti-spam'); ?>
                                 </a>
+                                <button type="button" class="action-button maspik-open-whats-new" id="maspik-open-whats-new-btn">
+                                    <span class="dashicons dashicons-megaphone"></span>
+                                    <?php esc_html_e("What's New?", 'contact-forms-anti-spam'); ?>
+                                </button>
                                 <?php if (!cfes_is_supporting("country_location")): ?>
                                 <a href="https://wpmaspik.com/#pro?utm_source=plugin-dashboard" target="_blank" class="action-button action-button-upgrade">
                                     <span class="dashicons dashicons-star-filled"></span>
@@ -777,7 +786,6 @@ $spamcounter = maspik_spam_count();
                         'private_file_id' => (isset($_POST['private_file_id']) && $_POST['private_file_id'] !== '') ? 
                             (absint($_POST['private_file_id']) > 2 ? absint($_POST['private_file_id']) : '') : '',
                         'popular_spam' => isset($_POST['popular_spam']) ? 1 : 0,
-                        'maspikDbCheck' => isset($_POST['maspikDbCheck']) ? 1 : 0,
                         'maspikHoneypot' => isset($_POST['maspikHoneypot']) ? 1 : 0,
                         'maspikYearCheck' => isset($_POST['maspikYearCheck']) ? 1 : 0,
                         'maspikTimeCheck' => isset($_POST['maspikTimeCheck']) ? 1 : 0,
@@ -796,6 +804,7 @@ $spamcounter = maspik_spam_count();
                         'maspik_support_custom_forms' => sanitize_text_field(isset($_POST['maspik_support_custom_forms']) ? "yes" : "no"),
                         'maspik_support_woocommerce_review' => sanitize_text_field(isset($_POST['maspik_support_woocommerce_review']) ? "yes" : "no"),
                         'maspik_support_Woocommerce_registration' => sanitize_text_field(isset($_POST['maspik_support_Woocommerce_registration']) ? "yes" : "no"),
+                        'maspik_support_woocommerce_orders' => sanitize_text_field(isset($_POST['maspik_support_woocommerce_orders']) ? "yes" : "no"),
                         'maspik_support_Wpforms' => sanitize_text_field(isset($_POST['maspik_support_Wpforms']) ? "yes" : "no"),
                         'maspik_support_formidable_forms' => sanitize_text_field(isset($_POST['maspik_support_formidable_forms']) ? "yes" : "no"),
                         'maspik_support_forminator_forms' => sanitize_text_field(isset($_POST['maspik_support_forminator_forms']) ? "yes" : "no"),
@@ -824,6 +833,16 @@ $spamcounter = maspik_spam_count();
                         if (maspik_save_settings($key, $value) != "success") {
                             $error_message .= "Failed to save $key. ";
                         }
+                    }
+
+                    // WooCommerce Orders sub-settings: only when accordion was in the form (so we don't overwrite when feature is off)
+                    if ( class_exists( 'WooCommerce' ) && function_exists( 'WC' ) && ! empty( $_POST['maspik_woo_orders_accordion_visible'] ) ) {
+                        $woo_orders_error   = isset( $_POST['maspik_woo_orders_error_message'] ) ? sanitize_textarea_field( stripslashes( wp_unslash( $_POST['maspik_woo_orders_error_message'] ) ) ) : '';
+                        $woo_orders_gateways = isset( $_POST['maspik_woo_orders_gateways_to_check'] ) && is_array( $_POST['maspik_woo_orders_gateways_to_check'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['maspik_woo_orders_gateways_to_check'] ) ) : array();
+                        $woo_orders_zero    = isset( $_POST['maspik_woo_orders_check_zero_total'] ) ? 'yes' : 'no';
+                        maspik_save_settings( 'maspik_woo_orders_error_message', $woo_orders_error );
+                        maspik_save_settings( 'maspik_woo_orders_gateways_to_check', $woo_orders_gateways );
+                        maspik_save_settings( 'maspik_woo_orders_check_zero_total', $woo_orders_zero );
                     }
                     
                     // Ensure AI client secret exists
@@ -930,7 +949,21 @@ $spamcounter = maspik_spam_count();
 
                                     <!-- AI Spam Check Toggle - First in list -->
                                     <div class="maspik-ai-toggle-wrap togglewrap">
-                                        <?php echo maspik_toggle_button('maspik_ai_enabled', 'maspik_ai_enabled', 'maspik_ai_enabled', 'maspik-ai-toggle togglebutton', "ai-toggle", maspik_get_settings('maspik_ai_enabled')); ?>
+                                        <div class="maspik-toggle-and-chip">
+                                            <?php echo maspik_toggle_button('maspik_ai_enabled', 'maspik_ai_enabled', 'maspik_ai_enabled', 'maspik-ai-toggle togglebutton', "ai-toggle", maspik_get_settings('maspik_ai_enabled')); ?>
+                                            <?php
+                                            $ai_effective = efas_get_spam_api('maspik_ai_enabled', 'bool');
+                                            $ai_local = maspik_get_settings('maspik_ai_enabled');
+                                            $ai_local_on = !empty($ai_local) && $ai_local !== '0' && $ai_local !== 0;
+                                            $matrix_auto_enabled = get_option('maspik_matrix_auto_enabled', false);
+                                            
+                                            if ($ai_effective && !$ai_local_on) {
+                                                echo '<span class="maspik-dashboard-on-chip" title="' . esc_attr__('Active from dashboard', 'contact-forms-anti-spam') . '"><span class="dashicons dashicons-cloud" aria-hidden="true"></span><span class="maspik-dashboard-on-label">' . esc_html__('Active from dashboard', 'contact-forms-anti-spam') . '</span></span>';
+                                            } elseif ($ai_local_on && $matrix_auto_enabled) {
+                                                echo '<span class="maspik-dashboard-on-chip" style="background-color: #f0f6fc; color: #2271b1;" title="' . esc_attr__('Auto-enabled in version 2.7.0', 'contact-forms-anti-spam') . '"><span class="dashicons dashicons-yes-alt" aria-hidden="true"></span><span class="maspik-dashboard-on-label">' . esc_html__('Auto-enabled', 'contact-forms-anti-spam') . '</span></span>';
+                                            }
+                                            ?>
+                                        </div>
                                         <div>
                                             <h4>
                                                 <svg class="maspik-ai-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -951,68 +984,48 @@ $spamcounter = maspik_spam_count();
                                         </div>
                                     </div>
 
-                                    <!-- IP Verification - hidden, to be removed in a future version -->
-                                    <div style="display:none;" class="maspik-ip-verification-wrap">
-                                    <div class="maspik-txt-custom-msg-head togglewrap maspik-db-check--wrap">
-                                        <?php echo maspik_toggle_button('maspikDbCheck', 'maspikDbCheck', 'maspikDbCheck', 'maspik-DbCheck togglebutton',"",""); ?>
-                                        <div>
-                                            <h4> <?php esc_html_e('IP Verification', 'contact-forms-anti-spam'); ?></h4> 
-                                            <?php maspik_popup("", "",  "See details" , "visibility"); ?>
-
-                                            <span style="display:block;"><?php esc_html_e("Check if the sender's IP address is flagged as spam in the Maspik database.", 'contact-forms-anti-spam'); ?><br>
-                                                <?php
-                                                $api_data = get_option('maspik_api_requests', array('months' => array()));
-                                                $current_month = date('Ym');
-                                                $actual_calls_current_month = 0;
-                                                if (isset($api_data['months'][$current_month])) {
-                                                    $actual_calls_current_month = intval($api_data['months'][$current_month]['actual_calls']);
-                                                }
-                                                
-                                                $max_checks = cfes_is_supporting("ip_verification") ? 10000 : 100;
-                                                
-                                                $over_max_checks = $actual_calls_current_month > $max_checks;
-                                                echo $over_max_checks ? '<span class="text-caution">' : '';
-                                                printf(
-                                                    /* translators: %1$d is the number of checks used, %2$d is the total number of checks allowed */
-                                                    esc_html__('You have used %1$d out of %2$d checks this month', 'contact-forms-anti-spam'),
-                                                    $actual_calls_current_month,
-                                                    $max_checks
-                                                );
-                                                echo $over_max_checks ? '.</span>' : '';
-
-                                                if (!cfes_is_supporting("ip_verification")) {
-                                                    echo ' ' . esc_html__('Upgrade to Pro for 10,000 checks/month', 'contact-forms-anti-spam');
-                                                }else{
-                                                    echo ' ' . esc_html__('thanks to your Pro subscription.', 'contact-forms-anti-spam');
-                                                }
-                                                ?>
-                                            </span>
-                                        </div>
-                                    </div><!-- end of maspik-db-check--wrap -->
-                                    </div><!-- end maspik-ip-verification-wrap (hidden) -->
                                     <div class="maspik-txt-custom-msg-head togglewrap maspik-honeypot-wrap">
-                                        <?php 
-                                            echo maspik_toggle_button(
-                                                'maspikHoneypot', 
-                                                'maspikHoneypot', 
-                                                'maspikHoneypot', 
-                                                'maspik-honeypot togglebutton',
-                                                "",
-                                                ""
-                                            ); 
-                                        ?>
+                                        <div class="maspik-toggle-and-chip">
+                                            <?php 
+                                                echo maspik_toggle_button(
+                                                    'maspikHoneypot', 
+                                                    'maspikHoneypot', 
+                                                    'maspikHoneypot', 
+                                                    'maspik-honeypot togglebutton',
+                                                    "",
+                                                    ""
+                                                ); 
+                                            ?>
+                                            <?php
+                                            $hp_effective = efas_get_spam_api('maspikHoneypot', 'bool');
+                                            $hp_local = maspik_get_settings('maspikHoneypot');
+                                            $hp_local_on = !empty($hp_local) && $hp_local !== '0' && $hp_local !== 0;
+                                            if ($hp_effective && !$hp_local_on) {
+                                                echo '<span class="maspik-dashboard-on-chip" title="' . esc_attr__('Active from dashboard', 'contact-forms-anti-spam') . '"><span class="dashicons dashicons-cloud" aria-hidden="true"></span><span class="maspik-dashboard-on-label">' . esc_html__('Active from dashboard', 'contact-forms-anti-spam') . '</span></span>';
+                                            }
+                                            ?>
+                                        </div>
                                         <div>
-                                            <h4> <?php esc_html_e('Honeypot Trap', 'contact-forms-anti-spam'); ?>
-                                            </h4>
+                                            <h4> <?php esc_html_e('Honeypot Trap', 'contact-forms-anti-spam'); ?></h4>
                                             <span><?php esc_html_e('Adds an invisible field to your form. Humans can\'t see it, but bots often fill it. If this hidden field has data, the submission is blocked as spam. This traps bots without affecting real users.', 'contact-forms-anti-spam'); ?></span>
                                         </div>  
                                     </div><!-- end of maspik-honeypot-wrap -->
 
                                     <?php if( efas_if_plugin_is_active('elementor-pro') ) {  ?>
                                         <div class="maspik-txt-custom-msg-head togglewrap maspik-block-inquiry-wrap">
-                                            <?php echo maspik_toggle_button('NeedPageurl', 'NeedPageurl', 'NeedPageurl', 'maspik-needpageurl togglebutton',"","",['NeedPageurl']); ?>
+                                            <div class="maspik-toggle-and-chip">
+                                                <?php echo maspik_toggle_button('NeedPageurl', 'NeedPageurl', 'NeedPageurl', 'maspik-needpageurl togglebutton',"","",['NeedPageurl']); ?>
+                                                <?php
+                                                $np_effective = efas_get_spam_api('NeedPageurl', 'bool');
+                                                $np_local = maspik_get_settings('NeedPageurl');
+                                                $np_local_on = !empty($np_local) && $np_local !== '0' && $np_local !== 0;
+                                                if ($np_effective && !$np_local_on) {
+                                                    echo '<span class="maspik-dashboard-on-chip" title="' . esc_attr__('Active from dashboard', 'contact-forms-anti-spam') . '"><span class="dashicons dashicons-cloud" aria-hidden="true"></span><span class="maspik-dashboard-on-label">' . esc_html__('Active from dashboard', 'contact-forms-anti-spam') . '</span></span>';
+                                                }
+                                                ?>
+                                            </div>
                                                 <div>
-                                                    <h4> <?php esc_html_e('Elementor Bot detector', 'contact-forms-anti-spam'); ?> </h4>
+                                                    <h4> <?php esc_html_e('Elementor Bot detector', 'contact-forms-anti-spam'); ?></h4>
                                                     <span><?php esc_html_e('Blocks form submissions that are sent from outside your site (e.g. bots sending POST requests from an external source).', 'contact-forms-anti-spam'); ?></span>
                                             </div>  
                                         </div><!-- end of maspik-block-inquiry-wrap -->
@@ -1020,10 +1033,19 @@ $spamcounter = maspik_spam_count();
 
                                     <!-- Advance key check start -->
                                     <div class="maspik-txt-custom-msg-head togglewrap maspik-honeypot-wrap">
-                                        <?php echo maspik_toggle_button('maspikTimeCheck', 'maspikTimeCheck', 'maspikTimeCheck', 'maspik-honeypot togglebutton',"",""); ?>
+                                        <div class="maspik-toggle-and-chip">
+                                            <?php echo maspik_toggle_button('maspikTimeCheck', 'maspikTimeCheck', 'maspikTimeCheck', 'maspik-honeypot togglebutton',"",""); ?>
+                                            <?php
+                                            $tc_effective = efas_get_spam_api('maspikTimeCheck', 'bool');
+                                            $tc_local = maspik_get_settings('maspikTimeCheck');
+                                            $tc_local_on = !empty($tc_local) && $tc_local !== '0' && $tc_local !== 0;
+if ($tc_effective && !$tc_local_on) {
+                                            echo '<span class="maspik-dashboard-on-chip" title="' . esc_attr__('Active from dashboard', 'contact-forms-anti-spam') . '"><span class="dashicons dashicons-cloud" aria-hidden="true"></span><span class="maspik-dashboard-on-label">' . esc_html__('Active from dashboard', 'contact-forms-anti-spam') . '</span></span>';
+                                        }
+                                            ?>
+                                        </div>
                                         <div>
-                                            <h4> <?php esc_html_e('Advance key check', 'contact-forms-anti-spam'); ?>
-                                            </h4>
+                                            <h4> <?php esc_html_e('Advance key check', 'contact-forms-anti-spam'); ?></h4>
                                             <span><?php esc_html_e('Adds a hidden field with a unique key that is generated when the form is loaded. Blocks submissions that have no key or a wrong key — e.g. forms sent from outside your site (direct POST), cached pages, or old copies of the form. Complements the Honeypot: the key blocks "no key" submissions; the honeypot blocks bots that fill the invisible field.', 'contact-forms-anti-spam'); ?></span>
                                             <br>
                                             <span><?php esc_html_e('Please clear cache after activating this feature.', 'contact-forms-anti-spam'); ?></span>
@@ -1722,7 +1744,7 @@ $spamcounter = maspik_spam_count();
                                             <div class="maspik-accordion-content-wrap">
                                                 <b><span><?php esc_html_e('Maspik Matrix is a powerful multi-layer spam protection engine that combines multiple detection methods into one smart protection system.', 'contact-forms-anti-spam'); ?></span>
                                                 <span><?php echo sprintf(esc_html__('We recommend to use this feature and read the documentation %shere%s.', 'contact-forms-anti-spam'), '<a href="https://wpmaspik.com/documentation/ai-spam-check/" target="_blank">', '</a>'); ?></span><br>
-                                                <span><?php esc_html_e('To activate this feature, please check the "Maspik Matrix" toggle in the "Upper" section of this page.', 'contact-forms-anti-spam'); ?></span></b>
+                                                <span><?php esc_html_e('Maspik Matrix is enabled by default. You can turn it off from the toggle in the "Upper" section of this page if needed.', 'contact-forms-anti-spam'); ?></span></b>
                                                 <br>
                                                 <!-- AI Configuration Fields (shown only when enabled) -->
                                                 <div class="" id="" style="">
@@ -2279,6 +2301,15 @@ $spamcounter = maspik_spam_count();
                                                         </div>  
                                                     </div><!-- end of maspik-woo-registration-switch-wrap -->
 
+                                                    <div class="maspik-woo-orders-switch-wrap togglewrap maspik-form-switch-wrap <?php echo efas_if_plugin_is_active('woocommerce') == 1 ? 'enabled':'disabled' ?>">
+                                                        <?php echo maspik_toggle_button('maspik_support_woocommerce_orders', 'maspik_support_woocommerce_orders', 'maspik_support_woocommerce_orders', 'maspik-form-switch togglebutton', "form-toggle",
+                                                        (efas_if_plugin_is_active('woocommerce') && maspik_proform_togglecheck('Woocommerce Orders')) == 1 ); ?>
+                                                            <div>
+                                                                <h4> <?php esc_html_e('Support Woocommerce Orders (checkout)', 'contact-forms-anti-spam'); ?> </h4>
+                                                                <p class="description"><?php esc_html_e('Pro only. Off by default. You choose which payment gateways to check (whitelist). After enabling and saving, refresh this page to see the gateway settings accordion below.', 'contact-forms-anti-spam'); ?></p>
+                                                        </div>
+                                                    </div><!-- end of maspik-woo-orders-switch-wrap -->
+
                                                 </div>
                                             
                                                 <?php 
@@ -2344,6 +2375,97 @@ $spamcounter = maspik_spam_count();
                                             </div>
                                         </div><!-- end of maspik-accordion-content -->
                                     </div><!-- end of maspik-accordion-item -->
+
+                                    <?php
+                                    $show_woo_orders_accordion = efas_if_plugin_is_active( 'woocommerce' ) && maspik_get_settings( 'maspik_support_woocommerce_orders', 'form-toggle' ) === 'yes';
+                                    if ( $show_woo_orders_accordion ) :
+                                        $available_gateways = array();
+                                        if ( function_exists( 'WC' ) && WC()->payment_gateways() ) {
+                                            foreach ( WC()->payment_gateways()->payment_gateways() as $gid => $gateway ) {
+                                                if ( is_object( $gateway ) ) {
+                                                    $available_gateways[ $gid ] = method_exists( $gateway, 'get_title' ) ? $gateway->get_title() : ( isset( $gateway->title ) ? $gateway->title : $gid );
+                                                } else {
+                                                    $available_gateways[ $gid ] = $gid;
+                                                }
+                                            }
+                                        }
+                                        $saved_gateways = maspik_get_settings( 'maspik_woo_orders_gateways_to_check' );
+                                        if ( ! is_array( $saved_gateways ) ) {
+                                            $saved_gateways = is_string( $saved_gateways ) ? ( json_decode( $saved_gateways, true ) ?: array() ) : array();
+                                        }
+                                        $woo_orders_msg = maspik_get_settings( 'maspik_woo_orders_error_message' );
+                                        $woo_orders_msg = is_string( $woo_orders_msg ) ? $woo_orders_msg : '';
+                                        $woo_orders_zero_raw = maspik_get_settings( 'maspik_woo_orders_check_zero_total' );
+                                        $woo_orders_zero = ( $woo_orders_zero_raw === 'yes' || $woo_orders_zero_raw === '' || $woo_orders_zero_raw === null );
+                                    ?>
+                                    <!-- Accordion Item - WooCommerce Orders: gateways & message (visible only when WooCommerce Orders is enabled, after refresh) -->
+                                    <div class="maspik-accordion-item maspik-accordion-woo-orders-field">
+                                        <input type="hidden" name="maspik_woo_orders_accordion_visible" value="1" />
+                                        <div class="maspik-accordion-header">
+                                            <div class="mpk-acc-header-texts">
+                                                <h4 class="maspik-header maspik-accordion-header-text"><?php esc_html_e( 'WooCommerce Orders – Gateways & message', 'contact-forms-anti-spam' ); ?></h4>
+                                            </div>
+                                            <span class="maspik-acc-arrow">
+                                                <span class="dashicons dashicons-arrow-right"></span>
+                                            </span>
+                                        </div>
+                                        <div class="maspik-accordion-content">
+                                            <div class="maspik-accordion-content-wrap hide-form-title">
+                                                <div class="maspik-woo-orders-intro" style="margin-bottom: 1.25em; padding: 12px 14px; border-left: 4px solid #2271b1; background: #f0f6fc;">
+                                                    <strong><?php esc_html_e( 'When does the spam check run?', 'contact-forms-anti-spam' ); ?></strong>
+                                                    <p style="margin: 8px 0 0 0; font-size: 13px; color: #50575e;"><?php esc_html_e( 'The spam check runs if at least one of the following is true:', 'contact-forms-anti-spam' ); ?></p>
+                                                    <ul style="margin: 8px 0 0 0; padding-left: 1.25em; font-size: 13px; color: #50575e;">
+                                                        <li><?php esc_html_e( 'The payment method used is in your selected gateways list.', 'contact-forms-anti-spam' ); ?></li>
+                                                        <li><?php esc_html_e( 'The order total is 0 and zero-total checking is enabled.', 'contact-forms-anti-spam' ); ?></li>
+                                                    </ul>
+                                                    <p style="margin: 10px 0 0 0; font-size: 13px; color: #50575e;"><?php esc_html_e( 'If no gateways are selected and zero-total checking is disabled, checkout will not be validated.', 'contact-forms-anti-spam' ); ?></p>
+                                                    <p style="margin: 10px 0 0 0; font-size: 13px; color: #50575e;"><strong><?php esc_html_e( 'Note:', 'contact-forms-anti-spam' ); ?></strong> <?php esc_html_e( 'This spam check works only on classic checkout (shortcode) or regular checkout, not on block checkout.', 'contact-forms-anti-spam' ); ?></p>
+                                                </div>
+
+                                                <!-- 1. Payment gateways select -->
+                                                <div class="maspik-accordion-subtitle-wrap add-space-top short-tooltip">
+                                                    <h3 class="maspik-accordion-subtitle"><?php esc_html_e( 'Payment gateways to check', 'contact-forms-anti-spam' ); ?></h3>
+                                                    <?php maspik_tooltip( esc_html__( 'Select the payment methods that should trigger a spam check. Any checkout using one of these gateways will be validated.', 'contact-forms-anti-spam' ) ); ?>
+                                                </div>
+                                                <div class="maspik-woo-orders-gateways-wrap maspik-main-list-wrap">
+                                                    <?php if ( ! empty( $available_gateways ) ) : ?>
+                                                        <select name="maspik_woo_orders_gateways_to_check[]" id="maspik_woo_orders_gateways_to_check" class="maspik-select maspik-woo-gateways-select" multiple="multiple" style="min-width: 280px; min-height: 120px;">
+                                                            <?php foreach ( $available_gateways as $gid => $label ) : ?>
+                                                                <option value="<?php echo esc_attr( $gid ); ?>" <?php selected( in_array( $gid, $saved_gateways, true ) ); ?>><?php echo esc_html( $label ); ?> (<?php echo esc_html( $gid ); ?>)</option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                    <?php else : ?>
+                                                        <p class="description"><?php esc_html_e( 'No WooCommerce payment gateways found.', 'contact-forms-anti-spam' ); ?></p>
+                                                    <?php endif; ?>
+                                                </div>
+
+                                                <div class="maspik-simple-divider"></div>
+
+                                                <!-- 2. Zero total: simple toggle -->
+                                                <div class="maspik-limit-char-head togglewrap">
+                                                    <?php
+                                                    echo maspik_toggle_button( 'maspik_woo_orders_check_zero_total', 'maspik_woo_orders_check_zero_total', 'maspik_woo_orders_check_zero_total', 'maspik-toggle togglebutton', 'yes-no', $woo_orders_zero ? 1 : 0 );
+                                                    ?>
+                                                    <h4><?php esc_html_e( 'Check free orders (total = 0)', 'contact-forms-anti-spam' ); ?></h4>
+                                                    <?php maspik_tooltip( esc_html__( 'Enable spam protection for orders that do not require payment.', 'contact-forms-anti-spam' ) ); ?>
+                                                </div>
+
+                                                <div class="maspik-simple-divider"></div>
+
+                                                <!-- 3. Error / notice message -->
+                                                <div class="maspik-accordion-subtitle-wrap add-space-top short-tooltip">
+                                                    <h3 class="maspik-accordion-subtitle"><?php esc_html_e( 'Message to show when checkout is blocked (notice / error)', 'contact-forms-anti-spam' ); ?></h3>
+                                                    <?php maspik_tooltip( esc_html__( 'Leave empty to use the default validation error message from the Spam Log section above.', 'contact-forms-anti-spam' ) ); ?>
+                                                </div>
+                                                <div class="maspik-general-custom-msg-wrap maspik-main-list-wrap maspik-textfield-list">
+                                                    <textarea name="maspik_woo_orders_error_message" id="maspik_woo_orders_error_message" class="maspik-textarea" rows="2" cols="80" placeholder="<?php esc_attr_e( 'e.g. We could not process your order. Please try again or contact us.', 'contact-forms-anti-spam' ); ?>"><?php echo esc_textarea( $woo_orders_msg ); ?></textarea>
+                                                </div>
+
+                                                <?php maspik_save_button_show(); ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <?php endif; ?>
 
                                     <!-- Plugin Settings Accordion -->
                                     <div class="maspik-accordion-item maspik-accordion-plugin-settings">
@@ -2787,6 +2909,43 @@ $spamcounter = maspik_spam_count();
                     <?php echo IP_Verification_popup_content(); ?>
                 </div>
 
+                <div id="pop-up-whats-new" class="maspik-popup-wrap maspik-whats-new-popup">
+                    <button class="maspik-whats-new-close close-popup" type="button" aria-label="<?php esc_attr_e('Close', 'contact-forms-anti-spam'); ?>"><span class="dashicons dashicons-no-alt"></span></button>
+                    <div class="maspik-whats-new-inner">
+                        <h2 class="maspik-whats-new-title">
+                            <span class="maspik-whats-new-icon dashicons dashicons-megaphone" aria-hidden="true"></span>
+                            <?php esc_html_e("What's New in Maspik", 'contact-forms-anti-spam'); ?>
+                        </h2>
+
+                        <section class="maspik-whats-new-topic">
+                            <h3 class="maspik-whats-new-topic-title"><?php esc_html_e('Unified Blacklist Fields', 'contact-forms-anti-spam'); ?></h3>
+                            <p><?php esc_html_e("We've merged the Text and Textarea blacklist into one place. You now manage blocked words for both fields from a single setting.", 'contact-forms-anti-spam'); ?></p>
+                        </section>
+
+                        <section class="maspik-whats-new-topic">
+                            <h3 class="maspik-whats-new-topic-title"><?php esc_html_e('Maspik Matrix', 'contact-forms-anti-spam'); ?></h3>
+                            <p><?php esc_html_e('Maspik Matrix helps detect more complex and borderline spam. You can enable it from the dashboard widget or in settings.', 'contact-forms-anti-spam'); ?></p>
+                        </section>
+
+                        <section class="maspik-whats-new-tips">
+                            <h3 class="maspik-whats-new-tips-title"><?php esc_html_e('Tips to Improve Spam Protection', 'contact-forms-anti-spam'); ?></h3>
+                            <div class="maspik-whats-new-tip">
+                                <h4 class="maspik-whats-new-tip-heading"><?php esc_html_e('Review Your Spam Log', 'contact-forms-anti-spam'); ?></h4>
+                                <p><?php esc_html_e('Identify recurring patterns and false positives.', 'contact-forms-anti-spam'); ?></p>
+                            </div>
+                            <div class="maspik-whats-new-tip">
+                                <h4 class="maspik-whats-new-tip-heading"><?php esc_html_e('Add Recurring Spam Words', 'contact-forms-anti-spam'); ?></h4>
+                                <p><?php esc_html_e('Block repeated phrases to stop them automatically next time.', 'contact-forms-anti-spam'); ?></p>
+                            </div>
+                        </section>
+
+                        <p class="maspik-whats-new-footer"><?php echo wp_kses(sprintf(__('We\'d love your feedback %s', 'contact-forms-anti-spam'), '<a href="mailto:hello@wpMaspik.com">hello@wpmaspik.com</a>'), array('a' => array('href' => array()))); ?></p>
+                        <div class="maspik-whats-new-actions">
+                            <button type="button" class="button button-primary maspik-whats-new-gotit"><?php esc_html_e('Review settings', 'contact-forms-anti-spam'); ?></button>
+                        </div>
+                    </div>
+                </div>
+
                 <?php
     wp_enqueue_style('select2-css', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css');
     wp_enqueue_script('select2-js', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', array('jquery'), null, true);
@@ -2794,6 +2953,12 @@ $spamcounter = maspik_spam_count();
 
 
     <script>
+    var maspikWhatsNew = {
+        showAuto: <?php echo $show_whats_new_auto ? 'true' : 'false'; ?>,
+        version: '<?php echo esc_js($whats_new_version); ?>',
+        nonce: '<?php echo esc_js($whats_new_nonce); ?>',
+        ajaxUrl: '<?php echo esc_js(admin_url('admin-ajax.php')); ?>'
+    };
 
     // Test form buttons
     document.addEventListener('DOMContentLoaded', function() {
@@ -3076,6 +3241,43 @@ $spamcounter = maspik_spam_count();
             const popups = document.querySelectorAll('.maspik-popup-wrap');
             const closeButtons = document.querySelectorAll('.close-popup');
             const popupBackground = document.getElementById('popup-background');
+            const whatsNewPopup = document.getElementById('pop-up-whats-new');
+
+            function openWhatsNewPopup() {
+                if (whatsNewPopup && popupBackground) {
+                    whatsNewPopup.classList.remove('maspik-whats-new-open');
+                    popupBackground.style.display = 'block';
+                    whatsNewPopup.classList.add('active');
+                    requestAnimationFrame(function() {
+                        requestAnimationFrame(function() {
+                            whatsNewPopup.classList.add('maspik-whats-new-open');
+                        });
+                    });
+                }
+            }
+            function markWhatsNewSeen() {
+                if (typeof maspikWhatsNew === 'undefined' || !maspikWhatsNew.version) return;
+                var formData = new FormData();
+                formData.append('action', 'maspik_whats_new_seen');
+                formData.append('nonce', maspikWhatsNew.nonce);
+                formData.append('version', maspikWhatsNew.version);
+                fetch(maspikWhatsNew.ajaxUrl, { method: 'POST', body: formData, credentials: 'same-origin' }).catch(function() {});
+            }
+            if (typeof maspikWhatsNew !== 'undefined' && maspikWhatsNew.showAuto) {
+                setTimeout(openWhatsNewPopup, 2000);
+            }
+            var whatsNewBtn = document.getElementById('maspik-open-whats-new-btn');
+            if (whatsNewBtn) {
+                whatsNewBtn.addEventListener('click', openWhatsNewPopup);
+            }
+            var gotItBtn = document.querySelector('.maspik-whats-new-gotit');
+            if (gotItBtn && whatsNewPopup && popupBackground) {
+                gotItBtn.addEventListener('click', function() {
+                    markWhatsNewSeen();
+                    whatsNewPopup.classList.remove('active');
+                    popupBackground.style.display = 'none';
+                });
+            }
 
             buttons.forEach((button, index) => {
                 button.addEventListener('click', (event) => {
@@ -3114,6 +3316,7 @@ $spamcounter = maspik_spam_count();
                 closeButton.addEventListener('click', () => {
                     const popup = closeButton.closest('.maspik-popup-wrap');
                     if (popup) {
+                        if (popup.id === 'pop-up-whats-new') markWhatsNewSeen();
                         popup.classList.remove('active');
                         popupBackground.style.display = 'none'; // Hide background
                     }
@@ -3122,9 +3325,10 @@ $spamcounter = maspik_spam_count();
 
             // Close popup when clicking outside of it
             document.addEventListener('click', (event) => {
-                if (!event.target.closest('.maspik-popup-wrap') && !event.target.closest('.your-button-class')) {
+                if (!event.target.closest('.maspik-popup-wrap') && !event.target.closest('.your-button-class') && !event.target.closest('.maspik-open-whats-new')) {
                     const activePopups = document.querySelectorAll('.maspik-popup-wrap.active');
                     activePopups.forEach(popup => {
+                        if (popup.id === 'pop-up-whats-new') markWhatsNewSeen();
                         popup.classList.remove('active');
                         popupBackground.style.display = 'none'; // Hide background
                     });

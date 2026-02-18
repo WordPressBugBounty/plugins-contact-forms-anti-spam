@@ -742,32 +742,7 @@ function maspik_Download_log_btn(){
 
 
 function maspik_get_real_ip() {
-    $headers = [
-        'CF-Connecting-IP', // Cloudflare (most accurate for Cloudflare)
-        'HTTP_CF_CONNECTING_IP', // Cloudflare (less popular)
-        'HTTP_X_REAL_IP', // Nginx 
-        'HTTP_X_FORWARDED_FOR',  // Proxy forwarding
-        'HTTP_CLIENT_IP',
-        'HTTP_X_FORWARDED',
-        'HTTP_X_CLUSTER_CLIENT_IP',
-        'HTTP_FORWARDED_FOR',
-        'HTTP_FORWARDED',
-        'REMOTE_ADDR' // Default
-    ];
-
-    foreach ($headers as $key) {
-        if (!empty($_SERVER[$key])) {
-            $ip_list = explode(',', $_SERVER[$key]);
-            foreach ($ip_list as $ip) {
-                $ip = trim($ip);
-                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                    return $ip;
-                }
-            }
-        }
-    }
-
-    return '127.0.0.1';
+	return Maspik_Client_Ip::get_client_ip();
 }
 
 
@@ -822,7 +797,35 @@ function maspik_is_field_value_equal_to_string($string, $field_value) {
 }
 
 function efas_get_spam_api($field = "text_field",$type = "array") {
-    $spamapi_option = get_option('spamapi'); 
+    $spamapi_option = get_option('spamapi');
+    $spamapi_option = is_array($spamapi_option) ? $spamapi_option : array();
+
+    global $MASPIK_SYNC_BOOL_API_TO_LOCAL;
+    if ( ! empty( $MASPIK_SYNC_BOOL_API_TO_LOCAL ) && $type === 'bool' && isset( $MASPIK_SYNC_BOOL_API_TO_LOCAL[ $field ] ) ) {
+        $local_key = $MASPIK_SYNC_BOOL_API_TO_LOCAL[ $field ];
+        $local_val = maspik_get_settings( $local_key );
+        $api_val   = false;
+        if ( ( maspik_get_settings('private_file_id') || maspik_get_settings("popular_spam") ) && is_array($spamapi_option) && cfes_is_supporting("api") && isset( $spamapi_option[ $field ] ) ) {
+            $raw = $spamapi_option[ $field ];
+            $api_val = is_array( $raw ) ? $raw[0] : $raw;
+        }
+        $local_truthy = !empty( $local_val ) && $local_val !== '0' && $local_val !== 0;
+        $api_truthy   = !empty( $api_val ) && $api_val !== '0' && $api_val !== 0;
+        return $local_truthy || $api_truthy;
+    }
+    // Support local key for honeypot/time so callers can use maspikHoneypot / maspikTimeCheck (field is value, not API key)
+    if ( ! empty( $MASPIK_SYNC_BOOL_API_TO_LOCAL ) && $type === 'bool' && in_array( $field, $MASPIK_SYNC_BOOL_API_TO_LOCAL, true ) && ! isset( $MASPIK_SYNC_BOOL_API_TO_LOCAL[ $field ] ) ) {
+        $api_key   = array_search( $field, $MASPIK_SYNC_BOOL_API_TO_LOCAL, true );
+        $local_val = maspik_get_settings( $field );
+        $api_val   = false;
+        if ( ( maspik_get_settings('private_file_id') || maspik_get_settings("popular_spam") ) && is_array($spamapi_option) && cfes_is_supporting("api") && isset( $spamapi_option[ $api_key ] ) ) {
+            $raw = $spamapi_option[ $api_key ];
+            $api_val = is_array( $raw ) ? $raw[0] : $raw;
+        }
+        $local_truthy = !empty( $local_val ) && $local_val !== '0' && $local_val !== 0;
+        $api_truthy   = !empty( $api_val ) && $api_val !== '0' && $api_val !== 0;
+        return $local_truthy || $api_truthy;
+    }
    
     if ((!maspik_get_settings('private_file_id') && !maspik_get_settings("popular_spam") ) || !is_array($spamapi_option) || !cfes_is_supporting("api") || !isset($spamapi_option[$field])) {
         return false;
@@ -927,6 +930,7 @@ function efas_array_supports_plugin(){
     'BitForm' => 0,
     'Woocommerce Review' => $info,
     'Woocommerce Registration' => $info,
+    'Woocommerce Orders' => $info,
     'Wpforms' => $info,
     'Gravityforms' => $info,
   );
@@ -983,6 +987,8 @@ function efas_if_plugin_is_affective($plugin , $status = "no"){
       return efas_if_plugin_is_active('woocommerce') && cfes_is_supporting("plugin") && maspik_get_settings( "maspik_support_woocommerce_review", 'form-toggle' ) != $status ;
     }else if($plugin == 'Woocommerce Registration'){
       return efas_if_plugin_is_active('woocommerce') && cfes_is_supporting("plugin") && maspik_get_settings( "maspik_support_Woocommerce_registration", 'form-toggle' ) != $status;
+    }else if($plugin == 'Woocommerce Orders'){
+      return efas_if_plugin_is_active('woocommerce') && cfes_is_supporting("plugin") && maspik_get_settings( "maspik_support_woocommerce_orders", 'form-toggle' ) != $status;
     }else if($plugin == 'Wpforms'){
       return  efas_if_plugin_is_active('wpforms') && cfes_is_supporting("plugin") && maspik_get_settings( "maspik_support_Wpforms", 'form-toggle' ) != $status  ;
     }else if($plugin == 'Gravityforms'){
@@ -2656,24 +2662,43 @@ function maspik_merge_textarea_blacklist() {
 add_action('admin_init', 'maspik_merge_textarea_blacklist', 1);
 
 /**
- * Maspik Matrix (AI) rollout bootstrap.
- *
- * For existing sites: we do NOT auto-enable. We only set a timestamp once
- * so we can show an opt-in notice (~30 days). New installations get
- * Matrix on by default via MASPIK_SETTINGS in consts.php.
+ * Auto-enable Maspik Matrix for all users on plugin update.
+ * Simple: if Matrix is off, turn it on and save flag in maspik table.
  */
 function maspik_enable_matrix_by_default() {
-    if (get_option('maspik_matrix_enabled_notice', false)) {
+    // Check if Matrix is already enabled locally (not from API)
+    $ai_enabled_local = maspik_get_settings('maspik_ai_enabled');
+    $ai_enabled = !empty($ai_enabled_local) && $ai_enabled_local !== '0' && $ai_enabled_local !== 0;
+    if ($ai_enabled) {
         return;
     }
-    update_option('maspik_matrix_enabled_notice', time());
+    
+    // Check if we already auto-enabled it (flag stored in maspik table)
+    $already_enabled = maspik_get_settings('maspik_matrix_auto_enabled');
+    if ($already_enabled) {
+        return;
+    }
+    
+    // Enable Matrix
+    maspik_save_settings('maspik_ai_enabled', '1');
+    
+    // Save flag in maspik table (not WordPress options)
+    maspik_save_settings('maspik_matrix_auto_enabled', '1');
+    
+    // Set notice timestamp (only if user has permissions)
+    if (current_user_can('manage_options')) {
+        update_option('maspik_matrix_enabled_notice', time());
+        delete_option('maspik_matrix_enabled_notice_dismissed');
+    }
 }
+// Run only on admin_init - lightweight, runs once per admin page load
 add_action('admin_init', 'maspik_enable_matrix_by_default', 2);
 
+
 /**
- * Show admin notice offering to enable Maspik Matrix (opt-in for existing users).
+ * Show admin notice informing users that Maspik Matrix is now enabled.
  *
- * Shown only when Matrix is currently off, notice not dismissed, and within ~30 days.
+ * Shown when Matrix was auto-enabled, notice not dismissed, and within ~30 days.
  */
 function maspik_show_matrix_enabled_notice() {
     $notice_set = get_option('maspik_matrix_enabled_notice', false);
@@ -2683,22 +2708,22 @@ function maspik_show_matrix_enabled_notice() {
     if (get_option('maspik_matrix_enabled_notice_dismissed', false)) {
         return;
     }
-    $ai_enabled = maspik_get_settings('maspik_ai_enabled');
-    // If Matrix is enabled, don't show notice
-    if ($ai_enabled === '1' || $ai_enabled === 1) {
+    
+    $ai_enabled = efas_get_spam_api('maspik_ai_enabled', 'bool');
+    
+    // Only show notice if Matrix is enabled
+    if (!$ai_enabled) {
         delete_option('maspik_matrix_enabled_notice');
         return;
     }
-    // If null (not set in DB yet) and notice timestamp was just set (new install), 
-    // assume default '1' applies and don't show notice
-    if ($ai_enabled === null) {
-        $notice_time = get_option('maspik_matrix_enabled_notice', false);
-        if ($notice_time && (time() - (int)$notice_time) < 60) {
-            // Very recent timestamp = likely new install, default is '1', don't show notice
-            delete_option('maspik_matrix_enabled_notice');
-            return;
-        }
+    
+    // Only show notice if it was auto-enabled (check flag in maspik table)
+    $was_auto_enabled = maspik_get_settings('maspik_matrix_auto_enabled');
+    if (!$was_auto_enabled) {
+        delete_option('maspik_matrix_enabled_notice');
+        return;
     }
+    
     $set_at = is_numeric($notice_set) ? (int) $notice_set : 0;
     if ($set_at && (time() - $set_at) > 30 * DAY_IN_SECONDS) {
         delete_option('maspik_matrix_enabled_notice');
@@ -2706,36 +2731,27 @@ function maspik_show_matrix_enabled_notice() {
     }
 
     $settings_url = admin_url('admin.php?page=maspik');
+    $spam_log_url = admin_url('admin.php?page=maspik-log.php');
     ?>
-    <div class="notice notice-info is-dismissible maspik-matrix-enabled-notice" style="position: relative;">
+    <div class="notice notice-success is-dismissible maspik-matrix-enabled-notice" style="position: relative;">
         <p>
             <strong><?php esc_html_e('Maspik', 'contact-forms-anti-spam'); ?>:</strong>
-            <?php esc_html_e('Without Maspik Matrix your site is only partially protected. Most of the spam and bot blocking comes from this engine — we strongly recommend turning it on.', 'contact-forms-anti-spam'); ?>
+            <?php esc_html_e('Maspik Matrix is now enabled by default for better spam protection. You can turn it off from the Maspik settings page if needed.', 'contact-forms-anti-spam'); ?>
         </p>
         <p>
-            <button type="button" class="button button-primary maspik-matrix-notice-activate">
-                <?php esc_html_e('Enable Maspik Matrix now', 'contact-forms-anti-spam'); ?>
-            </button>
-            <a href="<?php echo esc_url($settings_url); ?>" class="button">
+            <a href="<?php echo esc_url($settings_url); ?>" class="button button-primary">
                 <?php esc_html_e('Go to Maspik settings', 'contact-forms-anti-spam'); ?>
             </a>
+            <a href="<?php echo esc_url($spam_log_url); ?>" class="button">
+                <?php esc_html_e('Check Spam Log', 'contact-forms-anti-spam'); ?>
+            </a>
             <button type="button" class="button maspik-matrix-notice-dismiss">
-                <?php esc_html_e('Not now', 'contact-forms-anti-spam'); ?>
+                <?php esc_html_e('Dismiss', 'contact-forms-anti-spam'); ?>
             </button>
         </p>
     </div>
     <script>
     jQuery(document).ready(function($) {
-        $(document).on('click', '.maspik-matrix-enabled-notice .maspik-matrix-notice-activate', function(e) {
-            e.preventDefault();
-            var $notice = $('.maspik-matrix-enabled-notice');
-            var $btn = $(this);
-            $btn.prop('disabled', true);
-            $.post(ajaxurl, {
-                action: 'maspik_enable_matrix_from_notice',
-                nonce: '<?php echo wp_create_nonce('maspik_enable_matrix_from_notice'); ?>'
-            }).done(function() { $notice.slideUp(); }).fail(function() { $btn.prop('disabled', false); });
-        });
         $(document).on('click', '.maspik-matrix-enabled-notice .notice-dismiss, .maspik-matrix-enabled-notice .maspik-matrix-notice-dismiss', function(e) {
             e.preventDefault();
             var $notice = $('.maspik-matrix-enabled-notice');
@@ -2767,6 +2783,35 @@ function maspik_dismiss_matrix_enabled_notice_handler() {
 add_action('wp_ajax_maspik_dismiss_matrix_enabled_notice', 'maspik_dismiss_matrix_enabled_notice_handler');
 
 /**
+ * Returns the current What's New popup version. Bump MASPIK_WHATS_NEW_VERSION in consts.php when updating the popup content.
+ */
+function maspik_whats_new_version() {
+    return defined('MASPIK_WHATS_NEW_VERSION') ? MASPIK_WHATS_NEW_VERSION : '1';
+}
+
+/**
+ * AJAX handler: mark What's New popup as seen for the current user (so it won't auto-open again until version is bumped).
+ */
+function maspik_whats_new_seen_handler() {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field($_POST['nonce']), 'maspik_whats_new_seen')) {
+        wp_send_json_error();
+        return;
+    }
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error();
+        return;
+    }
+    $version = isset($_POST['version']) ? sanitize_text_field($_POST['version']) : '';
+    if ($version === '') {
+        wp_send_json_error();
+        return;
+    }
+    update_user_meta(get_current_user_id(), 'maspik_whats_new_seen_version', $version);
+    wp_send_json_success();
+}
+add_action('wp_ajax_maspik_whats_new_seen', 'maspik_whats_new_seen_handler');
+
+/**
  * AJAX handler to enable Maspik Matrix (AI) from the rollout notice.
  */
 function maspik_enable_matrix_from_notice_handler() {
@@ -2794,9 +2839,9 @@ add_action('wp_ajax_maspik_enable_matrix_from_notice', 'maspik_enable_matrix_fro
  */
 function maspik_matrix_dashboard_widget_render() {
     // This function only renders when Matrix is off (widget is only added when off)
-    // Double-check: if somehow Matrix got enabled, don't render
-    $ai_enabled = maspik_get_settings('maspik_ai_enabled');
-    if ($ai_enabled === '1' || $ai_enabled === 1) {
+    // Double-check: if somehow Matrix got enabled (site or dashboard), don't render
+    $ai_enabled = efas_get_spam_api('maspik_ai_enabled', 'bool');
+    if ($ai_enabled) {
         return;
     }
     $settings_url = admin_url('admin.php?page=maspik');
@@ -2842,9 +2887,9 @@ function maspik_add_matrix_dashboard_widget() {
     if (get_option('maspik_matrix_widget_hidden', false)) {
         return;
     }
-    // Don't show widget if Matrix is already enabled
-    $ai_enabled = maspik_get_settings('maspik_ai_enabled');
-    if ($ai_enabled === '1' || $ai_enabled === 1) {
+    // Don't show widget if Matrix is already enabled (site or dashboard)
+    $ai_enabled = efas_get_spam_api('maspik_ai_enabled', 'bool');
+    if ($ai_enabled) {
         return;
     }
     wp_add_dashboard_widget(

@@ -14,7 +14,7 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
     $is_spam = false;
     $error_fields = array();
     $form_data = array_map('sanitize_text_field', $_POST['form_fields'] ?? []);
-    $NeedPageurl = maspik_get_settings( 'NeedPageurl' );
+    $NeedPageurl = efas_get_spam_api( 'NeedPageurl', 'bool' );
     // Get all form fields
     $form_fields = $record->get( 'fields' );
     $form_fields = is_array($form_fields) ? $form_fields : array();
@@ -117,10 +117,6 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
         $ajax_handler->add_error( $lastKeyId, $error_message );
         return;
         }
-    }
-
-    if ( efas_get_spam_api( 'NeedPageurl' ) ) {
-        $NeedPageurl = $NeedPageurl ? $NeedPageurl : efas_get_spam_api( 'NeedPageurl', 'bool' );
     }
 
     if ( ! isset( $_POST['referrer'] ) && $NeedPageurl ) {

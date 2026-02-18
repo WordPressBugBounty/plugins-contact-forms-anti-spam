@@ -157,7 +157,6 @@ class MaspikMetFormValidation {
             ];
         }
         
-        error_log('Maspik MetForm: No spam detected, validation passed');
         return $validation_data;
     }
     

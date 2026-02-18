@@ -73,7 +73,7 @@ add_action('bp_signup_validate', 'maspik_check_bp_registration_form');
  */
 function maspik_add_honeypot_to_bp_registration_form() {
     
-    if (maspik_get_settings('maspikHoneypot')) {
+    if (efas_get_spam_api('maspikHoneypot', 'bool')) {
 
         echo '<div class="register-section maspik-field" id="maspik-honeypot-section" style="display: none;">
         <label for="full-name-maspik-hp">Leave this field empty</label>

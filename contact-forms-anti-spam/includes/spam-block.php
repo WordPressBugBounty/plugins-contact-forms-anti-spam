@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) exit;
 function maspik_make_extra_spam_check($post) {
 
     // Honeypot check
-    if (maspik_get_settings('maspikHoneypot') && isset($post['full-name-maspik-hp']) && !empty($post['full-name-maspik-hp'])) {
+    if (efas_get_spam_api('maspikHoneypot', 'bool') && isset($post['full-name-maspik-hp']) && !empty($post['full-name-maspik-hp'])) {
         return [
             'spam' => true,
             'reason' => "Honeypot field is not empty",
@@ -25,7 +25,7 @@ function maspik_make_extra_spam_check($post) {
     }
 
     // Spam key check, maspikTimeCheck is the old name
-    if (maspik_get_settings('maspikTimeCheck')) {
+    if (efas_get_spam_api('maspikTimeCheck', 'bool')) {
 
             // Check if the spam key exists in the POST data
         if (!isset($post['maspik_spam_key']) || empty($post['maspik_spam_key'])) {
@@ -79,8 +79,9 @@ function maspik_HP_name(){
 
 function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
     
-    $to_do_extra_spam_check = maspik_get_settings('maspikHoneypot') || maspik_get_settings('maspikTimeCheck') || maspik_get_settings('maspikYearCheck');
-    if( is_array($post) && $to_do_extra_spam_check && $form != "ninjaforms"){ 
+    $to_do_extra_spam_check = efas_get_spam_api('maspikHoneypot', 'bool') || efas_get_spam_api('maspikTimeCheck', 'bool') || maspik_get_settings('maspikYearCheck');
+    // Skip honeypot/spam key for Block checkout – Store API doesn't send those fields.
+    if( is_array($post) && $to_do_extra_spam_check && $form != "ninjaforms" && $form != "woocommerce_checkout_block"){ 
         $extra_spam_check =  maspik_make_extra_spam_check($post) ;
         $is_spam = isset($extra_spam_check['spam']) ? $extra_spam_check['spam'] : $spam ;
         if($is_spam){
@@ -219,7 +220,7 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
 
     // AI-based spam check (Beta feature - will be Pro-only in future versions)
     if ( !$spam && $form && is_array($post) ) {
-        $ai_enabled = maspik_get_settings('maspik_ai_enabled');
+        $ai_enabled = efas_get_spam_api('maspik_ai_enabled', 'bool');
         if ( $ai_enabled ) {
             try {
                 // Prepare fields for AI analysis
@@ -250,21 +251,6 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
                 }
                 // Don't block - allow submission to continue
             }
-        }
-    }
-
-    // Check IP in Maspik API blacklist (only if AI check is disabled)
-    // This check is skipped when AI is enabled to avoid duplicate checks
-    $ip_api_check_enabled = maspik_get_settings('maspikDbCheck');
-    $ai_check_enabled = maspik_get_settings('maspik_ai_enabled');
-    
-    // Only perform IP API check if it's enabled AND AI check is disabled
-    if ( $ip_api_check_enabled && !$ai_check_enabled && !$spam && $form ) {
-        $exists = check_ip_in_api($ip, $form);
-        if ( $exists ) {
-            $reason = "Ip: $ip, exists in Maspik blacklist";
-            $message = "maspikDbCheck";
-            return array('spam' => true, 'reason' => $reason, 'message' => $message, 'value' => 1);
         }
     }
 
@@ -812,9 +798,9 @@ function checkTextareaForSpam($field_value) {
 // Add custom JavaScript to the footer
 function Maspik_add_hp_js_to_footer() {
     // Check if any of the settings are enabled
-    $maspikHoneypot = maspik_get_settings('maspikHoneypot');
+    $maspikHoneypot = efas_get_spam_api('maspikHoneypot', 'bool');
     $maspikYearCheck = maspik_get_settings('maspikYearCheck');
-    $maspikTimeCheck = maspik_get_settings('maspikTimeCheck');
+    $maspikTimeCheck = efas_get_spam_api('maspikTimeCheck', 'bool');
 
     // Only add the code if at least one of the settings is enabled
     if ($maspikHoneypot || $maspikYearCheck || $maspikTimeCheck) {

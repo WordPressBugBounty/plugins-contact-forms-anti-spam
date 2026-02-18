@@ -112,7 +112,7 @@ function add_maspikhp_html_to_jet_form($content, $field_name, $attrs) {
     if ($field_name === 'submit-field') {
         $addhtml = "";
 
-        if (maspik_get_settings('maspikHoneypot')) {
+        if (efas_get_spam_api('maspikHoneypot', 'bool')) {
             $honeypot_name = maspik_HP_name();
             $addhtml .= '<div class="jet-form-builder__field-wrap maspik-field">
                 <label for="' . $honeypot_name . '" class="jet-form-builder__label">Leave this field empty</label>

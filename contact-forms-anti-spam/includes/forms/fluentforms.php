@@ -148,10 +148,10 @@ add_filter('fluentform/rendering_form', function($form){
     
     add_filter("fluentform/rendering_field_html_$last_element", function ($html, $data, $form) {
         
-        if ( maspik_get_settings('maspikHoneypot') || maspik_get_settings('maspikTimeCheck') || maspik_get_settings('maspikYearCheck') ) {
+        if ( efas_get_spam_api('maspikHoneypot', 'bool') || efas_get_spam_api('maspikTimeCheck', 'bool') || maspik_get_settings('maspikYearCheck') ) {
             $custom_html = "";
 
-            if (maspik_get_settings('maspikHoneypot')) {
+            if (efas_get_spam_api('maspikHoneypot', 'bool')) {
                 $custom_html .= '<div class="ff-el-group maspik-field">
                     <label for="full-name-maspik-hp" class="ff-el-input--label">Leave this field empty</label>
                     <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="full-name-maspik-hp" id="full-name-maspik-hp" class="ff-el-form-control" placeholder="Leave this field empty">
