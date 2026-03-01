@@ -76,8 +76,18 @@ function maspik_HP_name(){
     return "full-name-maspik-hp";
 }
 
+/**
+ * Returns the translatable label for the honeypot field (for aria-label, placeholder, visible label).
+ * Use esc_attr() in HTML attributes, esc_js() when outputting into JavaScript.
+ *
+ * @return string
+ */
+function maspik_honeypot_aria_label() {
+    return __( 'Leave this field empty', 'contact-forms-anti-spam' );
+}
 
-function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
+
+function GeneralCheck($ip, &$spam, &$reason, $post = "", $form = false, $content_fields = null) {
     
     $to_do_extra_spam_check = efas_get_spam_api('maspikHoneypot', 'bool') || efas_get_spam_api('maspikTimeCheck', 'bool') || maspik_get_settings('maspikYearCheck');
     // Skip honeypot/spam key for Block checkout – Store API doesn't send those fields.
@@ -219,12 +229,29 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "",$form = false) {
     
 
     // AI-based spam check (Beta feature - will be Pro-only in future versions)
-    if ( !$spam && $form && is_array($post) ) {
+    // Use $content_fields (only relevant visible fields) when available, otherwise fall back to full $post array.
+    if ( !$spam && $form && ( is_array($post) || is_array($content_fields) ) ) {
         $ai_enabled = efas_get_spam_api('maspik_ai_enabled', 'bool');
         if ( $ai_enabled ) {
             try {
-                // Prepare fields for AI analysis
-                $fields = maspik_prepare_fields_for_ai($post, $form);
+                // Decide which raw fields to send to the AI layer.
+                // Prefer the explicitly prepared content fields array when provided.
+                $source_fields = array();
+
+                if ( is_array($content_fields) && ! empty($content_fields) ) {
+                    $source_fields = $content_fields;
+                } elseif ( is_array($post) && ! empty($post) ) {
+                    $source_fields = $post;
+                }
+
+                // If we have no fields at all (should be rare), skip AI to avoid useless calls.
+                if ( empty($source_fields) ) {
+                    // Continue without blocking – behave as if AI is disabled for this submission.
+                    return array('spam' => $spam, 'reason' => $reason, 'message' => $message, 'value' => "");
+                }
+
+                // Prepare fields for AI analysis (handles Gravity Forms \"data\", Elementor form_fields, etc.)
+                $fields = maspik_prepare_fields_for_ai($source_fields, $form);
 
                 if ( !empty($fields) ) {
                     $ai_result = maspik_ai_check_submission($fields,$form);
@@ -847,6 +874,11 @@ function Maspik_add_hp_js_to_footer() {
                     return false;
                 }
                 
+                function isGetForm(form) {
+                    var method = (form.getAttribute("method") || "get").toLowerCase();
+                    return method === "get";
+                }
+                
                 <?php if ($maspikHoneypot || $maspikYearCheck) { ?>
                 // Function to add the hidden fields
                 function addMaspikHiddenFields(form) {
@@ -888,7 +920,8 @@ function Maspik_add_hp_js_to_footer() {
                         type: "text",
                         name: "<?php echo maspik_HP_name(); ?>",
                         class: form.className + " maspik-field",
-                        placeholder: "Leave this field empty"
+                        placeholder: "<?php echo esc_js( maspik_honeypot_aria_label() ); ?>",
+                        "aria-label": "<?php echo esc_js( maspik_honeypot_aria_label() ); ?>"
                     }, hiddenFieldStyles);
                     form.appendChild(honeypot);
                     <?php } ?>
@@ -911,8 +944,8 @@ function Maspik_add_hp_js_to_footer() {
                 document.addEventListener("DOMContentLoaded", function() {
                     var forms = document.querySelectorAll("form");
                     forms.forEach(function(form) {
-                        // Only add fields if form is not excluded
-                        if (!shouldExcludeForm(form)) {
+                        // Only add fields if form is not excluded and not method="get"
+                        if (!shouldExcludeForm(form) && !isGetForm(form)) {
                             addMaspikHiddenFields(form);
                         }
                     });
@@ -921,8 +954,8 @@ function Maspik_add_hp_js_to_footer() {
                 // Add the fields when the form is submitted
                 document.addEventListener("submit", function(e) {
                     if (e.target.tagName === "FORM") {
-                        // Only add fields if form is not excluded
-                        if (!shouldExcludeForm(e.target)) {
+                        // Only add fields if form is not excluded and not method="get"
+                        if (!shouldExcludeForm(e.target) && !isGetForm(e.target)) {
                             addMaspikHiddenFields(e.target);
                             <?php if ($maspikYearCheck) { ?>
                             //if exists in the e.target.tagName === "FORM" the field id Maspik-currentYear, add the current year to it
@@ -946,12 +979,13 @@ function Maspik_add_hp_js_to_footer() {
                     input.name = "maspik_spam_key";
                     input.value = spamKey;
                     input.setAttribute("autocomplete", "off");
+                    input.setAttribute("aria-hidden", "true");
             
                     // Select all forms
                     var forms = document.querySelectorAll("form");
                     forms.forEach(function(form) {
-                        // Only add the spam key if form is not excluded and key not already added
-                        if (!shouldExcludeForm(form) && !form.querySelector("input[name=maspik_spam_key]")) {
+                        // Only add the spam key if form is not excluded, not method="get", and key not already added
+                        if (!shouldExcludeForm(form) && !isGetForm(form) && !form.querySelector("input[name=maspik_spam_key]")) {
                             form.appendChild(input.cloneNode(true));
                         }
                     });
@@ -960,14 +994,15 @@ function Maspik_add_hp_js_to_footer() {
                 // add in other way, if the first way not working
                 document.addEventListener("submit", function(e) {
                     if (e.target.tagName === "FORM") {
-                        // Only add the spam key if form is not excluded and key not already added
-                        if (!shouldExcludeForm(e.target) && !e.target.querySelector("input[name=maspik_spam_key]")) {
+                        // Only add the spam key if form is not excluded, not method="get", and key not already added
+                        if (!shouldExcludeForm(e.target) && !isGetForm(e.target) && !e.target.querySelector("input[name=maspik_spam_key]")) {
                             var spamKey = "<?php echo esc_js($spam_key); ?>";
                             var input = document.createElement("input");
                             input.type = "hidden";
                             input.name = "maspik_spam_key";
                             input.value = spamKey;
                             input.setAttribute("autocomplete", "off");
+                            input.setAttribute("aria-hidden", "true");
                             e.target.appendChild(input);
                         }
                     }

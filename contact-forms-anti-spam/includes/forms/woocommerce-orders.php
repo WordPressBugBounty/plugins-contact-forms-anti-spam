@@ -153,7 +153,21 @@ function maspik_woo_checkout_validate_spam( $data, $errors ) {
         $post['full-name-maspik-hp'] = sanitize_text_field( wp_unslash( $_POST['full-name-maspik-hp'] ) );
     }
 
-    $GeneralCheck = GeneralCheck( $ip, $spam, $reason, $post, 'woocommerce_checkout' );
+    // Content fields for AI: only billing/shipping/order_comments (text, email, phone), exclude payment/nonce/hidden.
+    $content_fields = array();
+    $checkout_content_keys = array(
+        'billing_first_name', 'billing_last_name', 'billing_company', 'billing_address_1', 'billing_address_2',
+        'billing_city', 'billing_state', 'billing_postcode', 'billing_email', 'billing_phone',
+        'shipping_first_name', 'shipping_last_name', 'shipping_company', 'shipping_address_1', 'shipping_address_2',
+        'shipping_city', 'shipping_state', 'shipping_postcode', 'order_comments',
+    );
+    foreach ( $checkout_content_keys as $key ) {
+        if ( isset( $post[ $key ] ) && is_string( $post[ $key ] ) && trim( $post[ $key ] ) !== '' ) {
+            $content_fields[ $key ] = sanitize_text_field( $post[ $key ] );
+        }
+    }
+
+    $GeneralCheck = GeneralCheck( $ip, $spam, $reason, $post, 'woocommerce_checkout', $content_fields );
     $spam    = isset( $GeneralCheck['spam'] ) ? (bool) $GeneralCheck['spam'] : false;
     $reason  = isset( $GeneralCheck['reason'] ) ? $GeneralCheck['reason'] : '';
     $message = isset( $GeneralCheck['message'] ) ? $GeneralCheck['message'] : '';

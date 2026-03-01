@@ -349,10 +349,41 @@ class MaspikMetFormValidation {
         $spam = false;
         $reason = '';
         
+        // Build content fields for AI from textual/email/phone/textarea-like fields
+        $content_fields = array();
+        foreach ( $form_data as $field_name => $field_value ) {
+            if ( strpos( $field_name, '_' ) === 0 || in_array( $field_name, array( 'form_id', 'form_settings' ), true ) ) {
+                continue;
+            }
+
+            if ( empty( $field_value ) ) {
+                continue;
+            }
+
+            if ( is_array( $field_value ) ) {
+                $field_value = implode( ' ', array_filter( array_map( 'strval', $field_value ) ) );
+            }
+
+            $field_value = sanitize_text_field( (string) $field_value );
+            if ( $field_value === '' ) {
+                continue;
+            }
+
+            // Consider only fields that look like text/email/phone/textarea according to helpers
+            if (
+                $this->is_text_field( $field_name, $field_value ) ||
+                $this->is_email_field( $field_name, $field_value ) ||
+                $this->is_phone_field( $field_name, $field_value ) ||
+                $this->is_textarea_field( $field_name, $field_value )
+            ) {
+                $content_fields[ $field_name ] = $field_value;
+            }
+        }
+        
         // Add spam keys to form data for general check
         $datatocheck = maspik_add_spam_keys_to_array($form_data, $_POST);
         
-        $GeneralCheck = GeneralCheck($ip, $spam, $reason, $datatocheck, 'metform');
+        $GeneralCheck = GeneralCheck($ip, $spam, $reason, $datatocheck, 'metform', $content_fields);
         $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false;
         
         if ($spam) {

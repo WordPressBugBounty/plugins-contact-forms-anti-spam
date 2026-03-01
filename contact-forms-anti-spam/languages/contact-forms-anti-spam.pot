@@ -912,6 +912,10 @@ msgstr ""
 msgid "Leave blank to disable."
 msgstr ""
 
+#: includes/spam-block.php
+msgid "Leave this field empty"
+msgstr ""
+
 #: admin/partials/maspik-admin-display.php:1562
 msgid "leave empty to disable this option."
 msgstr ""

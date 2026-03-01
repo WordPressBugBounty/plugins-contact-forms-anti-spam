@@ -70,17 +70,113 @@ function maspik_validation_process_gravity($result, $value, $form, $field) {
         return $result;
     }
 
-    // General check first - MUST run before any field checks, even if field is empty
-    // This ensures maspik_matrix (AI check) runs and blocks spam properly
+    // General check state – will run once, after per-field checks.
     static $general_check_done = false;
     static $general_check_result = null;
-    
-    if (!$general_check_done) {
+
+    // Collect relevant content fields for AI across all fields in the form.
+    // We only care about text/name/email/phone/textarea.
+    static $content_fields = array();
+
+    // If field is already invalid or empty, return early (but GeneralCheck already ran above)
+    if (!$result['is_valid'] || empty($value)) {
+        return $result;
+    }
+
+    $field_value = is_array($value) ? implode(" ", $value) : $value;
+    $field_type = $field->type;
+    $field_value = strtolower($field_value);
+
+    switch ($field_type) {
+        case 'text':
+        case 'name':
+            $validateTextField = validateTextField($field_value);
+            if (isset($validateTextField['spam']) && $validateTextField['spam']) {
+                efas_add_to_log("text", $validateTextField['spam'], $_POST, 'GravityForms', 
+                    $validateTextField['label'] ?? '', $validateTextField['option_value'] ?? '');
+                $result['is_valid'] = false;
+                $result['message'] = cfas_get_error_text($validateTextField['message'] ?? '');
+                $spam_check_done = true;
+                return $result;
+            }
+
+            // Add to AI content fields if valid
+            if ( empty($validateTextField['spam']) ) {
+                $content_fields[ $field->id ] = $field_value;
+            }
+            break;
+
+        case 'email':
+            $spam = checkEmailForSpam($field_value);
+            if ($spam) {
+                efas_add_to_log("email", $spam, $_POST, "GravityForms", "emails_blacklist", $field_value);
+                $result['is_valid'] = false;
+                $result['message'] = cfas_get_error_text();
+                $spam_check_done = true;
+                return $result;
+            }
+
+            // Add to AI content fields if valid
+            if ( ! $spam ) {
+                $content_fields[ $field->id ] = $field_value;
+            }
+            break;
+
+        case 'phone':
+            $checkTelForSpam = checkTelForSpam($field_value);
+            if (isset($checkTelForSpam['valid']) && !$checkTelForSpam['valid']) {
+                efas_add_to_log("tel", $checkTelForSpam['reason'] ?? '', $_POST, "GravityForms", 
+                    $checkTelForSpam['label'] ?? '', $checkTelForSpam['option_value'] ?? '');
+                $result['is_valid'] = false;
+                $result['message'] = cfas_get_error_text($checkTelForSpam['message'] ?? '');
+                $spam_check_done = true;
+                return $result;
+            }
+
+            // Add to AI content fields if valid
+            if ( isset($checkTelForSpam['valid']) && $checkTelForSpam['valid'] ) {
+                $content_fields[ $field->id ] = $field_value;
+            }
+            break;
+
+        case 'textarea':
+            $checkTextareaForSpam = checkTextareaForSpam($field_value);
+            if (isset($checkTextareaForSpam['spam']) && $checkTextareaForSpam['spam']) {
+                efas_add_to_log("textarea", $checkTextareaForSpam['spam'], $_POST, "GravityForms", 
+                    $checkTextareaForSpam['label'] ?? '', $checkTextareaForSpam['option_value'] ?? '');
+                $result['is_valid'] = false;
+                $result['message'] = cfas_get_error_text($checkTextareaForSpam['message'] ?? '');
+                $spam_check_done = true;
+                return $result;
+            }
+
+            // Add to AI content fields if valid
+            if ( empty($checkTextareaForSpam['spam']) ) {
+                $content_fields[ $field->id ] = $field_value;
+            }
+            break;
+
+        case 'url':
+            // URL Field Validation
+            $checkUrlForSpam = checkUrlForSpam($field_value);
+            if (isset($checkUrlForSpam['spam']) && $checkUrlForSpam['spam']) {
+                efas_add_to_log("url", $checkUrlForSpam['spam'], $_POST, "GravityForms", 
+                    $checkUrlForSpam['label'] ?? '', $checkUrlForSpam['option_value'] ?? '');
+                $result['is_valid'] = false;
+                $result['message'] = cfas_get_error_text($checkUrlForSpam['message'] ?? '');
+                $spam_check_done = true;
+                return $result;
+            }
+            break;
+    }
+
+    // General check LAST – runs after per-field checks (text/email/etc)
+    if ( !$general_check_done ) {
         try {
             $ip = maspik_get_real_ip();
             $spam = false;
             $reason = '';
-            $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST, "gravityforms");
+            $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST, "gravityforms", $content_fields);
             $general_check_result = $GeneralCheck;
             $general_check_done = true;
             
@@ -118,78 +214,6 @@ function maspik_validation_process_gravity($result, $value, $form, $field) {
         }
     }
 
-    // If field is already invalid or empty, return early (but GeneralCheck already ran above)
-    if (!$result['is_valid'] || empty($value)) {
-        return $result;
-    }
-
-    $field_value = is_array($value) ? implode(" ", $value) : $value;
-    $field_type = $field->type;
-    $field_value = strtolower($field_value);
-
-    switch ($field_type) {
-        case 'text':
-        case 'name':
-            $validateTextField = validateTextField($field_value);
-            if (isset($validateTextField['spam']) && $validateTextField['spam']) {
-                efas_add_to_log("text", $validateTextField['spam'], $_POST, 'GravityForms', 
-                    $validateTextField['label'] ?? '', $validateTextField['option_value'] ?? '');
-                $result['is_valid'] = false;
-                $result['message'] = cfas_get_error_text($validateTextField['message'] ?? '');
-                $spam_check_done = true;
-                return $result;
-            }
-            break;
-
-        case 'email':
-            $spam = checkEmailForSpam($field_value);
-            if ($spam) {
-                efas_add_to_log("email", $spam, $_POST, "GravityForms", "emails_blacklist", $field_value);
-                $result['is_valid'] = false;
-                $result['message'] = cfas_get_error_text();
-                $spam_check_done = true;
-                return $result;
-            }
-            break;
-
-        case 'phone':
-            $checkTelForSpam = checkTelForSpam($field_value);
-            if (isset($checkTelForSpam['valid']) && !$checkTelForSpam['valid']) {
-                efas_add_to_log("tel", $checkTelForSpam['reason'] ?? '', $_POST, "GravityForms", 
-                    $checkTelForSpam['label'] ?? '', $checkTelForSpam['option_value'] ?? '');
-                $result['is_valid'] = false;
-                $result['message'] = cfas_get_error_text($checkTelForSpam['message'] ?? '');
-                $spam_check_done = true;
-                return $result;
-            }
-            break;
-
-        case 'textarea':
-            $checkTextareaForSpam = checkTextareaForSpam($field_value);
-            if (isset($checkTextareaForSpam['spam']) && $checkTextareaForSpam['spam']) {
-                efas_add_to_log("textarea", $checkTextareaForSpam['spam'], $_POST, "GravityForms", 
-                    $checkTextareaForSpam['label'] ?? '', $checkTextareaForSpam['option_value'] ?? '');
-                $result['is_valid'] = false;
-                $result['message'] = cfas_get_error_text($checkTextareaForSpam['message'] ?? '');
-                $spam_check_done = true;
-                return $result;
-            }
-            break;
-
-        case 'url':
-            // URL Field Validation
-            $checkUrlForSpam = checkUrlForSpam($field_value);
-            if (isset($checkUrlForSpam['spam']) && $checkUrlForSpam['spam']) {
-                efas_add_to_log("url", $checkUrlForSpam['spam'], $_POST, "GravityForms", 
-                    $checkUrlForSpam['label'] ?? '', $checkUrlForSpam['option_value'] ?? '');
-                $result['is_valid'] = false;
-                $result['message'] = cfas_get_error_text($checkUrlForSpam['message'] ?? '');
-                $spam_check_done = true;
-                return $result;
-            }
-            break;
-    }
-
     return $result;
 }
 
@@ -203,15 +227,15 @@ function add_maspikhp_html_to_gform($button, $form) {
     if (efas_get_spam_api('maspikHoneypot', 'bool')) {
         $honeypot_name = maspik_HP_name();
         $addhtml .= '<div class="gfield gfield--type-text maspik-field">
-            <label for="' . $honeypot_name . '" class="ginput_container_text">Leave this field empty</label>
-            <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" name="' . $honeypot_name . '" id="' . $honeypot_name . '" class="ginput_text" placeholder="Leave this field empty">
+            <label for="' . esc_attr( $honeypot_name ) . '" class="ginput_container_text">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
+            <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="' . esc_attr( $honeypot_name ) . '" id="' . esc_attr( $honeypot_name ) . '" class="ginput_text" placeholder="' . esc_attr( maspik_honeypot_aria_label() ) . '">
         </div>';
     }
 
     if (maspik_get_settings('maspikYearCheck')) {
         $addhtml .= '<div class="gfield gfield--type-text maspik-field">
-            <label for="Maspik-currentYear" class="ginput_container_text">Leave this field empty</label>
-            <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="ginput_text" placeholder="">
+            <label for="Maspik-currentYear" class="ginput_container_text">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
+            <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="Maspik-currentYear" id="Maspik-currentYear" class="ginput_text" placeholder="">
         </div>';
     }
 

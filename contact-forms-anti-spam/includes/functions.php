@@ -2662,36 +2662,13 @@ function maspik_merge_textarea_blacklist() {
 add_action('admin_init', 'maspik_merge_textarea_blacklist', 1);
 
 /**
- * Auto-enable Maspik Matrix for all users on plugin update.
- * Simple: if Matrix is off, turn it on and save flag in maspik table.
+ * Matrix default behavior: no longer auto-enables on update.
+ * Matrix is disabled by default for new installs; existing enabled state is respected.
  */
 function maspik_enable_matrix_by_default() {
-    // Check if Matrix is already enabled locally (not from API)
-    $ai_enabled_local = maspik_get_settings('maspik_ai_enabled');
-    $ai_enabled = !empty($ai_enabled_local) && $ai_enabled_local !== '0' && $ai_enabled_local !== 0;
-    if ($ai_enabled) {
-        return;
-    }
-    
-    // Check if we already auto-enabled it (flag stored in maspik table)
-    $already_enabled = maspik_get_settings('maspik_matrix_auto_enabled');
-    if ($already_enabled) {
-        return;
-    }
-    
-    // Enable Matrix
-    maspik_save_settings('maspik_ai_enabled', '1');
-    
-    // Save flag in maspik table (not WordPress options)
-    maspik_save_settings('maspik_matrix_auto_enabled', '1');
-    
-    // Set notice timestamp (only if user has permissions)
-    if (current_user_can('manage_options')) {
-        update_option('maspik_matrix_enabled_notice', time());
-        delete_option('maspik_matrix_enabled_notice_dismissed');
-    }
+    // No-op: Matrix is disabled by default. Do not auto-enable on updates.
+    return;
 }
-// Run only on admin_init - lightweight, runs once per admin page load
 add_action('admin_init', 'maspik_enable_matrix_by_default', 2);
 
 
@@ -2781,6 +2758,63 @@ function maspik_dismiss_matrix_enabled_notice_handler() {
     wp_send_json_success();
 }
 add_action('wp_ajax_maspik_dismiss_matrix_enabled_notice', 'maspik_dismiss_matrix_enabled_notice_handler');
+
+/**
+ * Show admin notice when MASPIK Matrix is disabled (visible in admin panel / dashboard).
+ */
+function maspik_show_matrix_disabled_notice() {
+    if ( ! current_user_can( 'manage_options' ) ) {
+        return;
+    }
+    if ( get_option( 'maspik_matrix_disabled_notice_dismissed', false ) ) {
+        return;
+    }
+    $ai_effective = efas_get_spam_api( 'maspik_ai_enabled', 'bool' );
+    if ( $ai_effective ) {
+        return;
+    }
+    $settings_url = admin_url( 'admin.php?page=maspik' );
+    ?>
+    <div class="notice notice-warning is-dismissible maspik-matrix-disabled-admin-notice" style="position: relative;">
+        <p>
+            <strong><?php esc_html_e( 'MASPIK:', 'contact-forms-anti-spam' ); ?></strong>
+            <?php esc_html_e( 'MASPIK Matrix is currently disabled, so advanced spam detection (including IP reputation, behavior patterns, and AI scoring) is not active. Enable it in settings for stronger protection.', 'contact-forms-anti-spam' ); ?>
+        </p>
+        <p>
+            <a href="<?php echo esc_url( $settings_url ); ?>" class="button button-primary"><?php esc_html_e( 'Go to Maspik settings', 'contact-forms-anti-spam' ); ?></a>
+            <button type="button" class="button button-small maspik-matrix-disabled-notice-dismiss" style="margin-left: 0.5em;"><?php esc_html_e( "Don't show again", 'contact-forms-anti-spam' ); ?></button>
+        </p>
+    </div>
+    <script>
+    jQuery(document).ready(function($) {
+        $(document).on('click', '.maspik-matrix-disabled-admin-notice .maspik-matrix-disabled-notice-dismiss', function(e) {
+            e.preventDefault();
+            var $notice = $('.maspik-matrix-disabled-admin-notice');
+            $notice.slideUp();
+            $.post(ajaxurl, {
+                action: 'maspik_dismiss_matrix_disabled_notice',
+                nonce: '<?php echo esc_js( wp_create_nonce( 'maspik_dismiss_matrix_disabled_notice' ) ); ?>'
+            });
+        });
+    });
+    </script>
+    <?php
+}
+add_action( 'admin_notices', 'maspik_show_matrix_disabled_notice', 11 );
+
+/**
+ * AJAX handler to dismiss the "Matrix disabled" admin notice (permanent).
+ */
+function maspik_dismiss_matrix_disabled_notice_handler() {
+    check_ajax_referer( 'maspik_dismiss_matrix_disabled_notice', 'nonce' );
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error();
+        return;
+    }
+    update_option( 'maspik_matrix_disabled_notice_dismissed', true );
+    wp_send_json_success();
+}
+add_action( 'wp_ajax_maspik_dismiss_matrix_disabled_notice', 'maspik_dismiss_matrix_disabled_notice_handler' );
 
 /**
  * Returns the current What's New popup version. Bump MASPIK_WHATS_NEW_VERSION in consts.php when updating the popup content.

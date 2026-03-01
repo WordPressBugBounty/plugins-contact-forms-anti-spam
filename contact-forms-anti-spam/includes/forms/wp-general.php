@@ -147,15 +147,15 @@ function add_custom_html_to_comment_form( $submit_button, $args ) {
 
         if (efas_get_spam_api('maspikHoneypot', 'bool')) {
             $custom_html .= '<div class="comment-form maspik-field" style="display: none;">
-                <label for="full-name-maspik-hp" class="comment-form-label">Leave this field empty</label>
-                <input size="1" type="text" autocomplete="off" autocomplete="new-password" autocomplete="false" aria-hidden="true" tabindex="-1" name="full-name-maspik-hp" id="full-name-maspik-hp" class="comment-form-input" placeholder="Leave this field empty" data-form-type="other" data-lpignore="true">
+                <label for="full-name-maspik-hp" class="comment-form-label">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
+                <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="full-name-maspik-hp" id="full-name-maspik-hp" class="comment-form-input" placeholder="' . esc_attr( maspik_honeypot_aria_label() ) . '" data-form-type="other" data-lpignore="true">
             </div>';
         }
 
         if (maspik_get_settings('maspikYearCheck')) {
             $custom_html .= '<div class="comment-form maspik-field" style="display: none;">
-                <label for="Maspik-currentYear" class="comment-form-label">Leave this field with corrent year</label>
-                <input size="1" type="text" autocomplete="off" autocomplete="new-password" autocomplete="false" aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="comment-form-input" placeholder="" data-form-type="other" data-lpignore="true">
+                <label for="Maspik-currentYear" class="comment-form-label">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
+                <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="Maspik-currentYear" id="Maspik-currentYear" class="comment-form-input" placeholder="" data-form-type="other" data-lpignore="true">
             </div>';
         }
 
@@ -279,8 +279,17 @@ function maspik_register_form_honeypot_check_in_woocommerce_registration($errors
         $ip = maspik_get_real_ip();
         $reason = "";
 
+        // Content fields for AI: only username and email (the visible fields we validate).
+        $content_fields = array();
+        if ( $user_login !== '' ) {
+            $content_fields['username'] = $user_login;
+        }
+        if ( $user_email !== '' ) {
+            $content_fields['email'] = $user_email;
+        }
+
         // Country IP Check
-        $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST,"woocommerce_registration");
+        $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST, "woocommerce_registration", $content_fields);
         $spam = $GeneralCheck['spam'] ?? false;
         $reason = $GeneralCheck['reason'] ?? '';
         $message = $GeneralCheck['message'] ?? '';
@@ -339,7 +348,7 @@ function maspik_add_honeypot_to_register_form() {
     }
     ?>
         <p class="form-row maspik-field" style="display: none;" aria-hidden="true">
-            <label for="full-name-maspik-hp">Leave this field unfilled</label>
+            <label for="full-name-maspik-hp"><?php echo esc_html( maspik_honeypot_aria_label() ); ?></label>
             <input type="text" 
                    name="full-name-maspik-hp" 
                    id="full-name-maspik-hp"
@@ -350,10 +359,11 @@ function maspik_add_honeypot_to_register_form() {
                    autocapitalize="off"
                    spellcheck="false"
                    data-form-type="other"
+                   aria-label="<?php echo esc_attr( maspik_honeypot_aria_label() ); ?>"
                    aria-hidden="true">
         </p>
         <p class="form-row maspik-field" style="display: none;" aria-hidden="true">
-            <label for="Maspik-currentYear">Leave this field unfilled</label>
+            <label for="Maspik-currentYear"><?php echo esc_html( maspik_honeypot_aria_label() ); ?></label>
             <input type="text" 
                    name="Maspik-currentYear" 
                    id="Maspik-currentYear"
@@ -364,6 +374,7 @@ function maspik_add_honeypot_to_register_form() {
                    autocapitalize="off"
                    spellcheck="false"
                    data-form-type="other"
+                   aria-label="<?php echo esc_attr( maspik_honeypot_aria_label() ); ?>"
                    aria-hidden="true">
         </p>
 

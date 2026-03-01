@@ -929,6 +929,10 @@ msgstr "השאר ריק כדי לבטל"
 msgid "Leave blank to disable."
 msgstr "השאר ריק כדי לבטל"
 
+#: includes/spam-block.php
+msgid "Leave this field empty"
+msgstr "השאר שדה זה ריק"
+
 #: admin/partials/maspik-admin-display.php:939
 msgid "leave empty to disable this option."
 msgstr "השאר ריק כדי לבטל אפשרות זו"

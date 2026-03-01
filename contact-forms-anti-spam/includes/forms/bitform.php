@@ -118,6 +118,9 @@ function maspik_check_bitform_for_spam($form_data, $form_id) {
             $fields = $formManager->getFields();
             
             if (is_array($fields)) {
+                // Collect relevant content fields for AI
+                $content_fields = array();
+
                 // Check each field based on its actual type
                 foreach ($form_data as $field_key => $field_value) {
                     // Skip internal BitForm fields
@@ -154,6 +157,8 @@ function maspik_check_bitform_for_spam($form_data, $form_id) {
                                     efas_add_to_log('text', $spam, $form_data, 'BitForm', $spam_lbl, $spam_val);
                                     return $error_message;
                                 }
+                                // Add to AI content fields if valid
+                                $content_fields[ $field_key ] = $field_value;
                                 break;
                                 
                             case 'email':
@@ -164,6 +169,8 @@ function maspik_check_bitform_for_spam($form_data, $form_id) {
                                     efas_add_to_log('email', $spam, $form_data, 'BitForm', 'emails_blacklist', $spam_val);
                                     return $error_message;
                                 }
+                                // Add to AI content fields if valid
+                                $content_fields[ $field_key ] = $field_value;
                                 break;
                                 
                             case 'phone-number':
@@ -180,6 +187,10 @@ function maspik_check_bitform_for_spam($form_data, $form_id) {
                                     $error_message = cfas_get_error_text($message);
                                     efas_add_to_log('tel', $reason, $form_data, 'BitForm', $spam_lbl, $spam_val);
                                     return $error_message;
+                                }
+                                // Add to AI content fields if valid
+                                if ( $valid ) {
+                                    $content_fields[ $field_key ] = $field_value;
                                 }
                                 break;
                                 
@@ -212,6 +223,8 @@ function maspik_check_bitform_for_spam($form_data, $form_id) {
                                     $error_message = cfas_get_error_text($message);
                                     return $error_message;
                                 }
+                                // Add to AI content fields if valid
+                                $content_fields[ $field_key ] = $field_value;
                                 break;
                                 
                             default:
@@ -233,7 +246,12 @@ function maspik_check_bitform_for_spam($form_data, $form_id) {
     $spam = false;
     $reason = '';
     
-    $GeneralCheck = GeneralCheck($ip, $spam, $reason, $form_data, 'bitform');
+    // If we built content_fields above, reuse it; otherwise fall back to full form_data.
+    if ( ! isset( $content_fields ) || ! is_array( $content_fields ) ) {
+        $content_fields = $form_data;
+    }
+    
+    $GeneralCheck = GeneralCheck($ip, $spam, $reason, $form_data, 'bitform', $content_fields);
     $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false;
     
     if ($spam) {
@@ -305,13 +323,13 @@ function maspik_add_bitform_fields() {
                 if ($form.find('.maspik-honeypot').length === 0) {
                     // Add honeypot field
                     var honeypotField = '<div class="maspik-field" style="position: absolute; left: -99999px; top: -99999px; display: none;">' +
-                        '<input type="text" name="<?php echo $honeypot_field; ?>" value="" style="display: none;" />' +
+                        '<input type="text" name="<?php echo esc_attr( $honeypot_field ); ?>" value="" style="display: none;" aria-label="<?php echo esc_attr( maspik_honeypot_aria_label() ); ?>" />' +
                         '</div>';
                     
                     $form.append(honeypotField);
                     
                     // Add spam key field
-                    var spamKeyField = '<input type="hidden" name="maspik_spam_key" value="<?php echo $spam_key; ?>" />';
+                    var spamKeyField = '<input type="hidden" name="maspik_spam_key" value="<?php echo esc_attr( $spam_key ); ?>" aria-hidden="true" />';
                     $form.append(spamKeyField);
                     
                     //console.log('Maspik fields added to BitForm');
@@ -325,12 +343,12 @@ function maspik_add_bitform_fields() {
                     
                     if ($form.find('.maspik-honeypot').length === 0) {
                         var honeypotField = '<div class="maspik-field" style="position: absolute; left: -99999px; top: -99999px; display: none;">' +
-                            '<input type="text" name="<?php echo $honeypot_field; ?>" value="" style="display: none;" />' +
+                            '<input type="text" name="<?php echo esc_attr( $honeypot_field ); ?>" value="" style="display: none;" aria-label="<?php echo esc_attr( maspik_honeypot_aria_label() ); ?>" />' +
                             '</div>';
                         
                         $form.append(honeypotField);
                         
-                        var spamKeyField = '<input type="hidden" name="maspik_spam_key" value="<?php echo $spam_key; ?>" />';
+                        var spamKeyField = '<input type="hidden" name="maspik_spam_key" value="<?php echo esc_attr( $spam_key ); ?>" aria-hidden="true" />';
                         $form.append(spamKeyField);
                         
                         //console.log('Maspik fields added to dynamically loaded BitForm');

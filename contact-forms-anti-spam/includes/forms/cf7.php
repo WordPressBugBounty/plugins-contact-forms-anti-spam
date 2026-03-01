@@ -61,6 +61,9 @@ function maspik_validate_cf7_process( $result, $tags ) {
     $spam = false;
     $reason = "";
 
+    // Collect relevant content fields for AI (text, email, tel, textarea)
+    $content_fields = array();
+
     // Loop through each tag (field) in the form
     foreach ( $tags as $tag ) {
         $name = $tag->name;
@@ -94,6 +97,11 @@ function maspik_validate_cf7_process( $result, $tags ) {
                     $result->invalidate( $tag, $error_message );
                     return $result;
                 }
+
+                // Add to AI content fields if valid
+                if ( ! $spam ) {
+                    $content_fields[ $name ] = is_array( $field_value ) ? implode( ' ', (array) $field_value ) : $field_value;
+                }
                 break;
 
             case 'email':
@@ -109,6 +117,11 @@ function maspik_validate_cf7_process( $result, $tags ) {
                     efas_add_to_log( "email", $spam, $post_entries, "Contact Form 7", "emails_blacklist", $spam_val );
                     $result->invalidate( $tag, $error_message );
                     return $result;
+                }
+
+                // Add to AI content fields if valid
+                if ( ! $spam ) {
+                    $content_fields[ $name ] = is_array( $field_value ) ? implode( ' ', (array) $field_value ) : $field_value;
                 }
                 break;
 
@@ -129,6 +142,11 @@ function maspik_validate_cf7_process( $result, $tags ) {
                     efas_add_to_log( "tel", $reason, $post_entries, "Contact Form 7", $spam_lbl, $spam_val );
                     $result->invalidate( $tag, $error_message );
                     return $result;
+                }
+
+                // Add to AI content fields if valid
+                if ( $valid ) {
+                    $content_fields[ $name ] = is_array( $field_value ) ? implode( ' ', (array) $field_value ) : $field_value;
                 }
                 break;
 
@@ -168,6 +186,11 @@ function maspik_validate_cf7_process( $result, $tags ) {
                     $result->invalidate( $tag, $error_message );
                     return $result;
                 }
+
+                // Add to AI content fields if valid
+                if ( ! $spam ) {
+                    $content_fields[ $name ] = is_array( $field_value ) ? implode( ' ', (array) $field_value ) : $field_value;
+                }
                 break;
 
         }
@@ -175,7 +198,7 @@ function maspik_validate_cf7_process( $result, $tags ) {
 
     // General Check
     $ip = maspik_get_real_ip();
-    $GeneralCheck = GeneralCheck( $ip, $spam, $reason, $_POST, "cf7" );
+    $GeneralCheck = GeneralCheck( $ip, $spam, $reason, $_POST, "cf7", $content_fields );
     $spam = isset( $GeneralCheck['spam'] ) ? $GeneralCheck['spam'] : false;
     $reason = isset( $GeneralCheck['reason'] ) ? $GeneralCheck['reason'] : false;
     $message = isset( $GeneralCheck['message'] ) ? $GeneralCheck['message'] : false;
@@ -198,15 +221,15 @@ function maspik_honeypot_to_cf7_form( $form_content ) {
 
         if ( efas_get_spam_api( 'maspikHoneypot', 'bool' ) ) {
             $custom_html .= '<div class="wpcf7-form-control-wrap maspik-field">
-                <label for="full-name-maspik-hp" class="wpcf7-form-control-label">Leave this field empty</label>
-                <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" name="full-name-maspik-hp" id="full-name-maspik-hp" class="wpcf7-form-control wpcf7-text" placeholder="Leave this field empty">
+                <label for="full-name-maspik-hp" class="wpcf7-form-control-label">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
+                <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="full-name-maspik-hp" id="full-name-maspik-hp" class="wpcf7-form-control wpcf7-text" placeholder="' . esc_attr( maspik_honeypot_aria_label() ) . '">
             </div>';
         }
 
         if ( maspik_get_settings( 'maspikYearCheck' ) ) {
             $custom_html .= '<div class="wpcf7-form-control-wrap maspik-field">
-                <label for="Maspik-currentYear" class="wpcf7-form-control-label"></label>
-                <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="wpcf7-form-control wpcf7-text" placeholder="">
+                <label for="Maspik-currentYear" class="wpcf7-form-control-label">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
+                <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="Maspik-currentYear" id="Maspik-currentYear" class="wpcf7-form-control wpcf7-text" placeholder="">
             </div>';
         }
 

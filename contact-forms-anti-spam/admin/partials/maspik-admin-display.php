@@ -974,15 +974,27 @@ $whats_new_nonce = wp_create_nonce('maspik_whats_new_seen');
                                                     <line class="ai-antenna" x1="12" y1="6" x2="12" y2="2" stroke="#F48722" stroke-width="2" stroke-linecap="round"/>
                                                     <circle class="ai-signal" cx="12" cy="2" r="1" fill="#F48722"/>
                                                 </svg>
-                                                <?php esc_html_e('Maspik Matrix', 'contact-forms-anti-spam'); ?>
+                                                <?php esc_html_e('MASPIK Matrix (Cloud-based protection)', 'contact-forms-anti-spam'); ?>
                                             </h4>
                                             <span>
-                                                <?php esc_html_e('Cloud-based protection.', 'contact-forms-anti-spam'); ?>
-                                                <br>
-                                                <?php esc_html_e('Every submission is analyzed in real-time through several detection layers: IP reputation, behavior patterns, heuristics, and AI scoring — for maximum accuracy with minimal false positives.', 'contact-forms-anti-spam'); ?>
+                                                <?php esc_html_e('Multi-layer check: IP reputation, request patterns, and AI scoring.', 'contact-forms-anti-spam'); ?>
                                             </span>
+                                            <p class="maspik-matrix-privacy-note" style="margin-top: 0.5em; font-size: 0.9em; color: #646970;">
+                                                <?php esc_html_e('This feature sends limited request data (such as IP and spam signals) to external servers for analysis. Data is processed in real-time and not stored.', 'contact-forms-anti-spam'); ?>
+                                            </p>
                                         </div>
                                     </div>
+
+                                    <?php
+                                    $ai_effective_for_notice = efas_get_spam_api('maspik_ai_enabled', 'bool');
+                                    if ( ! $ai_effective_for_notice ) :
+                                    ?>
+                                    <div class="maspik-matrix-disabled-notice notice notice-warning" style="margin: 0.75em 0; padding: 0.75em 1em;">
+                                        <span class="dashicons dashicons-warning" style="margin-right: 0.25em;" aria-hidden="true"></span>
+                                        <strong><?php esc_html_e('Advanced spam protection is limited', 'contact-forms-anti-spam'); ?></strong>
+                                        <?php esc_html_e('MASPIK Matrix is disabled. Some advanced detection features (including AI-based checks) will not work at full capacity, and protection may be less effective.', 'contact-forms-anti-spam'); ?>
+                                    </div>
+                                    <?php endif; ?>
 
                                     <div class="maspik-txt-custom-msg-head togglewrap maspik-honeypot-wrap">
                                         <div class="maspik-toggle-and-chip">
@@ -1744,7 +1756,7 @@ if ($tc_effective && !$tc_local_on) {
                                             <div class="maspik-accordion-content-wrap">
                                                 <b><span><?php esc_html_e('Maspik Matrix is a powerful multi-layer spam protection engine that combines multiple detection methods into one smart protection system.', 'contact-forms-anti-spam'); ?></span>
                                                 <span><?php echo sprintf(esc_html__('We recommend to use this feature and read the documentation %shere%s.', 'contact-forms-anti-spam'), '<a href="https://wpmaspik.com/documentation/ai-spam-check/" target="_blank">', '</a>'); ?></span><br>
-                                                <span><?php esc_html_e('Maspik Matrix is enabled by default. You can turn it off from the toggle in the "Upper" section of this page if needed.', 'contact-forms-anti-spam'); ?></span></b>
+                                                <span><?php esc_html_e('You can turn Matrix on or off from the toggle in the "Main Options" section above.', 'contact-forms-anti-spam'); ?></span></b>
                                                 <br>
                                                 <!-- AI Configuration Fields (shown only when enabled) -->
                                                 <div class="" id="" style="">

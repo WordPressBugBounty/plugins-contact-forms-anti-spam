@@ -16,7 +16,7 @@ function maspik_validate_formidable_general($errors, $values){
   $datatocheck = maspik_add_spam_keys_to_array($_POST['item_meta'],$_POST);
 
   // General check (Country/IP, honeypot, spam key, AI Matrix, etc.)
-  $GeneralCheck = GeneralCheck($ip,$spam,$reason,$datatocheck,"formidable");
+  $GeneralCheck = GeneralCheck($ip,$spam,$reason,$datatocheck,"formidable", $datatocheck);
   $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
   $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
   $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;

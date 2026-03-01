@@ -16,25 +16,23 @@ function maspik_validate_bricks_form($errors, $form) {
     $reason ="";
     $ip =  maspik_get_real_ip();
 
-    // General check (Country/IP, honeypot, spam key, AI Matrix, etc.)
-    $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"bricks");
-    $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
-    $reason = $GeneralCheck['reason'] ? $GeneralCheck['reason'] : false ;
-    $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
-    $spam_val = isset($GeneralCheck['value']) ? $GeneralCheck['value'] : false ;
-    $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : 'General';
+    // Collect relevant content fields for AI (to be populated inside the per-field loop)
+    $content_fields = array();
 
-    if ( $spam) {
-        efas_add_to_log($type, $reason, $values, "Bricks", $message, $spam_val);
-        $errors[] = cfas_get_error_text($message);
-        return $errors;
-    }
-
-    // Perform spam validation for each form field
+    // Perform spam validation for each form field (and collect content fields)
     foreach ($form_fields as $field) {
         $field_id = $field['id'];
         $field_value = $form->get_field_value( $field_id );
-        
+
+        // Build content_fields only for relevant text/email/phone/textarea fields
+        if ( ! empty( $field['type'] ) && ! empty( $field_value ) ) {
+            $normalized_value = is_array( $field_value )
+                ? implode( ' ', array_map( 'strval', (array) $field_value ) )
+                : sanitize_text_field( (string) $field_value );
+            if ( $normalized_value !== '' && in_array( $field['type'], array( 'text', 'email', 'tel', 'textarea' ), true ) ) {
+                $content_fields[ $field_id ] = $normalized_value;
+            }
+        }
 
       	if ($field['type'] === 'text' && ! empty($field_value)) {
             $validateTextField = validateTextField($field_value);
@@ -88,6 +86,20 @@ function maspik_validate_bricks_form($errors, $form) {
                 return $errors;
             }
         }
+    }
+
+    // General check (Country/IP, honeypot, spam key, AI Matrix, etc.) – after per-field checks
+    $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"bricks", $content_fields);
+    $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
+    $reason = $GeneralCheck['reason'] ? $GeneralCheck['reason'] : false ;
+    $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
+    $spam_val = isset($GeneralCheck['value']) ? $GeneralCheck['value'] : false ;
+    $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : 'General';
+
+    if ( $spam) {
+        efas_add_to_log($type, $reason, $values, "Bricks", $message, $spam_val);
+        $errors[] = cfas_get_error_text($message);
+        return $errors;
     }
 
     return $errors;

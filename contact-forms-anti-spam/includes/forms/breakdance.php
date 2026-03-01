@@ -45,6 +45,9 @@ function maspik_validation_process_breakdance($canExecute, $action, $extra, $for
     $form_id = isset($extra['formId']) ? $extra['formId'] : 0;
     $datatocheck = maspik_add_spam_keys_to_array($form_fields, $_POST);
 
+    // Collect relevant content fields for AI
+    $content_fields = array();
+
     // Get the form fields from Breakdance
     if (empty($form_fields)) {
         $validation_results[$submission_key] = $canExecute;
@@ -116,6 +119,9 @@ function maspik_validation_process_breakdance($canExecute, $action, $extra, $for
             $validation_results[$submission_key] = new WP_Error('spam_detected', $error_message);
             return $validation_results[$submission_key];
         }
+
+        // Add to AI content fields if valid
+        $content_fields['name'] = $name;
     }
 
     // Check email field for spam
@@ -129,6 +135,9 @@ function maspik_validation_process_breakdance($canExecute, $action, $extra, $for
             $validation_results[$submission_key] = new WP_Error('spam_detected', $error_message);
             return $validation_results[$submission_key];
         }
+
+        // Add to AI content fields if valid
+        $content_fields['email'] = $email;
     }
 
     // Check phone field for spam
@@ -148,6 +157,9 @@ function maspik_validation_process_breakdance($canExecute, $action, $extra, $for
             $validation_results[$submission_key] = new WP_Error('spam_detected', $error_message);
             return $validation_results[$submission_key];
         }
+
+        // Add to AI content fields if valid
+        $content_fields['phone'] = $phone;
     }
 
     // Check URL field for spam
@@ -187,13 +199,16 @@ function maspik_validation_process_breakdance($canExecute, $action, $extra, $for
                     $validation_results[$submission_key] = new WP_Error('spam_detected', $error_message);
                     return $validation_results[$submission_key];
                 }
+
+                // Add to AI content fields if valid
+                $content_fields[ $field_name ] = $field_value;
             }
         }
     }
 
     // General Check - use IP from extra data
     $ip = isset($extra['ip']) ? $extra['ip'] : maspik_get_real_ip();
-    $GeneralCheck = GeneralCheck($ip, $spam, $reason, $datatocheck, "breakdance");
+    $GeneralCheck = GeneralCheck($ip, $spam, $reason, $datatocheck, "breakdance", $content_fields);
     $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false;
     $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false;
     $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false;

@@ -79,7 +79,7 @@ function maspik_ai_check_submission( array $fields, string $form_type = '' ): ar
     if (!is_string($client_ip) || empty($client_ip)) {
         $client_ip = '127.0.0.1';
     }
-    
+
     $payload = [
         'fields'        => $fields,
         'context'       => [
@@ -484,19 +484,10 @@ function maspik_is_ai_beta_mode(): bool {
  */
 function maspik_prepare_fields_for_ai( array $form_data, string $form_type = '' ): array {
     $processed_fields = [];
-    
-    // Handle special form structures first, then flatten to uniform structure
-    $raw_fields = [];
-    
-    // Extract fields based on known form structures
-    if ( $form_type === 'elementor' && isset($form_data['form_fields']) ) {
-        // Elementor stores fields in form_fields sub-array
-        $raw_fields = $form_data['form_fields'];
-    } else {
-        // For all other forms, use the data as-is
-        $raw_fields = $form_data;
-    }
-    
+
+    // Each integration passes content_fields or post; use as-is and process uniformly.
+    $raw_fields = $form_data;
+
     // Process all fields uniformly
     foreach ( $raw_fields as $key => $value ) {
         // Convert key to string for consistent processing
@@ -508,7 +499,7 @@ function maspik_prepare_fields_for_ai( array $form_data, string $form_type = '' 
         }
                 
         // Skip keys that contain unwanted terms (case-insensitive)
-        $unwanted_terms = ['action', 'nonce', 'submit', 'referrer', 'captcha', 'time', 'key', 'gclid', 'utm_', 'url', 'redirect', 'link', 'ref','hash','maspik','full-name-maspik-hp','honeypot','token','wc_','password','productid','formId','postId','campaign','date'];
+        $unwanted_terms = ['hidden','action', 'nonce', 'submit', 'referrer', 'time', 'key', 'gclid', 'utm_', 'url', 'redirect', 'link', 'ref','hash','maspik','full-name-maspik-hp','honeypot','token','wc_','password','productid','formId','postId','campaign','date','turnstile','cf-chl','response','recaptcha','captcha','gform_'];
         $key_lower = strtolower($key);
         foreach ( $unwanted_terms as $term ) {
             if ( strpos($key_lower, strtolower($term)) !== false ) {
@@ -545,7 +536,10 @@ function maspik_prepare_fields_for_ai( array $form_data, string $form_type = '' 
         // Add to final processed fields array
         $processed_fields[$key] = $processed_value;
     }
-    
+
+    // Add form type as a field so the AI sees it alongside other fields (prepared here, not in the submission function).
+    $processed_fields['Form type'] = is_string( $form_type ) ? $form_type : '';
+
     return $processed_fields;
 } 
 

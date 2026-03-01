@@ -10,6 +10,8 @@ function maspik_validate_forminator_general($submit_errors, $form_id, $field_dat
     $spam = false;
     $reason ="";
     $field_id = 0;
+    // Collect relevant content fields for AI
+    $content_fields = array();
     // ip
     $ip =  maspik_get_real_ip();
 
@@ -31,6 +33,8 @@ function maspik_validate_forminator_general($submit_errors, $form_id, $field_dat
                 $submit_errors[][$field_id] = cfas_get_error_text($message);
                 return $submit_errors;
             }
+            // Add to AI content fields if valid
+            $content_fields[ $field_id ] = $field_value;
             continue;
         }
         
@@ -43,6 +47,8 @@ function maspik_validate_forminator_general($submit_errors, $form_id, $field_dat
                 $submit_errors[][$field_id] = cfas_get_error_text();
                 return $submit_errors;
             }
+            // Add to AI content fields if valid
+            $content_fields[ $field_id ] = $field_value;
             continue;
         }
         //
@@ -60,6 +66,10 @@ function maspik_validate_forminator_general($submit_errors, $form_id, $field_dat
                 $submit_errors[][$field_id] = cfas_get_error_text($message);
                 return $submit_errors;
             }
+            // Add to AI content fields if valid
+            if ( $valid ) {
+                $content_fields[ $field_id ] = $field_value;
+            }
             continue;
         }
         
@@ -76,6 +86,8 @@ function maspik_validate_forminator_general($submit_errors, $form_id, $field_dat
                 $submit_errors[][$field_id] = cfas_get_error_text($message);
                 return $submit_errors;
             }
+            // Add to AI content fields if valid
+            $content_fields[ $field_id ] = $field_value;
             continue;
         }
         
@@ -83,7 +95,7 @@ function maspik_validate_forminator_general($submit_errors, $form_id, $field_dat
     }
 
     // General check (Country/IP, honeypot, spam key, AI Matrix, etc.)
-    $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"forminator");
+    $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"forminator", $content_fields);
     $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
     $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
     $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
@@ -113,14 +125,14 @@ add_action( 'forminator_render_form_submit_markup', function( $html, $form_id, $
         $custom_html = "";
         if (efas_get_spam_api('maspikHoneypot', 'bool')) {
             $custom_html .= '<div class="forminator-row maspik-field">
-                <label for="full-name-maspik-hp" class="forminator-label">Leave this field empty</label>
-                <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="full-name-maspik-hp" id="full-name-maspik-hp" class="forminator-input" placeholder="Leave this field empty">
+                <label for="full-name-maspik-hp" class="forminator-label">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
+                <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="full-name-maspik-hp" id="full-name-maspik-hp" class="forminator-input" placeholder="' . esc_attr( maspik_honeypot_aria_label() ) . '">
             </div>';
         }
         if (maspik_get_settings('maspikYearCheck')) {
             $custom_html .= '<div class="forminator-row maspik-field">
-                <label for="Maspik-currentYear" class="forminator-label">Leave this field empty</label>
-                <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="forminator-input" placeholder="">
+                <label for="Maspik-currentYear" class="forminator-label">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
+                <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="Maspik-currentYear" id="Maspik-currentYear" class="forminator-input" placeholder="">
             </div>';
         }
 

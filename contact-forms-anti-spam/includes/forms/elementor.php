@@ -67,6 +67,9 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
     $keys = array_keys($form_fields);
     $lastKeyId = !empty($keys) ? end($keys) : '';
 
+    // Collect only relevant visible content fields for AI (text/name/email/tel/textarea)
+    $content_fields = array();
+
     
     // Loop through all fields
     foreach ( $form_fields as $field_id => $field ) {
@@ -93,6 +96,11 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
                     $ajax_handler->add_error( $field_id, $error_message );
                     return;
                 }
+
+                // Add to AI content fields if valid
+                if ( ! $spam ) {
+                    $content_fields[ $field_id ] = $field_value;
+                }
                 break;
 
             case 'email':
@@ -105,6 +113,11 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
                     efas_add_to_log($type = "email", $spam, $form_data,"Elementor forms", "emails_blacklist", $spam_val);
                     $ajax_handler->add_error($field_id, $error_message);
                     return;
+                }
+
+                // Add to AI content fields if valid
+                if ( ! $spam ) {
+                    $content_fields[ $field_id ] = $field_value;
                 }
                 break;
 
@@ -122,6 +135,11 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
                   efas_add_to_log($type = "tel", $reason, $form_data,"Elementor forms", $spam_lbl, $spam_val);
                   $ajax_handler->add_error($field_id, $error_message);
                   return;
+                }
+
+                // Add to AI content fields if valid
+                if ( $valid ) {
+                    $content_fields[ $field_id ] = $field_value;
                 }
                 break;
 
@@ -155,6 +173,11 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
                       $ajax_handler->add_error( $field_id, $error_message );
                       return;
                 }
+
+                // Add to AI content fields if valid
+                if ( ! $spam ) {
+                    $content_fields[ $field_id ] = $field_value;
+                }
                 break;
 
             // end
@@ -179,7 +202,7 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
         $meta = $record->get_form_meta( [ 'page_url', 'remote_ip' ] );
         $ip = isset($meta['remote_ip']['value']) && $meta['remote_ip']['value'] ? $meta['remote_ip']['value'] : maspik_get_real_ip();
         // Country IP Check 
-        $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST, "elementor");
+        $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST, "elementor", $content_fields);
         $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false;
         $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false;
         $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false;

@@ -76,15 +76,15 @@ function maspik_add_honeypot_to_bp_registration_form() {
     if (efas_get_spam_api('maspikHoneypot', 'bool')) {
 
         echo '<div class="register-section maspik-field" id="maspik-honeypot-section" style="display: none;">
-        <label for="full-name-maspik-hp">Leave this field empty</label>
-            <input type="text" name="full-name-maspik-hp" id="full-name-maspik-hp" value="" tabindex="-1" autocomplete="off" />
+        <label for="full-name-maspik-hp">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
+            <input type="text" name="full-name-maspik-hp" id="full-name-maspik-hp" value="" tabindex="-1" autocomplete="off" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" />
         </div>';
     }
 
     if ( maspik_get_settings( 'maspikYearCheck' ) ) {
         echo '<div class="register-section maspik-field" style="display: none;">
-            <label for="Maspik-currentYear" class="bp-form-control-label"></label>
-            <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="buddypress-form-control" placeholder="">
+            <label for="Maspik-currentYear" class="bp-form-control-label">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
+            <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="Maspik-currentYear" id="Maspik-currentYear" class="buddypress-form-control" placeholder="">
         </div>';
     }
 

@@ -20,6 +20,9 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
     $form_fields = is_array($form_fields) ? $form_fields : array();
     $keys = array_keys($form_fields);
     $lastKeyId = !empty($keys) ? end($keys) : '';
+
+    // Collect relevant content fields for AI
+    $content_fields = array();
     
     
     
@@ -48,6 +51,11 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
                     $ajax_handler->add_error($field_id, $error_message);
                     return;
                 }
+
+                // Add to AI content fields if valid
+                if ( ! $spam ) {
+                    $content_fields[ $field_id ] = $field_value;
+                }
                 break;
 
             case 'email':
@@ -60,6 +68,11 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
                     efas_add_to_log($type = "email", $spam, $form_data,"Hello Plus", "emails_blacklist", $spam_val);
                     $ajax_handler->add_error($field_id, $error_message);
                     return;
+                }
+
+                // Add to AI content fields if valid
+                if ( ! $spam ) {
+                    $content_fields[ $field_id ] = $field_value;
                 }
                 break;
 
@@ -78,6 +91,11 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
                   $ajax_handler->add_error($field_id, $error_message);
                   return;
                 }
+
+                // Add to AI content fields if valid
+                if ( $valid ) {
+                    $content_fields[ $field_id ] = $field_value;
+                }
                 break;
 
             case 'textarea':
@@ -94,6 +112,11 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
                       $ajax_handler->add_error($field_id, $error_message);
                       return;
                 }
+
+                // Add to AI content fields if valid
+                if ( ! $spam ) {
+                    $content_fields[ $field_id ] = $field_value;
+                }
                 break;
 
             // end
@@ -105,7 +128,7 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
         $meta = $record->get_form_meta( [ 'page_url', 'remote_ip' ] );
         $ip =  $meta['remote_ip']['value'] ? $meta['remote_ip']['value'] : maspik_get_real_ip();
         // Country IP Check 
-        $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"HelloPlus");
+        $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"HelloPlus", $content_fields);
         $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
         $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
         $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;

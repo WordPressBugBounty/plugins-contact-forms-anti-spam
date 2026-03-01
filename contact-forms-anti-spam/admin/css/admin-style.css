@@ -2283,6 +2283,7 @@ body.rtl .maspik-toggle-and-chip {
 .spam-log-wrap {
   max-width: 1600px;
   margin: 20px 20px 0 0;
+  padding-bottom: 60px; /* Same as .wrap.maspik-mainpage: reserve space for admin footer when other plugins set #wpfooter to position: relative */
 }
 
 .rtl .wrap.spam-log-wrap {
@@ -2989,6 +2990,7 @@ tr.row-entries.not-a-spam button.entry-action-btn.not-spam-action {
 .wrap.maspik-mainpage {
   max-width: 100%;
   margin: 20px 20px 0 0;
+  padding-bottom: 60px; /* Reserve space for admin footer so it never overlaps content (e.g. when another plugin sets #wpfooter to position: relative) */
   background: #f0f0f1;
 }
 
@@ -3687,4 +3689,26 @@ tr.row-entries.not-a-spam button.entry-action-btn.not-spam-action {
 .maspik-ai-logs-table li {
   margin: 2px 0 !important;
   font-size: 11px;
+}
+
+/* When another plugin sets #wpfooter to position: relative, it stays in the document flow.
+   If the parent is flex (or has min-height), the footer can grow and cover the page.
+   We only constrain our footer so it never expands beyond its content—we don't change position. */
+#wpfooter {
+  position: absolute !important;
+  height: auto !important;
+  min-height: 0 !important;
+  flex: 0 0 auto !important;
+  flex-grow: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+/* On the main page #wpfooter is inside #wpcontent; both get margin-left: 160px from WordPress,
+   so the footer is indented twice (320px). When the footer is inside #wpcontent, zero out its
+   left margin so it aligns with the content (one 160px from the menu), like the Spam Log. */
+#wpcontent > #wpbody > #wpfooter {
+  margin-left: 0 !important;
+}
+.rtl #wpcontent > #wpbody > #wpfooter {
+  margin-right: 0 !important;
 }

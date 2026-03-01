@@ -27,7 +27,8 @@ function maspik_validate_fluentform_general( $errors, $formData, $form, $fields)
 
 
   // General check (Country/IP, honeypot, spam key, AI Matrix, etc.)
-  $GeneralCheck = GeneralCheck($ip,$spam,$reason,$parsed_data,"fluentforms");
+  // Use parsed_data both as full post data and as content fields base for AI.
+  $GeneralCheck = GeneralCheck($ip,$spam,$reason,$parsed_data,"fluentforms", $parsed_data);
   $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
   $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : false ;
   $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : false ;
@@ -153,15 +154,15 @@ add_filter('fluentform/rendering_form', function($form){
 
             if (efas_get_spam_api('maspikHoneypot', 'bool')) {
                 $custom_html .= '<div class="ff-el-group maspik-field">
-                    <label for="full-name-maspik-hp" class="ff-el-input--label">Leave this field empty</label>
-                    <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="full-name-maspik-hp" id="full-name-maspik-hp" class="ff-el-form-control" placeholder="Leave this field empty">
+                    <label for="full-name-maspik-hp" class="ff-el-input--label">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
+                    <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="full-name-maspik-hp" id="full-name-maspik-hp" class="ff-el-form-control" placeholder="' . esc_attr( maspik_honeypot_aria_label() ) . '">
                 </div>';
             }
 
             if (maspik_get_settings('maspikYearCheck')) {
                 $custom_html .= '<div class="ff-el-group maspik-field">
-                    <label for="Maspik-currentYear" class="ff-el-input--label">Leave this field empty</label>
-                    <input size="1" type="text" autocomplete="off"   aria-hidden="true" tabindex="-1" name="Maspik-currentYear" id="Maspik-currentYear" class="ff-el-form-control" placeholder="">
+                    <label for="Maspik-currentYear" class="ff-el-input--label">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
+                    <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="Maspik-currentYear" id="Maspik-currentYear" class="ff-el-form-control" placeholder="">
                 </div>';
             }
 
