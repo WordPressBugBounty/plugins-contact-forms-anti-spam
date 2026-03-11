@@ -199,8 +199,7 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
 
     // General Check
     try {
-        $meta = $record->get_form_meta( [ 'page_url', 'remote_ip' ] );
-        $ip = isset($meta['remote_ip']['value']) && $meta['remote_ip']['value'] ? $meta['remote_ip']['value'] : maspik_get_real_ip();
+        $ip = maspik_get_real_ip();
         // Country IP Check 
         $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST, "elementor", $content_fields);
         $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false;

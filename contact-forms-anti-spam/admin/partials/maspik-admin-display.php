@@ -978,10 +978,48 @@ $whats_new_nonce = wp_create_nonce('maspik_whats_new_seen');
                                             </h4>
                                             <span>
                                                 <?php esc_html_e('Multi-layer check: IP reputation, request patterns, and AI scoring.', 'contact-forms-anti-spam'); ?>
+                                                <a href="#maspik-matrix-section" class="maspik-accordion-link" data-accordion-target="maspik-matrix-section" style="margin-<?php echo is_rtl() ? 'right' : 'left'; ?>: 6px; font-size: 0.9em;">
+                                                    <?php esc_html_e('See more', 'contact-forms-anti-spam'); ?>
+                                                </a>
                                             </span>
                                             <p class="maspik-matrix-privacy-note" style="margin-top: 0.5em; font-size: 0.9em; color: #646970;">
                                                 <?php esc_html_e('This feature sends limited request data (such as IP and spam signals) to external servers for analysis. Data is processed in real-time and not stored.', 'contact-forms-anti-spam'); ?>
                                             </p>
+                                            <?php
+                                            // AI metrics summary under Matrix title (per month and total)
+                                            $ai_metrics = maspik_get_settings( 'maspik_ai_metrics' );
+                                            if ( is_array( $ai_metrics ) ) :
+                                                $total_checks = isset( $ai_metrics['total_checks'] ) ? (int) $ai_metrics['total_checks'] : 0;
+                                                $total_spam   = isset( $ai_metrics['total_spam'] ) ? (int) $ai_metrics['total_spam'] : 0;
+                                                $month_key    = date( 'Ym' );
+                                                $month_data   = isset( $ai_metrics['by_month'][ $month_key ] ) && is_array( $ai_metrics['by_month'][ $month_key ] )
+                                                    ? $ai_metrics['by_month'][ $month_key ]
+                                                    : array( 'checks' => 0, 'spam' => 0 );
+                                                $month_checks = (int) ( $month_data['checks'] ?? 0 );
+                                                $month_spam   = (int) ( $month_data['spam'] ?? 0 );
+                                            ?>
+                                            <p class="maspik-matrix-ai-metrics maspik-subtext" style="margin-top: 0.4em;">
+                                                <?php
+                                                if ( $month_checks > 0 ) {
+                                                    /* translators: 1: number of AI checks this month, 2: number blocked as spam */
+                                                    printf(
+                                                        esc_html__( 'This month: %1$s MASPIK Matrix checks, %2$s blocked as spam.', 'contact-forms-anti-spam' ),
+                                                        esc_html( number_format_i18n( $month_checks ) ),
+                                                        esc_html( number_format_i18n( $month_spam ) )
+                                                    );
+                                                } elseif ( $total_checks > 0 ) {
+                                                    /* translators: 1: total AI checks, 2: total blocked as spam */
+                                                    printf(
+                                                        esc_html__( 'Since activation: %1$s MASPIK Matrix checks, %2$s blocked as spam.', 'contact-forms-anti-spam' ),
+                                                        esc_html( number_format_i18n( $total_checks ) ),
+                                                        esc_html( number_format_i18n( $total_spam ) )
+                                                    );
+                                                } else {
+                                                    esc_html_e( 'Matrix is ready. Data will appear here after your first MASPIK Matrix check.', 'contact-forms-anti-spam' );
+                                                }
+                                                ?>
+                                            </p>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
 
@@ -1737,7 +1775,7 @@ if ($tc_effective && !$tc_local_on) {
                                     <!-- MORE OPTIONS HEADER - END -->
 
                                      <!-- Accordion Item - Maspik Matrix -->
-                                     <div class="maspik-accordion-item maspik-accordion-ai-spam-check" >
+                                     <div class="maspik-accordion-item maspik-accordion-ai-spam-check" id="maspik-matrix-section">
                                         <div class="maspik-accordion-header" id="ai-spam-check-accordion">
                                             <div class="mpk-acc-header-texts">
                                                 <h4 class="maspik-header maspik-accordion-header-text">
@@ -1754,57 +1792,133 @@ if ($tc_effective && !$tc_local_on) {
                                             
                                         <div class="maspik-accordion-content" id="maspik-ai-spam-check">
                                             <div class="maspik-accordion-content-wrap">
-                                                <b><span><?php esc_html_e('Maspik Matrix is a powerful multi-layer spam protection engine that combines multiple detection methods into one smart protection system.', 'contact-forms-anti-spam'); ?></span>
-                                                <span><?php echo sprintf(esc_html__('We recommend to use this feature and read the documentation %shere%s.', 'contact-forms-anti-spam'), '<a href="https://wpmaspik.com/documentation/ai-spam-check/" target="_blank">', '</a>'); ?></span><br>
-                                                <span><?php esc_html_e('You can turn Matrix on or off from the toggle in the "Main Options" section above.', 'contact-forms-anti-spam'); ?></span></b>
-                                                <br>
-                                                <!-- AI Configuration Fields (shown only when enabled) -->
-                                                <div class="" id="" style="">
-                                                    
 
-                                                    <!-- Business Context (Optional) -->
+                                                <!-- Matrix explainer -->
+                                                <div class="maspik-matrix-intro">
+                                                    <h3 class="maspik-accordion-subtitle">
+                                                        <?php esc_html_e( 'What is Maspik Matrix?', 'contact-forms-anti-spam' ); ?>
+                                                    </h3>
+                                                    <p class="maspik-subtext">
+                                                        <?php esc_html_e('Maspik Matrix is a powerful multi-layer spam protection engine that combines multiple detection methods into one smart protection system.', 'contact-forms-anti-spam'); ?>
+                                                   
+                                                        <?php
+                                                        echo sprintf(
+                                                            esc_html__('We recommend to keep this feature enabled and read the documentation %shere%s.', 'contact-forms-anti-spam'),
+                                                            '<a href="https://wpmaspik.com/documentation/ai-spam-check/" target="_blank">',
+                                                            '</a>'
+                                                        );
+                                                        ?>
+                                                    
+                                                        <?php esc_html_e('You can turn Matrix on or off from the toggle in the "Main Options" section above.', 'contact-forms-anti-spam'); ?>
+                                                    </p>
+                                                </div>
+
+                                                <!-- Section 1: Short prompt -->
+                                                <div class="maspik-matrix-section maspik-matrix-section--prompt" style="margin-top: 20px; padding-top: 12px; border-top: 1px solid #e2e4e7;">
+                                                    <h3 class="maspik-accordion-subtitle">
+                                                        <?php esc_html_e( '1. Short prompt (Business context)', 'contact-forms-anti-spam' ); ?>
+                                                    </h3>
+                                                    <p class="maspik-subtext">
+                                                        <?php esc_html_e( 'Optional but recommended: tell Matrix what your business does so AI can better tell real leads from spam.', 'contact-forms-anti-spam' ); ?>
+                                                    </p>
+
                                                     <div class="maspik-field-group">
-                                                        <label for="maspik_ai_context"><?php esc_html_e('Business Context/ Short prompt (Recommended)', 'contact-forms-anti-spam'); ?></label>
-                                                        <?php echo create_maspik_textarea('maspik_ai_context', 2, 50, 'ai-context', 'Example: "Business deals with selling used cars, please make sure to block any other language than English"', 170 ); ?>
+                                                        <label for="maspik_ai_context"><?php esc_html_e('Business context / Short prompt', 'contact-forms-anti-spam'); ?></label>
+                                                        <?php echo create_maspik_textarea('maspik_ai_context', 2, 50, 'ai-context', 'Example: "Business sells used cars in the US. Block messages in other languages or unrelated investment offers."', 170 ); ?>
                                                         <p class="maspik-field-description">
-                                                            <?php esc_html_e('Describe your business to help AI better understand legitimate submissions. Example: "Business deals with selling used cars,  please make sure that text not include any other language than English" Max 170 characters.', 'contact-forms-anti-spam'); ?>
+                                                            <?php esc_html_e('Describe your business in one short sentence. This helps AI understand what is a normal inquiry for you and what looks like spam. Max 170 characters.', 'contact-forms-anti-spam'); ?>
                                                         </p>
                                                     </div>
+                                                </div>
 
-                                                                                                                                                              <!-- AI Logs Table -->
-                                                     <div class="maspik-ai-logs-table-wrap">
-                                                         <div class="maspik-ai-logs-header">
-                                                             <button type="button" class="maspik-ai-logs-table-button button button-secondary">
-                                                                 <?php esc_html_e('Show Maspik Matrix Logs', 'contact-forms-anti-spam'); ?>
-                                                             </button>
-                                                             
-                                                             <?php
-                                                             $ai_logs = maspik_get_ai_logs();
-                                                             
-                                                             if ( !empty($ai_logs) ) : ?>
-                                                                 <button type="button" class="maspik-clear-ai-logs button button-link-delete">
-                                                                     <?php esc_html_e('Clear Logs', 'contact-forms-anti-spam'); ?>
-                                                                 </button>
-                                                             <?php endif; ?>
-                                                         </div>
-                                                         
-                                                         <div class="maspik-ai-logs-table-container" style="display: none;">
-                                                             <h4><?php esc_html_e('Last 10 Maspik Matrix Results', 'contact-forms-anti-spam'); ?></h4>
-                                                             
-                                                             <?php if ( !empty($ai_logs) ) : ?>
-                                                                 <table class="maspik-ai-logs-table widefat">
-                                                                     <thead>
-                                                                         <tr>
-                                                                             <th><?php esc_html_e('Time', 'contact-forms-anti-spam'); ?></th>
-                                                                             <th><?php esc_html_e('IP Address', 'contact-forms-anti-spam'); ?></th>
-                                                                             <th><?php esc_html_e('Fields', 'contact-forms-anti-spam'); ?></th>
-                                                                             <th><?php esc_html_e('AI Score', 'contact-forms-anti-spam'); ?></th>
-                                                                             <th><?php esc_html_e('Result', 'contact-forms-anti-spam'); ?></th>
-                                                                             <th><?php esc_html_e('Reason', 'contact-forms-anti-spam'); ?></th>
-                                                                         </tr>
-                                                                     </thead>
-                                                                     <tbody>
-                                                                         <?php foreach ( $ai_logs as $log ) :
+                                                <!-- Section 2: Usage -->
+                                                <?php
+                                                // Simple AI metrics summary list (recent months)
+                                                $ai_metrics = maspik_get_settings( 'maspik_ai_metrics' );
+                                                if ( is_array( $ai_metrics ) && ! empty( $ai_metrics['by_month'] ) ) :
+                                                    $months_data = $ai_metrics['by_month'];
+                                                    krsort( $months_data ); // newest first
+                                                    $months_data = array_slice( $months_data, 0, 6, true );
+                                                ?>
+                                                <div class="maspik-ai-metrics-panel maspik-matrix-section maspik-matrix-section--usage" style="margin-top: 24px; padding-top: 12px; border-top: 1px solid #e2e4e7;">
+                                                    <h3 class="maspik-accordion-subtitle">
+                                                        <?php esc_html_e( '2. Matrix usage', 'contact-forms-anti-spam' ); ?>
+                                                    </h3>
+                                                    <p class="maspik-subtext">
+                                                        <?php esc_html_e( 'See how often Matrix checks submissions and how many are blocked as spam.', 'contact-forms-anti-spam' ); ?>
+                                                    </p>
+                                                    <table class="widefat striped maspik-ai-metrics-table" style="max-width: 520px; margin-top: 8px;">
+                                                        <thead>
+                                                            <tr>
+                                                                <th><?php esc_html_e( 'Month', 'contact-forms-anti-spam' ); ?></th>
+                                                                <th><?php esc_html_e( 'Checks', 'contact-forms-anti-spam' ); ?></th>
+                                                                <th><?php esc_html_e( 'Spam', 'contact-forms-anti-spam' ); ?></th>
+                                                                <th><?php esc_html_e( 'Spam rate', 'contact-forms-anti-spam' ); ?></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <?php foreach ( $months_data as $ym => $data ) :
+                                                                $checks = isset( $data['checks'] ) ? (int) $data['checks'] : 0;
+                                                                $spam   = isset( $data['spam'] ) ? (int) $data['spam'] : 0;
+                                                                $rate   = $checks > 0 ? round( ( $spam / $checks ) * 100 ) : 0;
+                                                                // Format month label from YYYYMM
+                                                                $year  = substr( $ym, 0, 4 );
+                                                                $month = substr( $ym, 4, 2 );
+                                                                $month_label = date_i18n( 'F Y', strtotime( $year . '-' . $month . '-01' ) );
+                                                            ?>
+                                                            <tr>
+                                                                <td><?php echo esc_html( $month_label ); ?></td>
+                                                                <td><?php echo esc_html( number_format_i18n( $checks ) ); ?></td>
+                                                                <td><?php echo esc_html( number_format_i18n( $spam ) ); ?></td>
+                                                                <td><?php echo esc_html( $rate ); ?>%</td>
+                                                            </tr>
+                                                            <?php endforeach; ?>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <?php endif; ?>
+
+                                                <!-- Section 3: Logs -->
+                                                <div class="maspik-ai-logs-table-wrap maspik-matrix-section maspik-matrix-section--logs" style="margin-top: 24px; padding-top: 12px; border-top: 1px solid #e2e4e7;">
+                                                    <h3 class="maspik-accordion-subtitle">
+                                                        <?php esc_html_e( '3. Matrix logs (last checks)', 'contact-forms-anti-spam' ); ?>
+                                                    </h3>
+                                                    <p class="maspik-subtext">
+                                                        <?php esc_html_e( 'Use the logs to debug why a specific submission was blocked or allowed.', 'contact-forms-anti-spam' ); ?>
+                                                    </p>
+
+                                                    <div class="maspik-ai-logs-header">
+                                                        <button type="button" class="maspik-ai-logs-table-button button button-secondary">
+                                                            <?php esc_html_e('Show Maspik Matrix Logs', 'contact-forms-anti-spam'); ?>
+                                                        </button>
+                                                        
+                                                        <?php
+                                                        $ai_logs = maspik_get_ai_logs();
+                                                        
+                                                        if ( !empty($ai_logs) ) : ?>
+                                                            <button type="button" class="maspik-clear-ai-logs button button-link-delete">
+                                                                <?php esc_html_e('Clear Logs', 'contact-forms-anti-spam'); ?>
+                                                            </button>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    
+                                                    <div class="maspik-ai-logs-table-container" style="display: none;">
+                                                        <h4><?php esc_html_e('Last 10 Maspik Matrix Results', 'contact-forms-anti-spam'); ?></h4>
+                                                        
+                                                        <?php if ( !empty($ai_logs) ) : ?>
+                                                            <table class="maspik-ai-logs-table widefat">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th><?php esc_html_e('Time', 'contact-forms-anti-spam'); ?></th>
+                                                                        <th><?php esc_html_e('IP Address', 'contact-forms-anti-spam'); ?></th>
+                                                                        <th><?php esc_html_e('Fields', 'contact-forms-anti-spam'); ?></th>
+                                                                        <th><?php esc_html_e('AI Score', 'contact-forms-anti-spam'); ?></th>
+                                                                        <th><?php esc_html_e('Result', 'contact-forms-anti-spam'); ?></th>
+                                                                        <th><?php esc_html_e('Reason', 'contact-forms-anti-spam'); ?></th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <?php foreach ( $ai_logs as $log ) :
                                                                             // Extract all log data into convenient variables
                                                                             
                                                                             // Basic log info
@@ -1932,10 +2046,8 @@ if ($tc_effective && !$tc_local_on) {
                                                              <?php endif; ?>
                                                          </div>
                                                      </div>
- 
-                                                 </div>
-                                                 
-                                                 <script>
+
+                                                <script>
                                                  jQuery(document).ready(function($) {
                                                      // Toggle AI logs table
                                                      $('.maspik-ai-logs-table-button').on('click', function() {
@@ -1944,16 +2056,16 @@ if ($tc_effective && !$tc_local_on) {
                                                          
                                                          if ($container.is(':visible')) {
                                                              $container.hide();
-                                                             $button.text('<?php esc_html_e('Show AI Logs', 'contact-forms-anti-spam'); ?>');
+                                                             $button.text('<?php esc_html_e('Show Matrix Logs', 'contact-forms-anti-spam'); ?>');
                                                          } else {
                                                              $container.show();
-                                                             $button.text('<?php esc_html_e('Hide AI Logs', 'contact-forms-anti-spam'); ?>');
+                                                             $button.text('<?php esc_html_e('Hide Matrix Logs', 'contact-forms-anti-spam'); ?>');
                                                          }
                                                      });
                                                      
                                                      // Clear AI logs
                                                      $('.maspik-clear-ai-logs').on('click', function() {
-                                                         if (confirm('<?php esc_html_e('Are you sure you want to clear all AI logs?', 'contact-forms-anti-spam'); ?>')) {
+                                                         if (confirm('<?php esc_html_e('Are you sure you want to Delete all Matrix logs?', 'contact-forms-anti-spam'); ?>')) {
                                                              $.post(ajaxurl, {
                                                                  action: 'maspik_clear_ai_logs',
                                                                  nonce: '<?php echo wp_create_nonce('maspik_clear_ai_logs'); ?>'
@@ -2001,7 +2113,7 @@ if ($tc_effective && !$tc_local_on) {
                                                          $('.maspik-modal-overlay').remove();
                                                      });
                                                  });
-                                                 </script>
+                                                </script>
 
                                                 <?php maspik_save_button_show() ?>
 
@@ -2828,8 +2940,10 @@ if ($tc_effective && !$tc_local_on) {
                                 <!-- end feedback-->
                             </div><!-- End of Accordion content -->
                         </div><!--end of blacklist opts -->
-                        <!--Test form here -->
-                        <div class="maspik-test-form form-container test-form">
+                    </div><!-- end of Xmaspik-blacklist-options -->
+
+                    <!--Test form here -->
+                    <div class="maspik-test-form form-container test-form">
                             <form name="frmContact"  id="frmContact" method="post"  enctype="multipart/form-data">
                                 <div class="maspik-test-form-buttons">
                                     <button data-id="contact-form" type="button"><?php esc_html_e('Contact form', 'contact-forms-anti-spam'); ?></button>
@@ -2872,12 +2986,11 @@ if ($tc_effective && !$tc_local_on) {
                                 <br><strong><?php esc_html_e('* Please save changes before checking.', 'contact-forms-anti-spam'); ?></strong>
                                 <br><div id="statusMessage"></div>
                             </form>
+                        </div>
+                    <!-- end test form -->
 
-                        </div> 
-                        <!-- end test form -->
 
-
-                    </div><!-- end of maspik-setting-body -->
+                </div><!-- end of maspik-setting-body -->
                     <?php echo get_maspik_footer(); ?>
                 </div> <!-- end of maspik-settings -->
                   
@@ -3560,7 +3673,81 @@ if ($tc_effective && !$tc_local_on) {
             });
         </script>
     <?php } // END is not supporting ?>
-    
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Protected Form Types: delegate via generic system to Supported forms accordion
+            const protectedFormTypes = document.querySelectorAll('.maspik-protected-forms .form-type');
+            if (protectedFormTypes.length) {
+                protectedFormTypes.forEach(item => {
+                    item.classList.add('maspik-accordion-link');
+                    item.setAttribute('data-accordion-target', 'form-option-accordion');
+                });
+            }
+
+            // Generic handler: any element with .maspik-accordion-link and data-accordion-target
+            const accordionLinks = document.querySelectorAll('.maspik-accordion-link[data-accordion-target]');
+            console.log('[Maspik] Found accordion links:', accordionLinks.length);
+            accordionLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('data-accordion-target');
+                    console.log('[Maspik] Click on accordion link', {
+                        text: link.textContent ? link.textContent.trim() : '',
+                        targetId
+                    });
+
+                    if (!targetId) {
+                        console.warn('[Maspik] accordion link without data-accordion-target', link);
+                        return;
+                    }
+
+                    // Target can be an accordion item wrapper, or the header itself
+                    let accordionItem = document.getElementById(targetId) || document.querySelector(`.${targetId}`);
+                    if (!accordionItem) {
+                        console.error('[Maspik] No accordion item found for target', targetId);
+                        return;
+                    }
+
+                    // If the target is the header itself, use its parent as the item
+                    if (accordionItem.classList.contains('maspik-accordion-header') && accordionItem.parentElement) {
+                        accordionItem = accordionItem.parentElement;
+                    }
+
+                    // Smooth scroll with small offset for admin top bar
+                    const rect = accordionItem.getBoundingClientRect();
+                    const offset = 80;
+                    const y = rect.top + window.pageYOffset - offset;
+                    console.log('[Maspik] Scrolling to', { top: y });
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+
+                    // Find header/content and open accordion if needed
+                    let header = accordionItem.querySelector('.maspik-accordion-header');
+                    let content = accordionItem.querySelector('.maspik-accordion-content');
+
+                    // Fallback: if target itself is the header
+                    if (!header && accordionItem.classList.contains('maspik-accordion-header')) {
+                        header = accordionItem;
+                        content = header.nextElementSibling;
+                    }
+
+                    console.log('[Maspik] Accordion parts', {
+                        hasHeader: !!header,
+                        hasContent: !!content,
+                        headerClasses: header ? header.className : null
+                    });
+
+                    if (header) {
+                        console.log('[Maspik] Toggling accordion via header.click()');
+                        header.click();
+                    } else {
+                        console.warn('[Maspik] No accordion header found to toggle');
+                    }
+                });
+            });
+        });
+    </script>
+
 </div>
 <?php
 

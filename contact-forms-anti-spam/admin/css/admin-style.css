@@ -1107,7 +1107,29 @@ body.rtl .maspik-toggle-and-chip {
   max-width: 1400px;
   width: 100%;
   align-self: center;
+  align-items: flex-start;
   flex-wrap: nowrap;
+}
+
+.maspik-blacklist-options {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px
+}
+
+.maspik-test-form.form-container.test-form {
+  flex: 0 0 470px;
+}
+
+@media (max-width: 1100px) {
+  .maspik-setting-body {
+    flex-direction: column;
+  }
+
+  .maspik-test-form.form-container.test-form {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 .maspik-blacklist-options {
@@ -3287,8 +3309,11 @@ tr.row-entries.not-a-spam button.entry-action-btn.not-spam-action {
   background: linear-gradient(135deg, #f8f9fa, #ffffff);
 }
 
-/* Responsive adjustments for AI section */
 @media (max-width: 768px) {
+
+  .maspik-blacklist-options{
+    grid-template-columns: 1fr;
+  }
   #maspik-ai-config-fields .form-table th,
   #maspik-ai-config-fields .form-table td {
     display: block;

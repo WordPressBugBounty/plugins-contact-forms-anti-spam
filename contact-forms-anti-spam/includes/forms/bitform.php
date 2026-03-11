@@ -267,37 +267,6 @@ function maspik_check_bitform_for_spam($form_data, $form_id) {
     return false;
 }
 
-
-
-
-
-
-/**
- * General spam check (Country/IP, Honeypot, Time, Year)
- */
-function maspik_check_bitform_general_spam($form_data) {
-    $ip = maspik_get_real_ip();
-    $spam = false;
-    $reason = '';
-        
-    $GeneralCheck = GeneralCheck($ip, $spam, $reason, $form_data, 'bitform');
-    $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false;
-    
-    if ($spam) {
-        $reason = isset($GeneralCheck['reason']) ? $GeneralCheck['reason'] : '';
-        $message = isset($GeneralCheck['message']) ? $GeneralCheck['message'] : '';
-        $spam_val = isset($GeneralCheck['value']) ? $GeneralCheck['value'] : '';
-        $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : 'General';
-        
-        efas_add_to_log($type, $reason, $form_data, 'BitForm', $message, $spam_val);
-        return true; // Spam detected
-    }
-    
-    return false; // No spam detected
-}
-
-
-
 // Hook into BitForm validation
 add_filter('bitform_filter_form_validation', 'maspik_validate_bitform_for_spam', 10, 2);
 

@@ -138,33 +138,41 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "", $form = false, $content
         if ( !is_wp_error($response) && wp_remote_retrieve_response_code($response) == 200 ) {
             $body = wp_remote_retrieve_body($response);
             $data = json_decode($body, true);
-            $countryCode = isset($data['countryCode']) && $data['countryCode'] != "" ? $data['countryCode'] : "Unknown";
-            $continentCode = isset($data['continentCode']) && $data['continentCode'] != "" ? $data['continentCode'] : "Unknown";
+
+            // If IP belongs to Cloudflare edge (or similar), skip country check to avoid false positives
+            $asnOrganization = isset($data['asnOrganization']) ? $data['asnOrganization'] : '';
+            if (is_string($asnOrganization) && stripos($asnOrganization, 'cloudflare') !== false) {
+                // Do not block based on country/continent when request clearly comes from Cloudflare network.
+                // maspik_get_real_ip() should already try to resolve real client IP behind Cloudflare.
+            } else {
+                $countryCode = isset($data['countryCode']) && $data['countryCode'] != "" ? $data['countryCode'] : "Unknown";
+                $continentCode = isset($data['continentCode']) && $data['continentCode'] != "" ? $data['continentCode'] : "Unknown";
+                
+                $selected_country_codes = array();
+                $selected_continent_codes = array();
             
-            $selected_country_codes = array();
-            $selected_continent_codes = array();
-        
-            foreach ($country_blacklist as $item) {
-                if (strpos($item, 'Continent:') === 0) {
-                    $selected_continent_codes[] = substr($item, strlen('Continent:'));
-                } else {
-                    $selected_country_codes[] = $item;
+                foreach ($country_blacklist as $item) {
+                    if (strpos($item, 'Continent:') === 0) {
+                        $selected_continent_codes[] = substr($item, strlen('Continent:'));
+                    } else {
+                        $selected_country_codes[] = $item;
+                    }
                 }
-            }
-        
-            if ($AllowedOrBlockCountries === 'block') {
-                if (in_array($countryCode, $selected_country_codes) || in_array($continentCode, $selected_continent_codes)) {
-                    $spam = true;
-                    $message = "country_blacklist";
-                    $reason = "Country code $countryCode or continent $continentCode is blacklisted (block)";
-                    return array('spam' => $spam, 'reason' => $reason, 'message' => $message, 'value' => $countryCode);
-                }
-            } elseif ($AllowedOrBlockCountries === 'allow') {
-                if (!in_array($countryCode, $selected_country_codes) && !in_array($continentCode, $selected_continent_codes)) {
-                    $spam = true;
-                    $message = "country_blacklist";
-                    $reason = "Country code $countryCode or continent $continentCode is not in the whitelist (allow)";
-                    return array('spam' => $spam, 'reason' => $reason, 'message' => $message, 'value' => $countryCode);
+            
+                if ($AllowedOrBlockCountries === 'block') {
+                    if (in_array($countryCode, $selected_country_codes) || in_array($continentCode, $selected_continent_codes)) {
+                        $spam = true;
+                        $message = "country_blacklist";
+                        $reason = "Country code $countryCode or continent $continentCode is blacklisted (block)";
+                        return array('spam' => $spam, 'reason' => $reason, 'message' => $message, 'value' => $countryCode);
+                    }
+                } elseif ($AllowedOrBlockCountries === 'allow') {
+                    if (!in_array($countryCode, $selected_country_codes) && !in_array($continentCode, $selected_continent_codes)) {
+                        $spam = true;
+                        $message = "country_blacklist";
+                        $reason = "Country code $countryCode or continent $continentCode is not in the whitelist (allow)";
+                        return array('spam' => $spam, 'reason' => $reason, 'message' => $message, 'value' => $countryCode);
+                    }
                 }
             }
         }

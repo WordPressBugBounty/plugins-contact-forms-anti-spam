@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.9
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.7.1
+Stable tag: 2.7.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -395,6 +395,12 @@ Then Maspik is an excellent choice for your WordPress spam protection.
 
 == Changelog ==
 
+= 2.7.2 - 11/03/2026 =
+* Improvement – Improved country detection when using Cloudflare proxy IPs.
+* Improvement – Improved Maspik Matrix performance and accuracy.
+* Added – Usage statistics for Maspik Matrix.
+
+
 = 2.7.1 - 01/03/2026 =
 * Improvement – Maspik Matrix (AI + Advanced pattern checks) now receives only visible content fields (text, name, email, phone, textarea) from each form; hidden fields, checkboxes, selects and other non-textual fields are excluded from the AI check.
 * Improvement – Maspik Matrix not active by default for better privacy.
@@ -580,9 +586,3 @@ Then Maspik is an excellent choice for your WordPress spam protection.
 * Improvement – Forms are now supported by default (support for specific forms can be disabled in settings)
 
 == Upgrade Notice ==
-
-= 2.7.1 =
-MASPIK Matrix is now disabled by default for privacy. Enable it in Maspik settings for stronger spam protection.
-
-= 2.7.0 =
-Maspik Matrix is now enabled by default for better protection. You can disable it in settings, checking the Spam Log from time to time is recommended.

@@ -628,8 +628,16 @@ function efas_add_to_log($type = '', $input = '', $post = null, $source = "Eleme
         if ( !is_wp_error($response) && wp_remote_retrieve_response_code($response) == 200 ) {
             $body = wp_remote_retrieve_body($response);
             $geoData = json_decode($body, true);
-            if ( isset($geoData['countryName']) && !empty($geoData['countryName']) ) {
-                $countryName = sanitize_text_field($geoData['countryName']);
+            $asnOrganization = isset($geoData['asnOrganization']) ? $geoData['asnOrganization'] : '';
+            if (is_string($asnOrganization) && stripos($asnOrganization, 'cloudflare') !== false) {
+                $realCountry = isset($geoData['countryName']) && !empty($geoData['countryName'])
+                    ? sanitize_text_field($geoData['countryName'])
+                    : 'Unknown';
+                $countryName = sprintf('Cloudflare edge (%s)', $realCountry);
+            } else {
+                if ( isset($geoData['countryName']) && !empty($geoData['countryName']) ) {
+                    $countryName = sanitize_text_field($geoData['countryName']);
+                }
             }
         }
         
@@ -1883,6 +1891,44 @@ function maspik_increment_blocks() {
     $api_data['months'][$current_month]['blocks']++;
     
     update_option("maspik_api_requests", $api_data);
+}
+
+/**
+ * AI metrics (MASPIK Matrix): one read + one write per submission.
+ * Call once per request with deltas (e.g. after you know sent=1, spam=0|1).
+ * Retrieve with maspik_get_settings('maspik_ai_metrics').
+ * Structure: [ 'by_month' => [ 'YYYYMM' => [ 'checks' => n, 'spam' => n ], ... ], 'total_checks' => n, 'total_spam' => n ]
+ */
+function maspik_ai_metrics_record( $sent_delta = 0, $spam_delta = 0 ) {
+    if ( ( (int) $sent_delta ) === 0 && ( (int) $spam_delta ) === 0 ) {
+        return;
+    }
+    if ( ! maspik_table_exists() ) {
+        return;
+    }
+    $metrics = maspik_get_settings( 'maspik_ai_metrics' );
+    if ( ! is_array( $metrics ) ) {
+        $metrics = array( 'by_month' => array(), 'total_checks' => 0, 'total_spam' => 0 );
+    }
+    if ( ! isset( $metrics['by_month'] ) || ! is_array( $metrics['by_month'] ) ) {
+        $metrics['by_month'] = array();
+    }
+    $metrics['total_checks'] = isset( $metrics['total_checks'] ) ? (int) $metrics['total_checks'] : 0;
+    $metrics['total_spam']   = isset( $metrics['total_spam'] ) ? (int) $metrics['total_spam'] : 0;
+
+    $ym = date( 'Ym' );
+    if ( ! isset( $metrics['by_month'][ $ym ] ) || ! is_array( $metrics['by_month'][ $ym ] ) ) {
+        $metrics['by_month'][ $ym ] = array( 'checks' => 0, 'spam' => 0 );
+    }
+    $sent_delta = (int) $sent_delta;
+    $spam_delta = (int) $spam_delta;
+    $metrics['by_month'][ $ym ]['checks'] = (int) $metrics['by_month'][ $ym ]['checks'] + $sent_delta;
+    $metrics['by_month'][ $ym ]['spam']   = (int) $metrics['by_month'][ $ym ]['spam'] + $spam_delta;
+    $metrics['total_checks'] += $sent_delta;
+    $metrics['total_spam']   += $spam_delta;
+
+    $metrics['by_month'] = array_slice( $metrics['by_month'], -12, 12, true );
+    maspik_save_settings( 'maspik_ai_metrics', $metrics );
 }
 
 // Set default values for various settings

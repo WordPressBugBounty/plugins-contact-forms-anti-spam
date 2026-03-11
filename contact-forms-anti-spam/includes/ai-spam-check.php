@@ -21,6 +21,8 @@ if ( ! defined( 'WPINC' ) ) {
  * @return array Array containing spam check results
  */
 function maspik_ai_check_submission( array $fields, string $form_type = '' ): array {
+    $ai_metrics_sent = 0;
+    $ai_metrics_spam = 0;
     // Wrap entire function in try-catch to prevent any exceptions from breaking the site
     try {
         // Get AI settings from options/DB with fallbacks to constants
@@ -38,8 +40,6 @@ function maspik_ai_check_submission( array $fields, string $form_type = '' ): ar
     //error_log('Maspik AI: Endpoint=' . $endpoint . ', Mode=' . (maspik_is_ai_beta_mode() ? 'beta' : 'live'));
     
 
-    $threshold = (int) maspik_get_settings('maspik_ai_threshold', 70 );
-    $threshold = $threshold < 3 ? 70 : $threshold;
     $context   = maspik_get_settings('maspik_ai_context', '' );
     $context   = is_string($context) ? $context : '';
     
@@ -123,6 +123,8 @@ function maspik_ai_check_submission( array $fields, string $form_type = '' ): ar
             }
         }
     }
+
+    $ai_metrics_sent = 1;
 
     // Send request to AI API
     // Reduced timeout to 7 seconds to prevent long waits that could cause form submission issues
@@ -212,12 +214,10 @@ function maspik_ai_check_submission( array $fields, string $form_type = '' ): ar
             $reason = $json['reason'];
         }
 
-        // Block decision: ONLY by is_spam when it exists, otherwise by score + threshold as fallback
-        if ( isset( $json['is_spam'] ) ) {
-            $block = (bool) $json['is_spam'];
-        } else {
-            // Fallback: treat high score as spam if is_spam is missing (should be rare)
-            $block = ( $score !== null && $score >= $threshold );
+        // Block decision: only by is_spam when present; if missing, allow
+        $block = isset( $json['is_spam'] ) ? (bool) $json['is_spam'] : false;
+        if ( $block ) {
+            $ai_metrics_spam = 1;
         }
 
         $result = [
@@ -392,7 +392,7 @@ function maspik_ai_check_submission( array $fields, string $form_type = '' ): ar
     }
     
     return $error_result;
-    
+
     } catch ( Exception $e ) {
         // On any exception, don't block the form - log error and allow submission
         if ( defined('WP_DEBUG') && WP_DEBUG ) {
@@ -405,6 +405,10 @@ function maspik_ai_check_submission( array $fields, string $form_type = '' ): ar
             error_log('Maspik AI Check Fatal Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
         }
         return ['allow' => true, 'reason' => 'AI check fatal error: ' . $e->getMessage()];
+    } finally {
+        if ( $ai_metrics_sent > 0 ) {
+            maspik_ai_metrics_record( $ai_metrics_sent, $ai_metrics_spam );
+        }
     }
 }
 
@@ -499,7 +503,7 @@ function maspik_prepare_fields_for_ai( array $form_data, string $form_type = '' 
         }
                 
         // Skip keys that contain unwanted terms (case-insensitive)
-        $unwanted_terms = ['hidden','action', 'nonce', 'submit', 'referrer', 'time', 'key', 'gclid', 'utm_', 'url', 'redirect', 'link', 'ref','hash','maspik','full-name-maspik-hp','honeypot','token','wc_','password','productid','formId','postId','campaign','date','turnstile','cf-chl','response','recaptcha','captcha','gform_'];
+        $unwanted_terms = ['hidden','action', 'nonce', 'submit', 'referrer', 'time', 'key', 'gclid', 'utm_', 'url', 'redirect', 'link', 'ref','hash','maspik','full-name-maspik-hp','honeypot','token','password','productid','formId','postId','campaign','date','turnstile','cf-chl','response','recaptcha','captcha','gform_'];
         $key_lower = strtolower($key);
         foreach ( $unwanted_terms as $term ) {
             if ( strpos($key_lower, strtolower($term)) !== false ) {

@@ -125,8 +125,7 @@ function maspik_validation_process_hello_plus( $record, $ajax_handler ) {
 
         // General Check
     if(!$spam ){
-        $meta = $record->get_form_meta( [ 'page_url', 'remote_ip' ] );
-        $ip =  $meta['remote_ip']['value'] ? $meta['remote_ip']['value'] : maspik_get_real_ip();
+        $ip = maspik_get_real_ip();
         // Country IP Check 
         $GeneralCheck = GeneralCheck($ip,$spam,$reason,$_POST,"HelloPlus", $content_fields);
         $spam = isset($GeneralCheck['spam']) ? $GeneralCheck['spam'] : false ;
