@@ -50,16 +50,35 @@ function maspik_comments_checker(array $data) {
     }
 
     // Extracting data from the comment with validation
-    $content = isset($data['comment_content']) ? strtolower(sanitize_text_field($data['comment_content'])) : '';
-    $email = isset($data['comment_author_email']) ? strtolower(sanitize_email($data['comment_author_email'])) : '';
-    $name = isset($data['comment_author']) ? strtolower(sanitize_text_field($data['comment_author'])) : '';
-    $comment_type = isset($data['comment_type']) ? sanitize_text_field($data['comment_type']) : 'comment';
-
-    // Determine if the check should run based on settings and comment type
+    if ( isset( $data['comment_content'] ) ) {
+        $content = strtolower( sanitize_text_field( $data['comment_content'] ) );
+    } elseif ( isset( $data['comment'] ) ) {
+        $content = strtolower( sanitize_text_field( $data['comment'] ) );
+    } else {
+        $content = '';
+    }
+    if ( isset( $data['comment_author_email'] ) ) {
+        $email = strtolower( sanitize_email( $data['comment_author_email'] ) );
+    } elseif ( isset( $data['email'] ) ) {
+        $email = strtolower( sanitize_email( $data['email'] ) );
+    } else {
+        $email = '';
+    }
+    if ( isset( $data['comment_author'] ) ) {
+        $name = strtolower( sanitize_text_field( $data['comment_author'] ) );
+    } elseif ( isset( $data['author'] ) ) {
+        $name = strtolower( sanitize_text_field( $data['author'] ) );
+    } else {
+        $name = '';
+    }
+    $comment_type = isset($data['comment_type']) ? sanitize_text_field($data['comment_type']) : 'no_type';
+    // Review uses WooCommerce toggle; any other comment_type (empty, "comment", custom, etc.) uses WP comments toggle.
     $run = false;
-    if (maspik_get_settings("maspik_support_wp_comment") !== "no" && $comment_type === 'comment') {
-        $run = true;
-    } else if (maspik_get_settings("maspik_support_woocommerce_review") !== "no" && $comment_type === 'review') {
+    if ( 'review' === $comment_type ) {
+        if ( maspik_get_settings( 'maspik_support_woocommerce_review' ) !== 'no' ) {
+            $run = true;
+        }
+    } elseif ( maspik_get_settings( 'maspik_support_wp_comment' ) !== 'no' ) {
         $run = true;
     }
     if (!$run) {
@@ -75,8 +94,18 @@ function maspik_comments_checker(array $data) {
     $ip = maspik_get_real_ip();
     $reason = '';
 
-    // Country IP + HP Check
-    $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST,$comment_type);
+    $comment_ai_fields = array();
+    if ( $name !== '' ) {
+        $comment_ai_fields['comment_author'] = $name;
+    }
+    if ( $email !== '' ) {
+        $comment_ai_fields['comment_author_email'] = $email;
+    }
+    if ( $content !== '' ) {
+        $comment_ai_fields['comment_content'] = $content;
+    }
+    // Country IP + honeypot use full $_POST; Matrix/AI uses whitelisted comment fields only.
+    $GeneralCheck = GeneralCheck( $ip, $spam, $reason, $_POST, $comment_type, $comment_ai_fields );
     $spam = $GeneralCheck['spam'] ?? false;
     $reason = $GeneralCheck['reason'] ?? '';
     $message = $GeneralCheck['message'] ?? '';
@@ -168,6 +197,89 @@ function add_custom_html_to_comment_form( $submit_button, $args ) {
 add_filter( 'comment_form_submit_button', 'add_custom_html_to_comment_form', 10, 2 );
 
 
+/**
+ * Fields to send to Matrix/AI for wp-login registration (whitelist / normalized keys only).
+ *
+ * Full $_POST stays available to GeneralCheck for honeypot and spam key; this map is the 6th argument only.
+ *
+ * Includes common registration/profile keys (first_name, last_name, …) that appear often via core or plugins.
+ * Password-related POST keys are never copied.
+ *
+ * @param array $post Typically $_POST.
+ * @return array Normalized key => value (non-empty only).
+ */
+function maspik_wp_registration_fields_for_ai( $post ) {
+    if ( ! is_array( $post ) ) {
+        return array();
+    }
+    $post = wp_unslash( $post );
+    $out  = array();
+
+    $login = '';
+    if ( isset( $post['user_login'] ) && is_string( $post['user_login'] ) ) {
+        $login = sanitize_text_field( trim( $post['user_login'] ) );
+    } elseif ( isset( $post['username'] ) && is_string( $post['username'] ) ) {
+        $login = sanitize_text_field( trim( $post['username'] ) );
+    }
+    if ( $login !== '' ) {
+        $out['user_login'] = $login;
+    }
+
+    $mail = '';
+    if ( isset( $post['user_email'] ) && is_string( $post['user_email'] ) ) {
+        $mail = sanitize_email( trim( $post['user_email'] ) );
+    } elseif ( isset( $post['email'] ) && is_string( $post['email'] ) ) {
+        $mail = sanitize_email( trim( $post['email'] ) );
+    }
+    if ( $mail !== '' ) {
+        $out['user_email'] = $mail;
+    }
+
+    // Text fields frequently present on registration (official user meta or popular plugin patterns).
+    $optional_keys = array(
+        'first_name',
+        'last_name',
+        'nickname',
+        'display_name',
+    );
+
+    /**
+     * Extra POST keys to include for Matrix on WP registration (string fields only; each trimmed + sanitized).
+     * Do not add password or secret field names. Keys containing "pass" are skipped automatically.
+     *
+     * @param array $optional_keys Field names.
+     * @param array $post          Unslashed POST (read-only context).
+     */
+    $optional_keys = apply_filters( 'maspik_wp_registration_ai_optional_field_keys', $optional_keys, $post );
+    $optional_keys = array_unique( array_map( 'strval', (array) $optional_keys ) );
+
+    foreach ( $optional_keys as $key ) {
+        if ( '' === $key ) {
+            continue;
+        }
+        $key_lower = strtolower( $key );
+        if ( false !== strpos( $key_lower, 'pass' ) || false !== strpos( $key_lower, 'secret' ) ) {
+            continue;
+        }
+        if ( ! isset( $post[ $key ] ) || ! is_string( $post[ $key ] ) ) {
+            continue;
+        }
+        $val = sanitize_text_field( trim( $post[ $key ] ) );
+        if ( $val !== '' ) {
+            $out[ $key ] = $val;
+        }
+    }
+
+
+    /**
+     * Normalized registration field map for Matrix (WP core register + common extras).
+     *
+     * @param array $out  Keys e.g. user_login, user_email, first_name, user_url, …
+     * @param array $post Unslashed POST snapshot used to build $out.
+     */
+    return apply_filters( 'maspik_wp_registration_ai_fields', $out, $post );
+}
+
 
 /**
  * Check WP registration form for spam
@@ -175,8 +287,8 @@ add_filter( 'comment_form_submit_button', 'add_custom_html_to_comment_form', 10,
 function maspik_check_wp_registration_form($errors) {
 
     if ( maspik_get_settings("maspik_support_registration") !== "no" ) {
-        $user_email = isset($_POST['user_email']) ? sanitize_email($_POST['user_email']) : sanitize_email($_POST['email']);
-        $user_login = isset($_POST['user_login']) ? sanitize_text_field($_POST['user_login']) : sanitize_text_field($_POST['username']);
+        $user_email = isset( $_POST['user_email'] ) ? sanitize_email( wp_unslash( $_POST['user_email'] ) ) : ( isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '' );
+        $user_login = isset( $_POST['user_login'] ) ? sanitize_text_field( wp_unslash( $_POST['user_login'] ) ) : ( isset( $_POST['username'] ) ? sanitize_text_field( wp_unslash( $_POST['username'] ) ) : '' );
         
         $spam = false;
         $ip = maspik_get_real_ip();
@@ -185,7 +297,8 @@ function maspik_check_wp_registration_form($errors) {
 
         // General Check
         if (!$spam) {
-            $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST,"wp_registration");
+            $registration_ai_fields = maspik_wp_registration_fields_for_ai( $_POST );
+            $GeneralCheck = GeneralCheck( $ip, $spam, $reason, $_POST, 'wp_registration', $registration_ai_fields );
             $spam = $GeneralCheck['spam'] ?? false;
             $reason = $GeneralCheck['reason'] ?? '';
             $message = $GeneralCheck['message'] ?? '';

@@ -156,10 +156,12 @@ function maspik_toggle_button($name, $id, $dbrow_name, $class, $type = "", $manu
 }
 
 
-        function maspik_save_button_show($label = "Save", $add_class = "", $name = "maspik-save-btn" ){
-
-            echo "<div class='submit'><input type='submit' name='". $name."' value='". esc_attr($label) ."' id='submit' class='". esc_attr($add_class) ."'></div>";
-
+        function maspik_save_button_show( $label = 'Save', $add_class = '', $name = 'maspik-save-btn' ) {
+            echo '<div class="maspik-save-submit-wrap">';
+            echo '<div class="submit maspik-save-submit--with-progress">';
+            echo "<input type='submit' name='" . esc_attr( $name ) . "' value='" . esc_attr( $label ) . "' id='submit' class='" . esc_attr( $add_class ) . "'>";
+            echo '</div>';
+            echo '</div>';
         } 
 
         function create_maspik_textarea($name, $rows = 4, $cols = 50, $class = '', $pholder = "", $maxlength = 0) { 

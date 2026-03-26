@@ -44,20 +44,29 @@ if ( ! defined( 'WPINC' ) ) {
  * }, 10, 3);
  */
 
+/**
+ * Shared store for content fields collected during per-field validation.
+ * Called from gform_field_validation to add fields, from gform_validation to retrieve them.
+ */
+function maspik_gf_content_fields_store( $field_id = null, $field_value = null ) {
+    static $fields = array();
+    if ( $field_id !== null ) {
+        $fields[ $field_id ] = $field_value;
+    }
+    return $fields;
+}
+
 add_filter('gform_field_validation', 'maspik_validation_process_gravity', 10, 4);
 function maspik_validation_process_gravity($result, $value, $form, $field) {
     static $spam_check_done = false;
     
-    // If we already found spam, no need to continue checking
     if ($spam_check_done) {
         $result['is_valid'] = false;
         return $result;
     }
 
-    // Developer hook to disable spam check
     static $disable_check = null;
     if ($disable_check === null) {
-        // $form can be either array or object, handle both cases
         $form_id = 0;
         if (is_array($form) && isset($form['id'])) {
             $form_id = intval($form['id']);
@@ -70,15 +79,6 @@ function maspik_validation_process_gravity($result, $value, $form, $field) {
         return $result;
     }
 
-    // General check state – will run once, after per-field checks.
-    static $general_check_done = false;
-    static $general_check_result = null;
-
-    // Collect relevant content fields for AI across all fields in the form.
-    // We only care about text/name/email/phone/textarea.
-    static $content_fields = array();
-
-    // If field is already invalid or empty, return early (but GeneralCheck already ran above)
     if (!$result['is_valid'] || empty($value)) {
         return $result;
     }
@@ -99,10 +99,8 @@ function maspik_validation_process_gravity($result, $value, $form, $field) {
                 $spam_check_done = true;
                 return $result;
             }
-
-            // Add to AI content fields if valid
             if ( empty($validateTextField['spam']) ) {
-                $content_fields[ $field->id ] = $field_value;
+                maspik_gf_content_fields_store( $field->id, $field_value );
             }
             break;
 
@@ -115,10 +113,8 @@ function maspik_validation_process_gravity($result, $value, $form, $field) {
                 $spam_check_done = true;
                 return $result;
             }
-
-            // Add to AI content fields if valid
             if ( ! $spam ) {
-                $content_fields[ $field->id ] = $field_value;
+                maspik_gf_content_fields_store( $field->id, $field_value );
             }
             break;
 
@@ -132,10 +128,8 @@ function maspik_validation_process_gravity($result, $value, $form, $field) {
                 $spam_check_done = true;
                 return $result;
             }
-
-            // Add to AI content fields if valid
             if ( isset($checkTelForSpam['valid']) && $checkTelForSpam['valid'] ) {
-                $content_fields[ $field->id ] = $field_value;
+                maspik_gf_content_fields_store( $field->id, $field_value );
             }
             break;
 
@@ -149,15 +143,12 @@ function maspik_validation_process_gravity($result, $value, $form, $field) {
                 $spam_check_done = true;
                 return $result;
             }
-
-            // Add to AI content fields if valid
             if ( empty($checkTextareaForSpam['spam']) ) {
-                $content_fields[ $field->id ] = $field_value;
+                maspik_gf_content_fields_store( $field->id, $field_value );
             }
             break;
 
         case 'url':
-            // URL Field Validation
             $checkUrlForSpam = checkUrlForSpam($field_value);
             if (isset($checkUrlForSpam['spam']) && $checkUrlForSpam['spam']) {
                 efas_add_to_log("url", $checkUrlForSpam['spam'], $_POST, "GravityForms", 
@@ -170,51 +161,66 @@ function maspik_validation_process_gravity($result, $value, $form, $field) {
             break;
     }
 
-    // General check LAST – runs after per-field checks (text/email/etc)
-    if ( !$general_check_done ) {
-        try {
-            $ip = maspik_get_real_ip();
-            $spam = false;
-            $reason = '';
-            $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST, "gravityforms", $content_fields);
-            $general_check_result = $GeneralCheck;
-            $general_check_done = true;
-            
-            if (isset($GeneralCheck['spam']) && $GeneralCheck['spam']) {
-                $reason = $GeneralCheck['reason'] ?? '';
-                $message = $GeneralCheck['message'] ?? '';
-                $spam_val = $GeneralCheck['value'] ?? '';
-                $type = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : 'General';
-                
-                efas_add_to_log($type, $reason, $_POST, 'GravityForms', $message, $spam_val);
-                GFCommon::log_debug(__METHOD__ . '(): ' . $reason);
-                $result['is_valid'] = false;
-                $result['message'] = cfas_get_error_text($message);
-                $spam_check_done = true;
-                return $result;
-            }
-        } catch ( Exception $e ) {
-            // On exception, don't block the form - log error and allow submission
-            if ( defined('WP_DEBUG') && WP_DEBUG ) {
-                error_log('Maspik GravityForms GeneralCheck Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-            }
-            // Log to spam log for debugging
-            efas_add_to_log('General', 'Exception in GeneralCheck: ' . $e->getMessage(), $_POST, 'GravityForms', 'general_check_exception', '');
-            // Don't block - allow submission to continue
-            $general_check_done = true;
-        } catch ( Error $e ) {
-            // On fatal error, don't block the form - log error and allow submission
-            if ( defined('WP_DEBUG') && WP_DEBUG ) {
-                error_log('Maspik GravityForms GeneralCheck Fatal Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-            }
-            // Log to spam log for debugging
-            efas_add_to_log('General', 'Fatal Error in GeneralCheck: ' . $e->getMessage(), $_POST, 'GravityForms', 'general_check_fatal_error', '');
-            // Don't block - allow submission to continue
-            $general_check_done = true;
-        }
+    return $result;
+}
+
+/**
+ * GeneralCheck runs AFTER all field validations via gform_validation,
+ * so $content_fields is fully populated with only text-type fields.
+ */
+add_filter('gform_validation', 'maspik_general_check_gravity', 10, 1);
+function maspik_general_check_gravity( $validation_result ) {
+    $form    = $validation_result['form'];
+    $form_id = isset($form['id']) ? intval($form['id']) : 0;
+
+    $disable_check = apply_filters('maspik_disable_gravityforms_spam_check', false, $form_id, $form);
+    if ( $disable_check ) {
+        return $validation_result;
     }
 
-    return $result;
+    // If per-field checks already rejected the submission, skip GeneralCheck to save resources
+    if ( ! $validation_result['is_valid'] ) {
+        return $validation_result;
+    }
+
+    $content_fields = maspik_gf_content_fields_store();
+
+    try {
+        $ip     = maspik_get_real_ip();
+        $spam   = false;
+        $reason = '';
+        $GeneralCheck = GeneralCheck($ip, $spam, $reason, $_POST, "gravityforms", $content_fields);
+
+        if ( isset($GeneralCheck['spam']) && $GeneralCheck['spam'] ) {
+            $reason   = $GeneralCheck['reason'] ?? '';
+            $message  = $GeneralCheck['message'] ?? '';
+            $spam_val = $GeneralCheck['value'] ?? '';
+            $type     = isset($GeneralCheck['type']) ? $GeneralCheck['type'] : 'General';
+
+            efas_add_to_log($type, $reason, $_POST, 'GravityForms', $message, $spam_val);
+
+            $validation_result['is_valid'] = false;
+            foreach ( $validation_result['form']['fields'] as &$field ) {
+                if ( $field->type !== 'hidden' && $field->type !== 'html' && $field->type !== 'section' ) {
+                    $field->failed_validation  = true;
+                    $field->validation_message = cfas_get_error_text($message);
+                    break;
+                }
+            }
+        }
+    } catch ( Exception $e ) {
+        if ( defined('WP_DEBUG') && WP_DEBUG ) {
+            error_log('Maspik GravityForms GeneralCheck Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+        }
+        efas_add_to_log('General', 'Exception in GeneralCheck: ' . $e->getMessage(), $_POST, 'GravityForms', 'general_check_exception', '');
+    } catch ( Error $e ) {
+        if ( defined('WP_DEBUG') && WP_DEBUG ) {
+            error_log('Maspik GravityForms GeneralCheck Fatal Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+        }
+        efas_add_to_log('General', 'Fatal Error in GeneralCheck: ' . $e->getMessage(), $_POST, 'GravityForms', 'general_check_fatal_error', '');
+    }
+
+    return $validation_result;
 }
 
 add_filter('gform_submit_button', 'add_maspikhp_html_to_gform', 99, 2);

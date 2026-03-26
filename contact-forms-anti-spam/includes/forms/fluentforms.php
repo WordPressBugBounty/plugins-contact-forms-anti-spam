@@ -18,6 +18,21 @@ function maspik_validate_fluentform_general( $errors, $formData, $form, $fields)
   $parsed_data = array();
   if (isset($_POST['data']) && is_string($_POST['data'])) {
       parse_str($_POST['data'], $parsed_data);
+      // Drop top-level keys whose name contains these fragments (substring, case-insensitive).
+      $skip_key_fragments = array( 'hidden', 'radio', 'checkbox', 'select' );
+      $parsed_data = array_filter(
+          $parsed_data,
+          function ( $value, $key ) use ( $skip_key_fragments ) {
+              $key = (string) $key;
+              foreach ( $skip_key_fragments as $frag ) {
+                  if ( stripos( $key, $frag ) !== false ) {
+                      return false;
+                  }
+              }
+              return true;
+          },
+          ARRAY_FILTER_USE_BOTH
+      );
   }
 
   // Remove fields that start with underscore

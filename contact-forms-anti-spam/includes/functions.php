@@ -2708,11 +2708,10 @@ function maspik_merge_textarea_blacklist() {
 add_action('admin_init', 'maspik_merge_textarea_blacklist', 1);
 
 /**
- * Matrix default behavior: no longer auto-enables on update.
- * Matrix is disabled by default for new installs; existing enabled state is respected.
+ * Matrix defaults live in $MASPIK_DEFAULT_SETTINGS (new installs: Matrix on, API mode 2 — IP only).
+ * No auto-migration on plugin update; existing sites keep their saved options.
  */
 function maspik_enable_matrix_by_default() {
-    // No-op: Matrix is disabled by default. Do not auto-enable on updates.
     return;
 }
 add_action('admin_init', 'maspik_enable_matrix_by_default', 2);
@@ -2960,23 +2959,63 @@ function maspik_matrix_dashboard_widget_render() {
     <?php
 }
 
+/**
+ * Dashboard widget: Matrix is on with IP-only mode — suggest Full Matrix (mode 4) for stronger blocking.
+ */
+function maspik_matrix_dashboard_widget_render_full_mode_nudge() {
+    $ai_enabled = efas_get_spam_api('maspik_ai_enabled', 'bool');
+    if ( ! $ai_enabled || ! function_exists( 'maspik_matrix_api_mode_int' ) || maspik_matrix_api_mode_int() !== 2 ) {
+        return;
+    }
+    $settings_matrix_url = admin_url( 'admin.php?page=maspik#maspik-matrix-section' );
+    $nonce_hide          = wp_create_nonce( 'maspik_hide_matrix_full_mode_nudge' );
+    ?>
+    <p><?php esc_html_e( 'Maspik Matrix is on in a IP-check mode: only the visitor IP is checked — Its a minimal check.', 'contact-forms-anti-spam' ); ?></p>
+    <p><?php esc_html_e( 'If you need more protection, open Maspik settings and switch Matrix to “Full Matrix analysis” (full check). It catches far more spam because it also analyzes submission content with our full pipeline. (Data not stored!)', 'contact-forms-anti-spam' ); ?></p>
+    <p>
+        <a href="<?php echo esc_url( $settings_matrix_url ); ?>" class="button button-primary"><?php esc_html_e( 'Choose Full Matrix in settings', 'contact-forms-anti-spam' ); ?></a>
+    </p>
+    <p class="maspik-widget-hide-wrap" style="margin-bottom:0;">
+        <a href="#" class="maspik-dashboard-widget-hide-full-mode-nudge" data-nonce="<?php echo esc_attr( $nonce_hide ); ?>"><?php esc_html_e( 'Hide this reminder', 'contact-forms-anti-spam' ); ?></a>
+    </p>
+    <script>
+    jQuery(document).ready(function($) {
+        $(document).on('click', '.maspik-dashboard-widget-hide-full-mode-nudge', function(e) {
+            e.preventDefault();
+            var $w = $('#maspik_matrix_full_mode_widget').closest('.postbox');
+            $.post(ajaxurl, { action: 'maspik_hide_matrix_full_mode_nudge', nonce: $(this).data('nonce') }).done(function() {
+                $w.slideUp();
+            });
+        });
+    });
+    </script>
+    <?php
+}
+
 function maspik_add_matrix_dashboard_widget() {
     if (!current_user_can('manage_options')) {
         return;
     }
-    if (get_option('maspik_matrix_widget_hidden', false)) {
-        return;
-    }
-    // Don't show widget if Matrix is already enabled (site or dashboard)
     $ai_enabled = efas_get_spam_api('maspik_ai_enabled', 'bool');
-    if ($ai_enabled) {
+
+    if (!$ai_enabled) {
+        if (!get_option('maspik_matrix_widget_hidden', false)) {
+            wp_add_dashboard_widget(
+                'maspik_matrix_widget',
+                __('Maspik – Enable Matrix', 'contact-forms-anti-spam'),
+                'maspik_matrix_dashboard_widget_render'
+            );
+        }
         return;
     }
-    wp_add_dashboard_widget(
-        'maspik_matrix_widget',
-        __('Maspik – Enable Matrix', 'contact-forms-anti-spam'),
-        'maspik_matrix_dashboard_widget_render'
-    );
+
+    if (function_exists('maspik_matrix_api_mode_int') && maspik_matrix_api_mode_int() === 2 && !get_option('maspik_matrix_full_mode_nudge_hidden', false)) {
+        wp_add_dashboard_widget(
+            'maspik_matrix_full_mode_widget',
+            __('Maspik – Catch more spam', 'contact-forms-anti-spam'),
+            'maspik_matrix_dashboard_widget_render_full_mode_nudge'
+        );
+    }
 }
 add_action('wp_dashboard_setup', 'maspik_add_matrix_dashboard_widget');
 
@@ -2993,6 +3032,20 @@ function maspik_hide_matrix_widget_handler() {
     wp_send_json_success();
 }
 add_action('wp_ajax_maspik_hide_matrix_widget', 'maspik_hide_matrix_widget_handler');
+
+/**
+ * AJAX: hide the “switch to Full Matrix” dashboard reminder.
+ */
+function maspik_hide_matrix_full_mode_nudge_handler() {
+    check_ajax_referer('maspik_hide_matrix_full_mode_nudge', 'nonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error();
+        return;
+    }
+    update_option('maspik_matrix_full_mode_nudge_hidden', true);
+    wp_send_json_success();
+}
+add_action('wp_ajax_maspik_hide_matrix_full_mode_nudge', 'maspik_hide_matrix_full_mode_nudge_handler');
 function maspik_show_blacklist_merge_notice() {
     // Check if we should show the notice
     $show_notice = get_option('maspik_blacklist_merge_notice', false);

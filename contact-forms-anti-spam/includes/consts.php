@@ -72,6 +72,7 @@ $MASPIK_FIELD_DISPLAY_NAMES = [
          // AI spam check fields (Beta feature - will be Pro-only in future versions)
      "maspik_ai_enabled" => "Maspik Matrix",
      "maspik_ai_context" => "Business Context",
+     "maspik_matrix_api_mode" => "Matrix API check depth",
      "maspik_ai_client_secret" => "AI Client Secret",
 ];
 
@@ -177,6 +178,7 @@ $MASPIK_IMPORT_OPTIONS = [
     // AI spam check options (Beta feature - will be Pro-only in future versions)
     'maspik_ai_enabled',
     'maspik_ai_context',
+    'maspik_matrix_api_mode',
     'maspik_ai_client_secret',
 ];
 
@@ -219,10 +221,11 @@ $MASPIK_DEFAULT_SETTINGS = [
     'maspik_support_metform_forms' => 'yes',
     'maspik_support_bitform_forms' => 'yes',
     
-    // AI spam check settings (Beta feature - will be Pro-only in future versions)
-    'maspik_ai_enabled' => '0', // Disabled by default; user can enable from settings
+    // AI spam check / Matrix: on by default for new installs; mode 2 = IP only (no form content to API — privacy-first)
+    'maspik_ai_enabled' => '1',
     'maspik_ai_threshold' => '60',
     'maspik_ai_context' => '',
+    'maspik_matrix_api_mode' => '2', // 2 = IP only, 3 = + banned words, 4 = full pipeline
 ];
 
 // load templates settings array

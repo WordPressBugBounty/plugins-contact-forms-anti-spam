@@ -721,7 +721,6 @@ jQuery(document).ready(function($) {
                                     <h3 id="pro-feature-title">Enhance Your Website Protection</h3>
                                     <p id="pro-feature-message">Upgrade to MASPIK Pro and get access to powerful anti-spam features:</p>
                                     <ul>
-                                        <li>Advanced IP verification (10,000 checks/month)</li>
                                         <li>Custom spam API for multiple sites</li>
                                         <li>Country-based filtering</li>
                                         <li>Language detection & blocking</li>

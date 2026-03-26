@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 6.9
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.7.2
+Stable tag: 2.7.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -149,7 +149,6 @@ Maspik integrates seamlessly with a wide range of popular form plugins and WordP
 
 Upgrade to Maspik Pro to unlock powerful additional features:
 
-* ⭐ Advanced IP verification (10,000 checks/month)
 * ⭐ Custom spam dashboard for multiple sites – manage all spam settings from one place
 * ⭐ Country-based filtering – block spam by country or allow only specific countries
 * ⭐ Language-based filtering – block spam by language or allow only specific languages
@@ -394,6 +393,12 @@ Then Maspik is an excellent choice for your WordPress spam protection.
 7. Spam filter and statistics dashboard
 
 == Changelog ==
+
+= 2.7.3 - 16/03/2026 =
+* Improvement – Improved Gravity Forms integration.
+* Improvement – Improved WordPress comments integration.
+* Improvement – Improved BuddyPress integration.
+* Improvement – Maspik Matrix now have 3 modes: IP only, IP + banned words, Full Matrix analysis, you can choose the mode from the Maspik settings page.
 
 = 2.7.2 - 11/03/2026 =
 * Improvement – Improved country detection when using Cloudflare proxy IPs.

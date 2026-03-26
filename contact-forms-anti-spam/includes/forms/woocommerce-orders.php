@@ -159,7 +159,7 @@ function maspik_woo_checkout_validate_spam( $data, $errors ) {
         'billing_first_name', 'billing_last_name', 'billing_company', 'billing_address_1', 'billing_address_2',
         'billing_city', 'billing_state', 'billing_postcode', 'billing_email', 'billing_phone',
         'shipping_first_name', 'shipping_last_name', 'shipping_company', 'shipping_address_1', 'shipping_address_2',
-        'shipping_city', 'shipping_state', 'shipping_postcode', 'order_comments',
+        'shipping_city', 'shipping_state', 'order_comments',
     );
     foreach ( $checkout_content_keys as $key ) {
         if ( isset( $post[ $key ] ) && is_string( $post[ $key ] ) && trim( $post[ $key ] ) !== '' ) {

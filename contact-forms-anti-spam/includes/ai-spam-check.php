@@ -15,6 +15,20 @@ if ( ! defined( 'WPINC' ) ) {
  */
 
 /**
+ * Resolved Matrix API check depth (mode): 2, 3, or 4. Default 4 when unset or invalid.
+ *
+ * @return int
+ */
+function maspik_matrix_api_mode_int(): int {
+    $raw = maspik_get_settings( 'maspik_matrix_api_mode' );
+    if ( $raw === null || $raw === '' ) {
+        return 4;
+    }
+    $n = (int) $raw;
+    return in_array( $n, array( 2, 3, 4 ), true ) ? $n : 4;
+}
+
+/**
  * Check submission using AI-based spam detection
  * 
  * @param array $fields Array of form fields and their values
@@ -77,22 +91,26 @@ function maspik_ai_check_submission( array $fields, string $form_type = '' ): ar
     
     $client_ip = maspik_get_real_ip();
     if (!is_string($client_ip) || empty($client_ip)) {
-        $client_ip = '127.0.0.1';
+        $client_ip = '';
     }
 
-    $payload = [
-        'fields'        => $fields,
-        'context'       => [
-            'business_info' => $context, // max 170 characters
-            'site_url'      => home_url(),
-            'plugin_version'=> defined('MASPIK_VERSION') ? MASPIK_VERSION : 'dev',
-            'site_title_and_tagline' => $site_title_tagline,
-            'site_languages' => $site_languages, // V2 array of languages in the site
-            'client_ip' => $client_ip, //V2 - Check if the IP is in the API blacklist
-            'site_language' => get_locale(), // V1 Deprecated: site language
-            'form_type' => $form_type,
-        ],
+    $matrix_mode = maspik_matrix_api_mode_int();
+
+    // Mode 2: IP reputation only — do not send form field contents (no text analysis on server).
+    $context_block = [
+        'business_info' => $context, // max 170 characters
+        'site_url'      => home_url(),
+        'plugin_version'=> defined('MASPIK_VERSION') ? MASPIK_VERSION : '1.0.0',
+        'site_title_and_tagline' => $site_title_tagline,
+        'site_languages' => $site_languages, // V2 array of all languages in the site
+        'form_type' => $form_type,
+        'mode'      => $matrix_mode,
     ];
+
+    $payload = [ 'context' => $context_block ];
+    if ( $matrix_mode !== 2 ) {
+        $payload['fields'] = $fields;
+    }
     
     // JSON string (not array!) - important for Lambda to receive proper structure
     $request_body = wp_json_encode( $payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
@@ -106,7 +124,11 @@ function maspik_ai_check_submission( array $fields, string $form_type = '' ): ar
     // Set up headers with authentication (License + site token + HMAC)
     $headers = [
         'Content-Type'      => 'application/json',
+        'Accept'            => 'application/json',
+        'User-Agent'        => 'Maspik-Plugin/' . ( defined( 'MASPIK_VERSION' ) ? MASPIK_VERSION : '2.0' ) . '; ' . home_url( '', 'https' ),
         'X-Maspik-Token'    => $token, // send token so Lambda can validate & cache on first request
+        'Maspik-client_ip'  => $client_ip, // send client ip to validate against the IP blacklist
+        'X-Maspik-Mode'     => (string) $matrix_mode,
     ];
 
     
@@ -127,12 +149,14 @@ function maspik_ai_check_submission( array $fields, string $form_type = '' ): ar
     $ai_metrics_sent = 1;
 
     // Send request to AI API
-    // Reduced timeout to 7 seconds to prevent long waits that could cause form submission issues
+    $timeout = (int) apply_filters( 'maspik_ai_request_timeout', 7 );
+    $timeout = max( 3, min( 30, $timeout ) ); // clamp 3–30 seconds
+
     $resp = wp_remote_post( $endpoint, [
-        'timeout'   => 7,
-        'headers'   => $headers,
-        'body'      => $request_body,     // keep as string, not array
-        'sslverify' => true,
+        'timeout'     => $timeout,
+        'headers'     => $headers,
+        'body'        => $request_body,     // keep as string, not array
+        'sslverify'   => (bool) apply_filters( 'maspik_ai_ssl_verify', true ),
     ]);
 
     // Handle request errors gracefully
@@ -218,6 +242,19 @@ function maspik_ai_check_submission( array $fields, string $form_type = '' ): ar
         $block = isset( $json['is_spam'] ) ? (bool) $json['is_spam'] : false;
         if ( $block ) {
             $ai_metrics_spam = 1;
+        }
+
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG && isset( $json['mode'] ) ) {
+            $resp_mode = (int) $json['mode'];
+            if ( $resp_mode !== $matrix_mode ) {
+                error_log(
+                    sprintf(
+                        'Maspik Matrix API: mode mismatch (plugin sent %d, API returned %d)',
+                        $matrix_mode,
+                        $resp_mode
+                    )
+                );
+            }
         }
 
         $result = [
@@ -506,7 +543,12 @@ function maspik_prepare_fields_for_ai( array $form_data, string $form_type = '' 
         $unwanted_terms = ['hidden','action', 'nonce', 'submit', 'referrer', 'time', 'key', 'gclid', 'utm_', 'url', 'redirect', 'link', 'ref','hash','maspik','full-name-maspik-hp','honeypot','token','password','productid','formId','postId','campaign','date','turnstile','cf-chl','response','recaptcha','captcha','gform_'];
         $key_lower = strtolower($key);
         foreach ( $unwanted_terms as $term ) {
-            if ( strpos($key_lower, strtolower($term)) !== false ) {
+            $t = strtolower( $term );
+            // WordPress comment website field — must not match generic substring "url".
+            if ( 'url' === $t && 'comment_author_url' === $key_lower ) {
+                continue;
+            }
+            if ( strpos( $key_lower, $t ) !== false ) {
                 continue 2; // Skip to next field in outer loop
             }
         }
@@ -542,7 +584,8 @@ function maspik_prepare_fields_for_ai( array $form_data, string $form_type = '' 
     }
 
     // Add form type as a field so the AI sees it alongside other fields (prepared here, not in the submission function).
-    $processed_fields['Form type'] = is_string( $form_type ) ? $form_type : '';
+    // Not needed for now:
+    //$processed_fields['Form type'] = is_string( $form_type ) ? $form_type : '';
 
     return $processed_fields;
 } 
