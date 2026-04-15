@@ -2016,6 +2016,210 @@ body.rtl .maspik-toggle-and-chip {
   min-height: 40px;
 }
 
+/* Shared dim layer for example / shortcode / Pro / What’s New popups */
+#popup-background {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 998;
+}
+
+/* Pro upgrade modal — Matrix / What’s New style surfaces */
+.maspik-popup-wrap.maspik-pro-upgrade-popup {
+  width: calc(100% - 32px);
+  max-width: 440px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.maspik-popup-wrap.maspik-pro-upgrade-popup.active {
+  border: none;
+  box-shadow: none;
+}
+
+.maspik-pro-upgrade-popup__panel {
+  position: relative;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #dcdcde;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(244, 135, 34, 0.06);
+}
+
+.maspik-pro-upgrade-popup__hero {
+  padding: 28px 28px 20px;
+  padding-inline-end: 52px;
+  background: linear-gradient(135deg, #fafbfc 0%, #fff9f4 100%);
+  border-bottom: 1px solid #ececec;
+}
+
+.maspik-pro-upgrade-popup__badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(135deg, #f48722 0%, #d96f12 100%);
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.maspik-pro-upgrade-popup__title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #1d2327;
+}
+
+.maspik-pro-upgrade-popup__lead {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #646970;
+}
+
+.maspik-pro-upgrade-popup__body {
+  padding: 20px 28px 8px;
+}
+
+.maspik-pro-upgrade-popup__features-title {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.maspik-pro-upgrade-popup__features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.maspik-pro-upgrade-popup__features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  background: #f6f7f7;
+  border-radius: 8px;
+  border: 1px solid #f0f0f1;
+}
+
+.maspik-pro-upgrade-popup__feature-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  color: #2c8560;
+  margin-top: 1px;
+}
+
+.maspik-pro-upgrade-popup__feature-text {
+  font-size: 14px;
+  line-height: 1.45;
+  color: #2c3338;
+}
+
+.maspik-pro-upgrade-popup__footer {
+  padding: 20px 28px 24px;
+  border-top: 1px solid #ececec;
+  text-align: center;
+}
+
+.maspik-pro-upgrade-popup__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff !important;
+  text-decoration: none !important;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f48722 0%, #d96f12 100%);
+  border: none;
+  box-shadow: 0 2px 8px rgba(244, 135, 34, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.maspik-pro-upgrade-popup__cta:hover,
+.maspik-pro-upgrade-popup__cta:focus {
+  color: #fff !important;
+  filter: brightness(1.05);
+  box-shadow: 0 4px 14px rgba(244, 135, 34, 0.45);
+  transform: translateY(-1px);
+}
+
+.maspik-pro-upgrade-popup__tagline {
+  margin: 14px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #787c82;
+}
+
+.maspik-popup-wrap.maspik-pro-upgrade-popup .maspik-pro-upgrade-popup__close {
+  float: none;
+  font-size: inherit;
+  line-height: 1;
+}
+
+.maspik-pro-upgrade-popup__close {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #646970;
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background 0.15s ease;
+  z-index: 2;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.maspik-pro-upgrade-popup__close:hover,
+.maspik-pro-upgrade-popup__close:focus {
+  color: #1d2327;
+  background: #fff;
+}
+
+.maspik-pro-upgrade-popup__close .dashicons {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+body.rtl .maspik-pro-upgrade-popup__close {
+  right: auto;
+  left: 14px;
+}
+
 .maspik-popup-wrap .data-array-wrap {
   background-color: #F6F6F6;
   border-radius: 10px;
@@ -2468,6 +2672,327 @@ body.rtl .maspik-toggle-and-chip {
   margin-bottom: 0;
   font-size: 13px;
   color: #646970;
+}
+
+/* Usage card follows the Matrix checkbox without save/reload; keep visible when dashboard/auto chip is shown. */
+.maspik-ai-toggle-wrap.togglewrap:not(:has(#maspik_ai_enabled:checked)):not(:has(.maspik-dashboard-on-chip)) .maspik-matrix-usage-card {
+  display: none !important;
+}
+
+.maspik-matrix-usage-card {
+  margin-top: 12px;
+  max-width: 640px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid #ececec;
+}
+
+.maspik-matrix-usage-card.is-limit-reached {
+  border-color: #f5c2c7;
+  background: #fff7f7;
+}
+
+.maspik-matrix-usage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.maspik-matrix-usage-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.maspik-matrix-usage-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  color: #475351;
+  background: #f6f7f7;
+}
+
+.maspik-matrix-usage-limit-title {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: #b42318;
+  font-weight: 600;
+}
+
+.maspik-matrix-usage-summary,
+.maspik-matrix-usage-status,
+.maspik-matrix-usage-value,
+.maspik-matrix-usage-upgrade-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.maspik-matrix-usage-summary {
+  color: #1d2327;
+}
+
+.maspik-matrix-usage-progress {
+  margin-top: 8px;
+  height: 7px;
+  width: 100%;
+  background: #eee;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.maspik-matrix-usage-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+.maspik-matrix-usage-progress-fill.tone-success {
+  background: #22c55e;
+}
+
+.maspik-matrix-usage-progress-fill.tone-warning {
+  background: #f59e0b;
+}
+
+.maspik-matrix-usage-progress-fill.tone-danger {
+  background: #ef4444;
+}
+
+.maspik-matrix-usage-status {
+  margin-top: 8px;
+  color: #166534;
+}
+
+.maspik-matrix-usage-status.is-warning {
+  color: #92400e;
+}
+
+.maspik-matrix-usage-status.is-paused {
+  color: #b42318;
+  font-weight: 600;
+}
+
+.maspik-matrix-usage-value {
+  margin-top: 8px;
+  color: #475351;
+}
+
+.maspik-matrix-usage-upgrade {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.maspik-matrix-usage-upgrade-text {
+  color: #1d2327;
+}
+
+.maspik-matrix-usage-card a.maspik-btn-self,.maspik-matrix-usage-card a.maspik-btn-self:hover {
+  color: #fff;
+}
+
+/* Matrix usage panel (section 3): legend + table */
+.maspik-matrix-section--usage .maspik-matrix-usage-intro {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #475569;
+  max-width: 72ch;
+}
+
+.maspik-matrix-usage-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px 20px;
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e8ecf0;
+  box-sizing: border-box;
+}
+
+@media (min-width: 900px) {
+  .maspik-matrix-usage-legend--pro {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.maspik-matrix-usage-legend__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.maspik-matrix-usage-legend__term {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e293b;
+  letter-spacing: 0.01em;
+}
+
+.maspik-matrix-usage-legend__desc {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.maspik-matrix-usage-scroll {
+  margin-top: 2px;
+}
+
+.maspik-matrix-usage-near-cap-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.maspik-matrix-usage-near-cap-notice__text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #92400e;
+  max-width: min(100%, 52ch);
+}
+
+.maspik-matrix-usage-near-cap-notice__btn {
+  flex-shrink: 0;
+}
+
+.maspik-matrix-usage-near-cap-notice .maspik-matrix-usage-near-cap-notice__btn,
+.maspik-matrix-usage-near-cap-notice .maspik-matrix-usage-near-cap-notice__btn:hover {
+  color: #fff;
+}
+
+.maspik-matrix-usage-table {
+  table-layout: fixed;
+  min-width: 680px;
+}
+
+.maspik-matrix-usage-table--pro {
+  min-width: 480px;
+}
+
+.maspik-matrix-usage-table col.maspik-matrix-usage-col-month {
+  width: 26%;
+}
+
+.maspik-matrix-usage-table col.maspik-matrix-usage-col-num {
+  width: 14.8%;
+}
+
+.maspik-matrix-usage-table--pro col.maspik-matrix-usage-col-month {
+  width: 30%;
+}
+
+.maspik-matrix-usage-table--pro col.maspik-matrix-usage-col-num {
+  width: 23.33%;
+}
+
+.maspik-matrix-usage-table thead th.maspik-matrix-usage-num {
+  text-align: end;
+}
+
+.maspik-matrix-usage-table tbody th.maspik-matrix-usage-month {
+  text-align: start;
+  font-weight: 500;
+  color: #1d2327;
+  vertical-align: middle;
+  border-top: 1px solid #f0f0f1;
+  padding: 10px 12px !important;
+  font-size: 13px;
+}
+
+.maspik-matrix-usage-table tbody tr:first-child th.maspik-matrix-usage-month,
+.maspik-matrix-usage-table tbody tr:first-child td {
+  border-top: none;
+}
+
+.maspik-matrix-usage-num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.maspik-matrix-usage-cell-quota {
+  vertical-align: middle;
+}
+
+.maspik-matrix-usage-rate {
+  font-weight: 500;
+  color: #334155;
+}
+
+.maspik-matrix-usage-table tbody tr:hover th.maspik-matrix-usage-month,
+.maspik-matrix-usage-table tbody tr:hover td {
+  background: #f8fafc;
+}
+
+.maspik-matrix-usage-quota {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+
+.maspik-matrix-usage-quota__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #1d2327;
+  line-height: 1.2;
+  text-align: end;
+}
+
+.maspik-matrix-usage-quota__track {
+  display: block;
+  height: 6px;
+  width: 100%;
+  max-width: 140px;
+  background: #eee;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.maspik-matrix-usage-quota__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  min-width: 0;
+  transition: width 0.2s ease;
+}
+
+.maspik-matrix-usage-quota__fill.tone-success {
+  background: #22c55e;
+}
+
+.maspik-matrix-usage-quota__fill.tone-warning {
+  background: #f59e0b;
+}
+
+.maspik-matrix-usage-quota__fill.tone-danger {
+  background: #ef4444;
 }
 
 .maspik-matrix-accordion-wrap > .maspik-save-submit-wrap {
@@ -3682,6 +4207,9 @@ tr.row-entries.not-a-spam button.entry-action-btn.not-spam-action {
   align-self: flex-start;
   margin-top: 1px;
 }
+.maspik-matrix-mode-card input[type=radio]:checked::before {
+  background-color: #024921;
+}
 
 .rtl .maspik-ai-toggle-wrap .maspik-toggle {
   margin-right: 0;
@@ -3809,6 +4337,11 @@ tr.row-entries.not-a-spam button.entry-action-btn.not-spam-action {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
+}
+
+.maspik-ai-logs-table-container {
+  max-height: 500px;
+  overflow: auto;
 }
 
 .maspik-ai-logs-table-button {
@@ -4187,4 +4720,7 @@ tr.row-entries.not-a-spam button.entry-action-btn.not-spam-action {
 }
 .rtl #wpcontent > #wpbody > #wpfooter {
   margin-right: 0 !important;
+}
+.rtl .wrap.maspik-mainpage {
+  margin: 20px 0px 20px 20px;
 }

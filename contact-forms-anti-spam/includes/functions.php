@@ -1894,10 +1894,49 @@ function maspik_increment_blocks() {
 }
 
 /**
+ * Free-plan Matrix monthly checks limit.
+ *
+ * @return int
+ */
+function maspik_matrix_monthly_limit() {
+    return 100;
+}
+
+/**
+ * Whether Matrix monthly free-plan limit is reached.
+ * Pro plans are always treated as unlimited.
+ *
+ * @return bool
+ */
+function maspik_matrix_is_monthly_limit_reached() {
+    if ( function_exists( 'cfes_is_supporting' ) && cfes_is_supporting() ) {
+        return false;
+    }
+
+    $limit = max( 1, (int) maspik_matrix_monthly_limit() );
+    $ym    = date( 'Ym' );
+
+    $metrics = maspik_get_settings( 'maspik_ai_metrics' );
+    if ( ! is_array( $metrics ) || ! isset( $metrics['by_month'] ) || ! is_array( $metrics['by_month'] ) ) {
+        return false;
+    }
+
+    $month_data = isset( $metrics['by_month'][ $ym ] ) && is_array( $metrics['by_month'][ $ym ] )
+        ? $metrics['by_month'][ $ym ]
+        : array( 'checks' => 0 );
+
+    $checks_used_this_month = max( 0, (int) ( $month_data['checks'] ?? 0 ) );
+    return $checks_used_this_month >= $limit;
+}
+
+/**
  * AI metrics (MASPIK Matrix): one read + one write per submission.
  * Call once per request with deltas (e.g. after you know sent=1, spam=0|1).
  * Retrieve with maspik_get_settings('maspik_ai_metrics').
- * Structure: [ 'by_month' => [ 'YYYYMM' => [ 'checks' => n, 'spam' => n ], ... ], 'total_checks' => n, 'total_spam' => n ]
+ * Structure: [ 'by_month' => [ 'YYYYMM' => [ 'checks' => n, 'spam' => n, 'limit_skipped' => n ], ... ], 'total_checks' => n, 'total_spam' => n ]
+ * - checks: Matrix API calls actually sent (each counts toward the Free monthly cap).
+ * - spam: responses where Matrix blocked (is_spam).
+ * - limit_skipped: submissions where Matrix was on and fields were ready, but the Free monthly cap blocked sending (Pro: always 0).
  */
 function maspik_ai_metrics_record( $sent_delta = 0, $spam_delta = 0 ) {
     if ( ( (int) $sent_delta ) === 0 && ( (int) $spam_delta ) === 0 ) {
@@ -1918,7 +1957,10 @@ function maspik_ai_metrics_record( $sent_delta = 0, $spam_delta = 0 ) {
 
     $ym = date( 'Ym' );
     if ( ! isset( $metrics['by_month'][ $ym ] ) || ! is_array( $metrics['by_month'][ $ym ] ) ) {
-        $metrics['by_month'][ $ym ] = array( 'checks' => 0, 'spam' => 0 );
+        $metrics['by_month'][ $ym ] = array( 'checks' => 0, 'spam' => 0, 'limit_skipped' => 0 );
+    }
+    if ( ! isset( $metrics['by_month'][ $ym ]['limit_skipped'] ) ) {
+        $metrics['by_month'][ $ym ]['limit_skipped'] = 0;
     }
     $sent_delta = (int) $sent_delta;
     $spam_delta = (int) $spam_delta;
@@ -1926,6 +1968,40 @@ function maspik_ai_metrics_record( $sent_delta = 0, $spam_delta = 0 ) {
     $metrics['by_month'][ $ym ]['spam']   = (int) $metrics['by_month'][ $ym ]['spam'] + $spam_delta;
     $metrics['total_checks'] += $sent_delta;
     $metrics['total_spam']   += $spam_delta;
+
+    $metrics['by_month'] = array_slice( $metrics['by_month'], -12, 12, true );
+    maspik_save_settings( 'maspik_ai_metrics', $metrics );
+}
+
+/**
+ * Record a Matrix check that was skipped because the Free monthly limit was already reached.
+ *
+ * @param int $delta Usually 1.
+ */
+function maspik_ai_metrics_record_limit_skip( $delta = 1 ) {
+    $delta = (int) $delta;
+    if ( $delta <= 0 ) {
+        return;
+    }
+    if ( ! maspik_table_exists() ) {
+        return;
+    }
+    $metrics = maspik_get_settings( 'maspik_ai_metrics' );
+    if ( ! is_array( $metrics ) ) {
+        $metrics = array( 'by_month' => array(), 'total_checks' => 0, 'total_spam' => 0 );
+    }
+    if ( ! isset( $metrics['by_month'] ) || ! is_array( $metrics['by_month'] ) ) {
+        $metrics['by_month'] = array();
+    }
+
+    $ym = date( 'Ym' );
+    if ( ! isset( $metrics['by_month'][ $ym ] ) || ! is_array( $metrics['by_month'][ $ym ] ) ) {
+        $metrics['by_month'][ $ym ] = array( 'checks' => 0, 'spam' => 0, 'limit_skipped' => 0 );
+    }
+    if ( ! isset( $metrics['by_month'][ $ym ]['limit_skipped'] ) ) {
+        $metrics['by_month'][ $ym ]['limit_skipped'] = 0;
+    }
+    $metrics['by_month'][ $ym ]['limit_skipped'] = (int) $metrics['by_month'][ $ym ]['limit_skipped'] + $delta;
 
     $metrics['by_month'] = array_slice( $metrics['by_month'], -12, 12, true );
     maspik_save_settings( 'maspik_ai_metrics', $metrics );
@@ -2960,36 +3036,120 @@ function maspik_matrix_dashboard_widget_render() {
 }
 
 /**
- * Dashboard widget: Matrix is on with IP-only mode — suggest Full Matrix (mode 4) for stronger blocking.
+ * Whether to show the “IP-only Matrix → Full Matrix” reminder (dashboard widget + admin notice).
  */
-function maspik_matrix_dashboard_widget_render_full_mode_nudge() {
-    $ai_enabled = efas_get_spam_api('maspik_ai_enabled', 'bool');
-    if ( ! $ai_enabled || ! function_exists( 'maspik_matrix_api_mode_int' ) || maspik_matrix_api_mode_int() !== 2 ) {
+function maspik_matrix_full_mode_nudge_should_show() {
+    if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+        return false;
+    }
+    if ( get_option( 'maspik_matrix_full_mode_nudge_hidden_v3', false ) ) {
+        return false;
+    }
+    if ( ! function_exists( 'efas_get_spam_api' ) || ! efas_get_spam_api( 'maspik_ai_enabled', 'bool' ) ) {
+        return false;
+    }
+    if ( ! function_exists( 'maspik_matrix_api_mode_int' ) ) {
+        return false;
+    }
+    return maspik_matrix_api_mode_int() === 2;
+}
+
+/**
+ * Shared copy + actions for the Full Matrix nudge (widget and admin notice).
+ *
+ * @param string $context 'widget'|'notice' — dismiss control markup differs slightly.
+ */
+function maspik_matrix_full_mode_nudge_render_body( $context = 'widget' ) {
+    $settings_matrix_url = admin_url( 'admin.php?page=maspik#maspik-matrix-section' );
+    $nonce_activate      = wp_create_nonce( 'maspik_set_matrix_full_mode_from_nudge' );
+    $context             = ( 'notice' === $context ) ? 'notice' : 'widget';
+    ?>
+    <p style="margin:0.5em 0;line-height:1.6;">
+        <strong><?php esc_html_e( 'Maspik:', 'contact-forms-anti-spam' ); ?></strong>
+        <?php esc_html_e( 'Matrix is in IP-only mode, switch to Full Matrix in settings for stronger blocking.', 'contact-forms-anti-spam' ); ?>
+        <button type="button" class="button button-primary maspik-matrix-full-mode-nudge-activate" data-nonce="<?php echo esc_attr( $nonce_activate ); ?>" style="margin:0 0.35em 0 0.75em;vertical-align:baseline;"><?php esc_html_e( 'Use Full Matrix Check', 'contact-forms-anti-spam' ); ?></button>
+        <a href="<?php echo esc_url( $settings_matrix_url ); ?>" class="button" style="vertical-align:baseline;"><?php esc_html_e( 'Settings', 'contact-forms-anti-spam' ); ?></a>
+        <a href="#" class="maspik-matrix-full-mode-nudge-dismiss" style="margin-left:0.6em;font-size:11px;text-decoration:none;color:#646970;vertical-align:baseline;"><?php esc_html_e( 'dismiss', 'contact-forms-anti-spam' ); ?></a>
+    </p>
+    <?php
+}
+
+/**
+ * Admin notice (all admin screens): Matrix on IP-only mode — suggest Full Matrix.
+ */
+function maspik_show_matrix_full_mode_nudge_admin_notice() {
+    if ( ! maspik_matrix_full_mode_nudge_should_show() ) {
         return;
     }
-    $settings_matrix_url = admin_url( 'admin.php?page=maspik#maspik-matrix-section' );
-    $nonce_hide          = wp_create_nonce( 'maspik_hide_matrix_full_mode_nudge' );
     ?>
-    <p><?php esc_html_e( 'Maspik Matrix is on in a IP-check mode: only the visitor IP is checked — Its a minimal check.', 'contact-forms-anti-spam' ); ?></p>
-    <p><?php esc_html_e( 'If you need more protection, open Maspik settings and switch Matrix to “Full Matrix analysis” (full check). It catches far more spam because it also analyzes submission content with our full pipeline. (Data not stored!)', 'contact-forms-anti-spam' ); ?></p>
-    <p>
-        <a href="<?php echo esc_url( $settings_matrix_url ); ?>" class="button button-primary"><?php esc_html_e( 'Choose Full Matrix in settings', 'contact-forms-anti-spam' ); ?></a>
-    </p>
-    <p class="maspik-widget-hide-wrap" style="margin-bottom:0;">
-        <a href="#" class="maspik-dashboard-widget-hide-full-mode-nudge" data-nonce="<?php echo esc_attr( $nonce_hide ); ?>"><?php esc_html_e( 'Hide this reminder', 'contact-forms-anti-spam' ); ?></a>
-    </p>
+    <div class="notice notice-info maspik-matrix-full-mode-nudge-notice" style="position:relative;">
+        <?php maspik_matrix_full_mode_nudge_render_body( 'notice' ); ?>
+    </div>
+    <?php
+}
+
+/**
+ * Register the notice after Maspik settings pages clear admin_notices (maspik_is_maspik_page, priority 99999).
+ */
+function maspik_matrix_full_mode_nudge_register_admin_notice() {
+    if ( ! maspik_matrix_full_mode_nudge_should_show() ) {
+        return;
+    }
+    add_action( 'admin_notices', 'maspik_show_matrix_full_mode_nudge_admin_notice', 12 );
+}
+add_action( 'admin_init', 'maspik_matrix_full_mode_nudge_register_admin_notice', 100000 );
+
+/**
+ * Single dismiss handler script for widget + notice (avoids duplicate AJAX if both appear).
+ */
+function maspik_matrix_full_mode_nudge_print_dismiss_script() {
+    static $printed = false;
+    if ( $printed || ! maspik_matrix_full_mode_nudge_should_show() ) {
+        return;
+    }
+    $printed = true;
+    $nonce   = wp_create_nonce( 'maspik_hide_matrix_full_mode_nudge' );
+    ?>
     <script>
-    jQuery(document).ready(function($) {
-        $(document).on('click', '.maspik-dashboard-widget-hide-full-mode-nudge', function(e) {
+    jQuery(function($) {
+        $(document).on('click', '.maspik-matrix-full-mode-nudge-activate', function(e) {
             e.preventDefault();
-            var $w = $('#maspik_matrix_full_mode_widget').closest('.postbox');
-            $.post(ajaxurl, { action: 'maspik_hide_matrix_full_mode_nudge', nonce: $(this).data('nonce') }).done(function() {
-                $w.slideUp();
+            var $btn = $(this);
+            $btn.prop('disabled', true);
+            $.post(ajaxurl, {
+                action: 'maspik_set_matrix_full_mode_from_nudge',
+                nonce: $btn.data('nonce')
+            }).done(function() {
+                $('.maspik-matrix-full-mode-nudge-notice').slideUp();
+                $('#maspik_matrix_full_mode_widget').closest('.postbox').slideUp();
+            }).fail(function() {
+                $btn.prop('disabled', false);
+            });
+        });
+        $(document).on('click', '.maspik-matrix-full-mode-nudge-dismiss', function(e) {
+            e.preventDefault();
+            $.post(ajaxurl, {
+                action: 'maspik_hide_matrix_full_mode_nudge',
+                nonce: <?php echo wp_json_encode( $nonce ); ?>
+            }).done(function() {
+                $('.maspik-matrix-full-mode-nudge-notice').slideUp();
+                $('#maspik_matrix_full_mode_widget').closest('.postbox').slideUp();
             });
         });
     });
     </script>
     <?php
+}
+add_action( 'admin_footer', 'maspik_matrix_full_mode_nudge_print_dismiss_script' );
+
+/**
+ * Dashboard widget: Matrix is on with IP-only mode — suggest Full Matrix (mode 4) for stronger blocking.
+ */
+function maspik_matrix_dashboard_widget_render_full_mode_nudge() {
+    if ( ! maspik_matrix_full_mode_nudge_should_show() ) {
+        return;
+    }
+    maspik_matrix_full_mode_nudge_render_body( 'widget' );
 }
 
 function maspik_add_matrix_dashboard_widget() {
@@ -3009,7 +3169,7 @@ function maspik_add_matrix_dashboard_widget() {
         return;
     }
 
-    if (function_exists('maspik_matrix_api_mode_int') && maspik_matrix_api_mode_int() === 2 && !get_option('maspik_matrix_full_mode_nudge_hidden', false)) {
+    if ( maspik_matrix_full_mode_nudge_should_show() ) {
         wp_add_dashboard_widget(
             'maspik_matrix_full_mode_widget',
             __('Maspik – Catch more spam', 'contact-forms-anti-spam'),
@@ -3042,10 +3202,27 @@ function maspik_hide_matrix_full_mode_nudge_handler() {
         wp_send_json_error();
         return;
     }
-    update_option('maspik_matrix_full_mode_nudge_hidden', true);
+    update_option( 'maspik_matrix_full_mode_nudge_hidden_v3', true );
     wp_send_json_success();
 }
 add_action('wp_ajax_maspik_hide_matrix_full_mode_nudge', 'maspik_hide_matrix_full_mode_nudge_handler');
+
+/**
+ * AJAX: switch Matrix mode from IP-only to Full Matrix from nudge CTA.
+ */
+function maspik_set_matrix_full_mode_from_nudge_handler() {
+    check_ajax_referer( 'maspik_set_matrix_full_mode_from_nudge', 'nonce' );
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error();
+        return;
+    }
+
+    maspik_save_settings( 'maspik_matrix_api_mode', '4' );
+    update_option( 'maspik_matrix_full_mode_nudge_hidden_v3', true );
+
+    wp_send_json_success();
+}
+add_action( 'wp_ajax_maspik_set_matrix_full_mode_from_nudge', 'maspik_set_matrix_full_mode_from_nudge_handler' );
 function maspik_show_blacklist_merge_notice() {
     // Check if we should show the notice
     $show_notice = get_option('maspik_blacklist_merge_notice', false);

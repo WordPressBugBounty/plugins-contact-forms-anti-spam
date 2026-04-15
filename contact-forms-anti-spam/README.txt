@@ -2,10 +2,10 @@
 Contributors: maspik, yonifre
 Donate link: https://paypal.me/yonifre
 Tags: spam, blacklist, anti spam, Honeypot, antispam 
-Tested up to: 6.9
+Tested up to: 7.0
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.7.3
+Stable tag: 2.8.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -39,7 +39,7 @@ Trusted by thousands of websites worldwide. Works automatically on activation.
 ✅ Phone number validation  
 ✅ Multiple honeypot methods and advanced key checks  
 ✅ Multi-language support  
-✅ Maspik Matrix – Cloud-based Multi-layer spam protection engine
+✅ Maspik Matrix – Cloud-based Multi-layer spam protection engine 
 
 ---
 
@@ -59,6 +59,11 @@ This engine performs several checks in parallel to increase accuracy and reduce 
 * Learn from spam submissions and improve over time
 
 Maspik Matrix provides stronger, faster, and more reliable spam detection by evaluating each submission through multiple layers of protection simultaneously.
+
+Maspik includes **100 free Matrix checks** so you can start protecting forms immediately. 
+**Pro users get unlimited Matrix checks**.
+
+Note – Local checks are not counted towards the monthly limit, only API calls are counted.
 
 ### Blacklisting by Field Type
 
@@ -120,6 +125,7 @@ Maspik Matrix provides stronger, faster, and more reliable spam detection by eva
 Maspik integrates seamlessly with a wide range of popular form plugins and WordPress core forms:
 
 * Elementor Forms
+* Elementor Atomic Forms
 * Contact Form 7
 * Hello Plus
 * Ninja Forms
@@ -149,6 +155,7 @@ Maspik integrates seamlessly with a wide range of popular form plugins and WordP
 
 Upgrade to Maspik Pro to unlock powerful additional features:
 
+* ⭐ Maspik Matrix – Unlimited checks
 * ⭐ Custom spam dashboard for multiple sites – manage all spam settings from one place
 * ⭐ Country-based filtering – block spam by country or allow only specific countries
 * ⭐ Language-based filtering – block spam by language or allow only specific languages
@@ -178,7 +185,7 @@ Maspik is GDPR compliant.
 * 💬 [Community Forum](https://www.facebook.com/groups/maspik)
 * 🐛 [Report Issues](https://wpmaspik.com/#support?readme-file)
 * 💡 [Feature Requests](https://wpmaspik.com/#support?readme-file)
-* 💰 [Receive Pro for free](https://wpmaspik.com/get-maspik-pro-for-free-share-your-expertise/?readme-file)
+* 💰 [Receive Maspik Pro for free](https://wpmaspik.com/get-maspik-pro-for-free-share-your-expertise/?readme-file)
 * 💖 [Support us with a 5-star review](https://wordpress.org/support/plugin/contact-forms-anti-spam/reviews/#new-post)
 * ✨ [WP Maspik Website](https://wpmaspik.com/?readme-file)
 
@@ -240,25 +247,24 @@ Maspik uses multiple detection methods including smart pattern recognition, hone
 
 Unlike traditional CAPTCHA solutions, Maspik works silently in the background and does not disrupt your real users.
 
-= What is the AI spam check? =
+= What is the Maspik Matrix? =
 
-By default, the AI Spam Check feature is disabled in Maspik.
+Maspik Matrix is a server-based spam detection engine and one of Maspik's core features.
+It runs multi-layer checks on each submission to provide a single spam decision.
 
-When enabled, it analyzes each form submission using leading AI models — Google Gemini, OpenAI, and Mistral AI — to estimate how likely the message is to be spam.
+Matrix layers include IP reputation checks, heuristic checks, bad-words detection, link detection, behavior analysis, and AI analysis.
 
-The AI decision is not 100% perfect.  
-To make the system stricter or more permissive, you can:
+The AI layer supports two levels: a smaller/faster model and a larger/deeper model.
 
-* Adjust the spam threshold
-* Add custom context to help the AI understand your intent
+You can choose the Matrix depth mode in settings:
+- IP check only
+- IP + bad-words checks
+- Full Matrix (all checks and AI layers)
 
-For example, you can add context like:
+Each site includes **100 free Matrix checks per month**.
+**Pro users get unlimited Matrix checks**.
 
-* "Be very strict with any message that sounds like a sales pitch."
-* "Accept only messages written in English."
-* "Treat repeated keywords or links as spam."
-
-You can configure AI spam check in the **Maspik → AI Spam Check** settings page.
+You can configure all Matrix options in the **Matrix** accordion in the Maspik settings page.
 
 = Will Maspik affect my site's performance? =
 
@@ -394,11 +400,21 @@ Then Maspik is an excellent choice for your WordPress spam protection.
 
 == Changelog ==
 
+= 2.8.0 - 15/04/2026 =
+* Enhanced – Maspik Matrix feature is now free for all users – 100 free checks every month, Pro users get unlimited checks
+* Note – Local checks are not counted towards the monthly limit, only API calls are counted.
+* New feature – Direct POST attack detection
+* New feature – Elementor Atomic Forms validation support
+* New feature – WooCommerce orders spam check support (Pro feature)
+* New feature – Usage statistics for Maspik Matrix
+* Improvement – Improved compatibility with WordPress 7.0
+* Improvement – Improved performance of Maspik Matrix
+
 = 2.7.3 - 16/03/2026 =
 * Improvement – Improved Gravity Forms integration.
 * Improvement – Improved WordPress comments integration.
 * Improvement – Improved BuddyPress integration.
-* Improvement – Maspik Matrix now have 3 modes: IP only, IP + banned words, Full Matrix analysis, you can choose the mode from the Maspik settings page.
+* Improvement – Maspik Matrix now have 3 modes: IP only, IP + banned words, Full Matrix check, you can choose the mode from the Maspik settings page.
 
 = 2.7.2 - 11/03/2026 =
 * Improvement – Improved country detection when using Cloudflare proxy IPs.

@@ -216,20 +216,13 @@ function maspik_validate_cf7_process( $result, $tags ) {
 }
 
 function maspik_honeypot_to_cf7_form( $form_content ) {
-    if ( efas_get_spam_api( 'maspikHoneypot', 'bool' ) || efas_get_spam_api( 'maspikTimeCheck', 'bool' ) || maspik_get_settings( 'maspikYearCheck' ) ) {
+    if ( efas_get_spam_api( 'maspikHoneypot', 'bool' ) ) {
         $custom_html = '';
 
         if ( efas_get_spam_api( 'maspikHoneypot', 'bool' ) ) {
             $custom_html .= '<div class="wpcf7-form-control-wrap maspik-field">
                 <label for="full-name-maspik-hp" class="wpcf7-form-control-label">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
                 <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="full-name-maspik-hp" id="full-name-maspik-hp" class="wpcf7-form-control wpcf7-text" placeholder="' . esc_attr( maspik_honeypot_aria_label() ) . '">
-            </div>';
-        }
-
-        if ( maspik_get_settings( 'maspikYearCheck' ) ) {
-            $custom_html .= '<div class="wpcf7-form-control-wrap maspik-field">
-                <label for="Maspik-currentYear" class="wpcf7-form-control-label">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
-                <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="Maspik-currentYear" id="Maspik-currentYear" class="wpcf7-form-control wpcf7-text" placeholder="">
             </div>';
         }
 

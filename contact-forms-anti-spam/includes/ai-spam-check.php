@@ -32,13 +32,22 @@ function maspik_matrix_api_mode_int(): int {
  * Check submission using AI-based spam detection
  * 
  * @param array $fields Array of form fields and their values
+ * @param string $form_type Form integration slug (e.g. elementor, cf7).
+ * @param int|null $plugin_spam_likelihood Optional 1–9; null = request floor (maspik_matrix_get_plugin_spam_likelihood_floor(), default 1).
  * @return array Array containing spam check results
  */
-function maspik_ai_check_submission( array $fields, string $form_type = '' ): array {
+function maspik_ai_check_submission( array $fields, string $form_type = '', $plugin_spam_likelihood = null ): array {
     $ai_metrics_sent = 0;
     $ai_metrics_spam = 0;
     // Wrap entire function in try-catch to prevent any exceptions from breaking the site
     try {
+        if ( function_exists( 'maspik_matrix_is_monthly_limit_reached' ) && maspik_matrix_is_monthly_limit_reached() ) {
+            if ( function_exists( 'maspik_ai_metrics_record_limit_skip' ) ) {
+                maspik_ai_metrics_record_limit_skip( 1 );
+            }
+            return array( 'allow' => true, 'reason' => 'MASPIK Matrix paused: monthly free-plan limit reached' );
+        }
+
         // Get AI settings from options/DB with fallbacks to constants
         $endpoint = defined('MASPIK_AI_ENDPOINT') ? MASPIK_AI_ENDPOINT : '';
 
@@ -96,6 +105,14 @@ function maspik_ai_check_submission( array $fields, string $form_type = '' ): ar
 
     $matrix_mode = maspik_matrix_api_mode_int();
 
+    if ( $plugin_spam_likelihood === null && function_exists( 'maspik_matrix_get_plugin_spam_likelihood_floor' ) ) {
+        $plugin_spam_likelihood = maspik_matrix_get_plugin_spam_likelihood_floor();
+    }
+    if ( $plugin_spam_likelihood === null ) {
+        $plugin_spam_likelihood = 1;
+    }
+    $plugin_spam_likelihood = max( 1, min( 9, (int) $plugin_spam_likelihood ) );
+
     // Mode 2: IP reputation only — do not send form field contents (no text analysis on server).
     $context_block = [
         'business_info' => $context, // max 170 characters
@@ -105,11 +122,25 @@ function maspik_ai_check_submission( array $fields, string $form_type = '' ): ar
         'site_languages' => $site_languages, // V2 array of all languages in the site
         'form_type' => $form_type,
         'mode'      => $matrix_mode,
+        // 1 = low suspicion, 9 = high; integrations raise floor — filter: maspik_matrix_plugin_spam_likelihood_1_9.
+        'plugin_spam_likelihood' => $plugin_spam_likelihood,
     ];
 
     $payload = [ 'context' => $context_block ];
     if ( $matrix_mode !== 2 ) {
         $payload['fields'] = $fields;
+    }
+    if ( efas_get_spam_api( 'NeedPageurl', 'bool' ) ) {
+        $maspik_referrer_raw = '';
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- form POST context; value only forwarded to Matrix.
+        if ( isset( $_POST['referrer'] ) && is_string( $_POST['referrer'] ) && $_POST['referrer'] !== '' ) {
+            $maspik_referrer_raw = wp_unslash( $_POST['referrer'] );
+        } elseif ( ! empty( $_SERVER['HTTP_REFERER'] ) && is_string( $_SERVER['HTTP_REFERER'] ) ) {
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- read-only; not saved to DB.
+            $maspik_referrer_raw = wp_unslash( $_SERVER['HTTP_REFERER'] );
+        }
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
+        $payload['maspik_referrer'] = esc_url_raw( $maspik_referrer_raw );
     }
     
     // JSON string (not array!) - important for Lambda to receive proper structure
@@ -126,7 +157,8 @@ function maspik_ai_check_submission( array $fields, string $form_type = '' ): ar
         'Content-Type'      => 'application/json',
         'Accept'            => 'application/json',
         'User-Agent'        => 'Maspik-Plugin/' . ( defined( 'MASPIK_VERSION' ) ? MASPIK_VERSION : '2.0' ) . '; ' . home_url( '', 'https' ),
-        'X-Maspik-Token'    => $token, // send token so Lambda can validate & cache on first request
+        'X-maspik-tkn'    => $token, // send token so Lambda can validate & cache on first request
+        'X-Maspik-Is-Pro'   => cfes_is_supporting() ? '1' : '0',
         'Maspik-client_ip'  => $client_ip, // send client ip to validate against the IP blacklist
         'X-Maspik-Mode'     => (string) $matrix_mode,
     ];
@@ -152,13 +184,15 @@ function maspik_ai_check_submission( array $fields, string $form_type = '' ): ar
     $timeout = (int) apply_filters( 'maspik_ai_request_timeout', 7 );
     $timeout = max( 3, min( 30, $timeout ) ); // clamp 3–30 seconds
 
+    //print request headers and body
+    //error_log('Maspik AI: Request headers: ' . json_encode($headers));
+    //error_log('Maspik AI: Request body: ' . $request_body);
     $resp = wp_remote_post( $endpoint, [
         'timeout'     => $timeout,
         'headers'     => $headers,
         'body'        => $request_body,     // keep as string, not array
         'sslverify'   => (bool) apply_filters( 'maspik_ai_ssl_verify', true ),
     ]);
-
     // Handle request errors gracefully
     if ( is_wp_error($resp) ) {
         // On failure, don't block - allow submission and log error
@@ -170,7 +204,7 @@ function maspik_ai_check_submission( array $fields, string $form_type = '' ): ar
     }
 
     $code = wp_remote_retrieve_response_code($resp);
-    $response_body = wp_remote_retrieve_body($resp);
+    $response_body = wp_remote_retrieve_body($resp );
     
     // Ensure code is valid integer
     if (!is_numeric($code)) {

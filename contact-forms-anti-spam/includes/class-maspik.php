@@ -110,6 +110,7 @@ class Maspik {
 	// if elementor pro active
         if ( maspik_is_plugin_active( 'elementor-pro/elementor-pro.php' ) ) {
           require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/elementor.php';
+          require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/elementor-atomic-forms.php';
         }
       }
     // if cf7 active

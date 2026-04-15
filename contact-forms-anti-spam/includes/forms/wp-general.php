@@ -171,22 +171,13 @@ add_filter('preprocess_comment', 'maspik_comments_checker');
 
 
 function add_custom_html_to_comment_form( $submit_button, $args ) {
-    if ( efas_get_spam_api('maspikHoneypot', 'bool') || efas_get_spam_api('maspikTimeCheck', 'bool') || maspik_get_settings('maspikYearCheck') ) {
+    if ( efas_get_spam_api('maspikHoneypot', 'bool') ) {
         $custom_html = "";
 
-        if (efas_get_spam_api('maspikHoneypot', 'bool')) {
             $custom_html .= '<div class="comment-form maspik-field" style="display: none;">
                 <label for="full-name-maspik-hp" class="comment-form-label">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
                 <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="full-name-maspik-hp" id="full-name-maspik-hp" class="comment-form-input" placeholder="' . esc_attr( maspik_honeypot_aria_label() ) . '" data-form-type="other" data-lpignore="true">
             </div>';
-        }
-
-        if (maspik_get_settings('maspikYearCheck')) {
-            $custom_html .= '<div class="comment-form maspik-field" style="display: none;">
-                <label for="Maspik-currentYear" class="comment-form-label">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
-                <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="Maspik-currentYear" id="Maspik-currentYear" class="comment-form-input" placeholder="" data-form-type="other" data-lpignore="true">
-            </div>';
-        }
 
         $submit_before = $custom_html;
         return $submit_before . $submit_button;

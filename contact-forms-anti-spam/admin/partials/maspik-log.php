@@ -340,13 +340,12 @@ function maspik_process_spam_source($source) {
 <div id="false-positive-modal" class="modal">
     <div class="modal-content fp-modal-content">
       <div class="modal-content-inner fp-modal-inner">
-        <span class="close-button">&times;</span>
         <div class="fp-modal-header">
           <span class="dashicons dashicons-flag fp-icon"></span>
           <h3 class="fp-modal-title"><?php esc_html_e('Mark as Not Spam', 'contact-forms-anti-spam'); ?></h3>
         </div>
         <div class="fp-modal-body">
-          <p class="fp-main-message"><?php esc_html_e('This entry was incorrectly flagged as spam. Help us improve Maspik by reporting this false positive.', 'contact-forms-anti-spam'); ?></p>
+          <p class="fp-main-message"><?php esc_html_e('This entry was incorrectly flagged as spam? Help us improve MASPIK by reporting this false positive.', 'contact-forms-anti-spam'); ?></p>
           <p class="fp-sub-message"><?php esc_html_e('Your report will help us improve our spam detection algorithms and prevent similar false positives in the future.', 'contact-forms-anti-spam'); ?></p>
         </div>
         <div class="fp-modal-actions">

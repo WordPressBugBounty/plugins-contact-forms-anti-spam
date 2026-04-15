@@ -787,7 +787,6 @@ $whats_new_nonce = wp_create_nonce('maspik_whats_new_seen');
                             (absint($_POST['private_file_id']) > 2 ? absint($_POST['private_file_id']) : '') : '',
                         'popular_spam' => isset($_POST['popular_spam']) ? 1 : 0,
                         'maspikHoneypot' => isset($_POST['maspikHoneypot']) ? 1 : 0,
-                        'maspikYearCheck' => isset($_POST['maspikYearCheck']) ? 1 : 0,
                         'maspikTimeCheck' => isset($_POST['maspikTimeCheck']) ? 1 : 0,
                         'NeedPageurl' => isset($_POST['NeedPageurl']) ? 1 : 0,
                         'ip_blacklist' => sanitize_textarea_field(stripslashes($_POST['ip_blacklist'] ?? '')),
@@ -1000,7 +999,7 @@ $whats_new_nonce = wp_create_nonce('maspik_whats_new_seen');
                                             $matrix_main_mode_labels = array(
                                                 2 => __( 'IP reputation only', 'contact-forms-anti-spam' ),
                                                 3 => __( 'IP reputation + banned words', 'contact-forms-anti-spam' ),
-                                                4 => __( 'Full Matrix analysis', 'contact-forms-anti-spam' ),
+                                                4 => __( 'Full Matrix check', 'contact-forms-anti-spam' ),
                                             );
                                             $matrix_main_mode_label = isset( $matrix_main_mode_labels[ $matrix_mode_main_ui ] ) ? $matrix_main_mode_labels[ $matrix_mode_main_ui ] : $matrix_main_mode_labels[4];
                                             
@@ -1039,40 +1038,117 @@ $whats_new_nonce = wp_create_nonce('maspik_whats_new_seen');
                                                 <?php esc_html_e('This feature sends limited request data (Depends on the mode) to external servers for analysis. Data is processed in real-time and not stored.', 'contact-forms-anti-spam'); ?>
                                             </p>
                                             <?php
-                                            // AI metrics summary under Matrix title (per month and total)
+                                            // Matrix monthly usage (visibility toggled via CSS from #maspik_ai_enabled / dashboard chip).
                                             $ai_metrics = maspik_get_settings( 'maspik_ai_metrics' );
-                                            if ( is_array( $ai_metrics ) ) :
-                                                $total_checks = isset( $ai_metrics['total_checks'] ) ? (int) $ai_metrics['total_checks'] : 0;
-                                                $total_spam   = isset( $ai_metrics['total_spam'] ) ? (int) $ai_metrics['total_spam'] : 0;
-                                                $month_key    = date( 'Ym' );
-                                                $month_data   = isset( $ai_metrics['by_month'][ $month_key ] ) && is_array( $ai_metrics['by_month'][ $month_key ] )
-                                                    ? $ai_metrics['by_month'][ $month_key ]
-                                                    : array( 'checks' => 0, 'spam' => 0 );
-                                                $month_checks = (int) ( $month_data['checks'] ?? 0 );
-                                                $month_spam   = (int) ( $month_data['spam'] ?? 0 );
+                                            $month_key  = date( 'Ym' );
+                                            $month_data = ( is_array( $ai_metrics ) && isset( $ai_metrics['by_month'][ $month_key ] ) && is_array( $ai_metrics['by_month'][ $month_key ] ) )
+                                                ? $ai_metrics['by_month'][ $month_key ]
+                                                : array( 'checks' => 0, 'spam' => 0 );
+
+                                            $checks_used_this_month  = max( 0, (int) ( $month_data['checks'] ?? 0 ) );
+                                            $spam_blocked_this_month = max( 0, (int) ( $month_data['spam'] ?? 0 ) );
+                                            $is_pro_plan             = function_exists( 'cfes_is_supporting' ) && cfes_is_supporting();
+                                            $monthly_limit           = function_exists( 'maspik_matrix_monthly_limit' ) ? max( 1, (int) maspik_matrix_monthly_limit() ) : 100;
+                                            $remaining               = max( 0, $monthly_limit - $checks_used_this_month );
+                                            $usage_percent_raw       = ( $checks_used_this_month / $monthly_limit ) * 100;
+                                            $usage_percent           = max( 0, min( 100, $usage_percent_raw ) );
+                                            $is_limit_reached        = ! $is_pro_plan && $checks_used_this_month >= $monthly_limit;
+                                            $is_warning              = ! $is_pro_plan && $usage_percent_raw >= 70 && $usage_percent_raw < 100;
+                                            $show_matrix_upgrade_cta = ! $is_pro_plan && ( $usage_percent_raw >= 80 || $is_limit_reached );
+
+                                            $usage_tone = 'success';
+                                            if ( $usage_percent_raw >= 85 ) {
+                                                $usage_tone = 'danger';
+                                            } elseif ( $usage_percent_raw >= 60 ) {
+                                                $usage_tone = 'warning';
+                                            }
                                             ?>
-                                            <p class="maspik-matrix-ai-metrics maspik-subtext" style="margin-top: 0.4em;">
-                                                <?php
-                                                if ( $month_checks > 0 ) {
-                                                    /* translators: 1: number of AI checks this month, 2: number blocked as spam */
+                                            <div class="maspik-matrix-usage-card <?php echo $is_limit_reached ? 'is-limit-reached' : ''; ?>">
+                                                <div class="maspik-matrix-usage-head">
+                                                    <span class="maspik-matrix-usage-title">
+                                                        <?php esc_html_e( 'Maspik Matrix Monthly usage', 'contact-forms-anti-spam' ); ?>
+                                                    </span>
+                                                    <span class="maspik-matrix-usage-badge">
+                                                        <?php
+                                                        if ( $is_pro_plan ) {
+                                                            esc_html_e( 'Pro Plan • Unlimited checks', 'contact-forms-anti-spam' );
+                                                        } else {
+                                                            /* translators: %d: monthly checks limit for free plan */
+                                                            printf( esc_html__( 'Free Plan • %d checks/month', 'contact-forms-anti-spam' ), esc_html( $monthly_limit ) );
+                                                        }
+                                                        ?>
+                                                    </span>
+                                                </div>
+
+                                                <?php if ( $is_limit_reached ) : ?>
+                                                    <p class="maspik-matrix-usage-limit-title">
+                                                        <?php
+                                                        /* translators: %d: monthly checks limit for free plan */
+                                                        printf( esc_html__( 'Monthly limit reached (%1$d / %1$d)', 'contact-forms-anti-spam' ), esc_html( $monthly_limit ) );
+                                                        ?>
+                                                    </p>
+                                                <?php endif; ?>
+
+                                                <p class="maspik-matrix-usage-summary">
+                                                    <?php
+                                                    if ( $is_pro_plan ) {
+                                                        /* translators: %s: checks used this month */
+                                                        printf(
+                                                            esc_html__( '%s checks used this month • Unlimited plan', 'contact-forms-anti-spam' ),
+                                                            esc_html( number_format_i18n( $checks_used_this_month ) )
+                                                        );
+                                                    } else {
+                                                        /* translators: 1: checks used this month, 2: monthly checks limit, 3: remaining monthly checks */
+                                                        printf(
+                                                            esc_html__( '%1$s / %2$s checks used • %3$s remaining', 'contact-forms-anti-spam' ),
+                                                            esc_html( number_format_i18n( $checks_used_this_month ) ),
+                                                            esc_html( number_format_i18n( $monthly_limit ) ),
+                                                            esc_html( number_format_i18n( $remaining ) )
+                                                        );
+                                                    }
+                                                    ?>
+                                                </p>
+
+                                                <?php if ( ! $is_pro_plan ) : ?>
+                                                    <div class="maspik-matrix-usage-progress" role="progressbar" aria-valuemin="0" aria-valuemax="<?php echo esc_attr( $monthly_limit ); ?>" aria-valuenow="<?php echo esc_attr( min( $checks_used_this_month, $monthly_limit ) ); ?>">
+                                                        <span class="maspik-matrix-usage-progress-fill tone-<?php echo esc_attr( $usage_tone ); ?>" style="width: <?php echo esc_attr( $usage_percent ); ?>%;"></span>
+                                                    </div>
+                                                <?php endif; ?>
+
+                                                <p class="maspik-matrix-usage-status <?php echo $is_warning ? 'is-warning' : ''; ?> <?php echo $is_limit_reached ? 'is-paused' : ''; ?>">
+                                                    <?php if ( $is_limit_reached ) : ?>
+                                                        <?php esc_html_e( 'Matrix protection is currently paused', 'contact-forms-anti-spam' ); ?>
+                                                    <?php elseif ( $is_pro_plan ) : ?>
+                                                        <?php esc_html_e( 'You are protected by MASPIK Matrix (Pro plan)', 'contact-forms-anti-spam' ); ?>
+                                                    <?php elseif ( $is_warning ) : ?>
+                                                        <?php if ( $usage_percent_raw > 80 ) : ?>
+                                                            <span aria-hidden="true">⚠️ </span>
+                                                        <?php endif; ?>
+                                                        <?php esc_html_e( 'You\'re close to your monthly limit', 'contact-forms-anti-spam' ); ?>
+                                                    <?php else : ?>
+                                                        <?php esc_html_e( 'You are protected by MASPIK Matrix (Free plan)', 'contact-forms-anti-spam' ); ?>
+                                                    <?php endif; ?>
+                                                </p>
+
+                                                <p class="maspik-matrix-usage-value">
+                                                    <?php
+                                                    /* translators: %s: spam attempts blocked this month */
                                                     printf(
-                                                        esc_html__( 'This month: %1$s MASPIK Matrix checks, %2$s blocked as spam.', 'contact-forms-anti-spam' ),
-                                                        esc_html( number_format_i18n( $month_checks ) ),
-                                                        esc_html( number_format_i18n( $month_spam ) )
+                                                        esc_html__( 'Matrix blocked %s spam attempts this month', 'contact-forms-anti-spam' ),
+                                                        esc_html( number_format_i18n( $spam_blocked_this_month ) )
                                                     );
-                                                } elseif ( $total_checks > 0 ) {
-                                                    /* translators: 1: total AI checks, 2: total blocked as spam */
-                                                    printf(
-                                                        esc_html__( 'Since activation: %1$s MASPIK Matrix checks, %2$s blocked as spam.', 'contact-forms-anti-spam' ),
-                                                        esc_html( number_format_i18n( $total_checks ) ),
-                                                        esc_html( number_format_i18n( $total_spam ) )
-                                                    );
-                                                } else {
-                                                    esc_html_e( 'Matrix is ready. Data will appear here after your first MASPIK Matrix check.', 'contact-forms-anti-spam' );
-                                                }
-                                                ?>
-                                            </p>
-                                            <?php endif; ?>
+                                                    ?>
+                                                </p>
+
+                                                <?php if ( $show_matrix_upgrade_cta ) : ?>
+                                                    <div class="maspik-matrix-usage-upgrade">
+                                                        <p class="maspik-matrix-usage-upgrade-text"><?php esc_html_e( 'Upgrade to Pro for unlimited protection', 'contact-forms-anti-spam' ); ?></p>
+                                                        <a class="maspik-btn-self" href="https://wpmaspik.com/#pro?utm_source=plugin-dashboard&utm_medium=matrix-usage" target="_blank" rel="noopener noreferrer">
+                                                            <?php esc_html_e( 'Upgrade to Pro', 'contact-forms-anti-spam' ); ?>
+                                                        </a>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -1114,7 +1190,6 @@ $whats_new_nonce = wp_create_nonce('maspik_whats_new_seen');
                                         </div>  
                                     </div><!-- end of maspik-honeypot-wrap -->
 
-                                    <?php if( efas_if_plugin_is_active('elementor-pro') ) {  ?>
                                         <div class="maspik-txt-custom-msg-head togglewrap maspik-block-inquiry-wrap">
                                             <div class="maspik-toggle-and-chip">
                                                 <?php echo maspik_toggle_button('NeedPageurl', 'NeedPageurl', 'NeedPageurl', 'maspik-needpageurl togglebutton',"","",['NeedPageurl']); ?>
@@ -1128,11 +1203,10 @@ $whats_new_nonce = wp_create_nonce('maspik_whats_new_seen');
                                                 ?>
                                             </div>
                                                 <div>
-                                                    <h4> <?php esc_html_e('Elementor Bot detector', 'contact-forms-anti-spam'); ?></h4>
-                                                    <span><?php esc_html_e('Blocks form submissions that are sent from outside your site (e.g. bots sending POST requests from an external source).', 'contact-forms-anti-spam'); ?></span>
-                                            </div>  
+                                                    <h4> <?php esc_html_e('Direct POST attack', 'contact-forms-anti-spam'); ?> <small> <?php if( efas_if_plugin_is_active('elementor-pro') ) { esc_html_e('(Formerly: Elementor Bot detector)', 'contact-forms-anti-spam'); } ?></small> </h4>
+                                                    <span><?php esc_html_e('Detect and block direct POST submissions that bypass the website interface by validating request context, origin, and expected form structure.', 'contact-forms-anti-spam'); ?></span>
+                                                </div>  
                                         </div><!-- end of maspik-block-inquiry-wrap -->
-                                    <?php  } ?>
 
                                     <!-- Advance key check start -->
                                     <div class="maspik-txt-custom-msg-head togglewrap maspik-honeypot-wrap">
@@ -1832,7 +1906,7 @@ if ($tc_effective && !$tc_local_on) {
                                         <div class="maspik-accordion-header" id="ai-spam-check-accordion">
                                             <div class="mpk-acc-header-texts">
                                                 <h4 class="maspik-header maspik-accordion-header-text">
-                                                    <?php esc_html_e('Maspik Matrix options and Logs', 'contact-forms-anti-spam'); ?>
+                                                    <?php esc_html_e('Maspik Matrix options', 'contact-forms-anti-spam'); ?>
                                                     <span class="maspik-beta-badge">New</span>
                                                 </h4>
                                             </div>
@@ -1926,7 +2000,7 @@ if ($tc_effective && !$tc_local_on) {
                                                                 <input type="radio" class="maspik-matrix-mode-radio" name="maspik_matrix_api_mode" value="4" <?php checked( $matrix_mode_val, 4 ); ?> />
                                                                 <span class="maspik-matrix-mode-card__main">
                                                                     <span class="maspik-matrix-mode-card__title-row">
-                                                                        <span class="maspik-matrix-mode-card__title"><?php esc_html_e( 'Full Matrix analysis', 'contact-forms-anti-spam' ); ?></span>
+                                                                        <span class="maspik-matrix-mode-card__title"><?php esc_html_e( 'Full Matrix check', 'contact-forms-anti-spam' ); ?></span>
                                                                         <span class="maspik-matrix-mode-badge maspik-matrix-mode-badge--catch maspik-matrix-mode-badge--catch-90 maspik-matrix-mode-card__pct-pill"><?php printf( esc_html__( 'Up to %d%% spam caught', 'contact-forms-anti-spam' ), 90 ); ?></span>
                                                                     </span>
                                                                     <span class="maspik-matrix-mode-card__desc"><?php esc_html_e( 'Full pipeline: heuristics, patterns, AI, and related checks (default).', 'contact-forms-anti-spam' ); ?></span>
@@ -1938,45 +2012,157 @@ if ($tc_effective && !$tc_local_on) {
 
                                                 <!-- Section 3: Usage -->
                                                 <?php
-                                                // Simple AI metrics summary list (recent months)
+                                                // Matrix metrics by month: attempts, API calls (quota), skips, spam, rate.
                                                 $ai_metrics = maspik_get_settings( 'maspik_ai_metrics' );
                                                 if ( is_array( $ai_metrics ) && ! empty( $ai_metrics['by_month'] ) ) :
                                                     $months_data = $ai_metrics['by_month'];
                                                     krsort( $months_data ); // newest first
                                                     $months_data = array_slice( $months_data, 0, 6, true );
+                                                    $matrix_usage_is_pro = function_exists( 'cfes_is_supporting' ) && cfes_is_supporting();
+                                                    $matrix_free_cap     = function_exists( 'maspik_matrix_monthly_limit' ) ? (int) maspik_matrix_monthly_limit() : 100;
+                                                    $matrix_usage_current_ym     = date( 'Ym' );
+                                                    $matrix_usage_current_checks = 0;
+                                                    if ( isset( $ai_metrics['by_month'][ $matrix_usage_current_ym ] ) && is_array( $ai_metrics['by_month'][ $matrix_usage_current_ym ] ) ) {
+                                                        $matrix_usage_current_checks = (int) ( $ai_metrics['by_month'][ $matrix_usage_current_ym ]['checks'] ?? 0 );
+                                                    }
+                                                    $matrix_usage_cap_pct = ( ! $matrix_usage_is_pro && $matrix_free_cap > 0 )
+                                                        ? ( ( $matrix_usage_current_checks / $matrix_free_cap ) * 100 )
+                                                        : 0;
+                                                    $matrix_usage_show_upgrade_near_cap = ! $matrix_usage_is_pro && $matrix_free_cap > 0 && $matrix_usage_cap_pct >= 80;
                                                 ?>
                                                 <div class="maspik-matrix-surface maspik-ai-metrics-panel maspik-matrix-section maspik-matrix-section--usage">
                                                     <h3 class="maspik-accordion-subtitle">
                                                         <?php esc_html_e( '3. Matrix usage', 'contact-forms-anti-spam' ); ?>
                                                     </h3>
-                                                    <p class="maspik-subtext">
-                                                        <?php esc_html_e( 'See how often Matrix checks submissions and how many are blocked as spam.', 'contact-forms-anti-spam' ); ?>
+                                                    <p class="maspik-matrix-usage-intro">
+                                                        <?php
+                                                        if ( $matrix_usage_is_pro ) {
+                                                            esc_html_e( 'Saved on this site per form run-through Matrix. Pro: unlimited checks.', 'contact-forms-anti-spam' );
+                                                        } else {
+                                                            esc_html_e( 'Saved on this site per form run-through Matrix. Free: monthly API cap applies.', 'contact-forms-anti-spam' );
+                                                        }
+                                                        ?>
                                                     </p>
-                                                    <div class="maspik-matrix-table-scroll">
-                                                    <table class="widefat maspik-ai-metrics-table maspik-matrix-data-table">
+                                                    <div class="maspik-matrix-usage-legend<?php echo $matrix_usage_is_pro ? ' maspik-matrix-usage-legend--pro' : ''; ?>" aria-label="<?php esc_attr_e( 'What each column means', 'contact-forms-anti-spam' ); ?>">
+                                                        <?php if ( ! $matrix_usage_is_pro ) : ?>
+                                                        <div class="maspik-matrix-usage-legend__item">
+                                                            <span class="maspik-matrix-usage-legend__term"><?php esc_html_e( 'Attempts', 'contact-forms-anti-spam' ); ?></span>
+                                                            <span class="maspik-matrix-usage-legend__desc"><?php esc_html_e( 'Calls sent + skips after the monthly cap is full.', 'contact-forms-anti-spam' ); ?></span>
+                                                        </div>
+                                                        <?php endif; ?>
+                                                        <div class="maspik-matrix-usage-legend__item">
+                                                            <span class="maspik-matrix-usage-legend__term"><?php echo $matrix_usage_is_pro ? esc_html__( 'Checks', 'contact-forms-anti-spam' ) : esc_html__( 'API calls', 'contact-forms-anti-spam' ); ?></span>
+                                                            <span class="maspik-matrix-usage-legend__desc"><?php
+                                                            echo $matrix_usage_is_pro
+                                                                ? esc_html__( 'Matrix requests sent this month.', 'contact-forms-anti-spam' )
+                                                                : esc_html__( 'Sent to Matrix; each uses your monthly cap.', 'contact-forms-anti-spam' );
+                                                            ?></span>
+                                                        </div>
+                                                        <?php if ( ! $matrix_usage_is_pro ) : ?>
+                                                        <div class="maspik-matrix-usage-legend__item">
+                                                            <span class="maspik-matrix-usage-legend__term"><?php esc_html_e( 'Skipped (limit)', 'contact-forms-anti-spam' ); ?></span>
+                                                            <span class="maspik-matrix-usage-legend__desc"><?php esc_html_e( 'Cap full — no API call.', 'contact-forms-anti-spam' ); ?></span>
+                                                        </div>
+                                                        <?php endif; ?>
+                                                        <div class="maspik-matrix-usage-legend__item">
+                                                            <span class="maspik-matrix-usage-legend__term"><?php esc_html_e( 'Spam blocked', 'contact-forms-anti-spam' ); ?></span>
+                                                            <span class="maspik-matrix-usage-legend__desc"><?php esc_html_e( 'Submissions Matrix blocked as spam.', 'contact-forms-anti-spam' ); ?></span>
+                                                        </div>
+                                                        <div class="maspik-matrix-usage-legend__item">
+                                                            <span class="maspik-matrix-usage-legend__term"><?php esc_html_e( 'Spam rate', 'contact-forms-anti-spam' ); ?></span>
+                                                            <span class="maspik-matrix-usage-legend__desc"><?php
+                                                            echo $matrix_usage_is_pro
+                                                                ? esc_html__( 'Spam blocked ÷ checks.', 'contact-forms-anti-spam' )
+                                                                : esc_html__( 'Spam blocked ÷ API calls.', 'contact-forms-anti-spam' );
+                                                            ?></span>
+                                                        </div>
+                                                    </div>
+                                                    <?php if ( $matrix_usage_show_upgrade_near_cap ) : ?>
+                                                    <div class="maspik-matrix-usage-near-cap-notice">
+                                                        <p class="maspik-matrix-usage-near-cap-notice__text">
+                                                            <?php esc_html_e( 'You have used most of your free monthly Matrix checks. Upgrade to Pro for unlimited checks.', 'contact-forms-anti-spam' ); ?>
+                                                        </p>
+                                                        <a class="maspik-btn-self maspik-matrix-usage-near-cap-notice__btn" href="https://wpmaspik.com/#pro?utm_source=plugin-dashboard&utm_medium=matrix-usage-table" target="_blank" rel="noopener noreferrer">
+                                                            <?php esc_html_e( 'Upgrade to Pro', 'contact-forms-anti-spam' ); ?>
+                                                        </a>
+                                                    </div>
+                                                    <?php endif; ?>
+                                                    <div class="maspik-matrix-table-scroll maspik-matrix-table-scroll--wide maspik-matrix-usage-scroll">
+                                                    <table class="widefat maspik-ai-metrics-table maspik-matrix-data-table maspik-matrix-usage-table<?php echo $matrix_usage_is_pro ? ' maspik-matrix-usage-table--pro' : ''; ?>">
+                                                        <colgroup>
+                                                            <col class="maspik-matrix-usage-col-month" />
+                                                            <?php if ( $matrix_usage_is_pro ) : ?>
+                                                            <col span="3" class="maspik-matrix-usage-col-num" />
+                                                            <?php else : ?>
+                                                            <col span="5" class="maspik-matrix-usage-col-num" />
+                                                            <?php endif; ?>
+                                                        </colgroup>
                                                         <thead>
                                                             <tr>
-                                                                <th><?php esc_html_e( 'Month', 'contact-forms-anti-spam' ); ?></th>
-                                                                <th><?php esc_html_e( 'Checks', 'contact-forms-anti-spam' ); ?></th>
-                                                                <th><?php esc_html_e( 'Spam', 'contact-forms-anti-spam' ); ?></th>
-                                                                <th><?php esc_html_e( 'Spam rate', 'contact-forms-anti-spam' ); ?></th>
+                                                                <th scope="col"><?php esc_html_e( 'Month', 'contact-forms-anti-spam' ); ?></th>
+                                                                <?php if ( ! $matrix_usage_is_pro ) : ?>
+                                                                <th scope="col" class="maspik-matrix-usage-num"><?php esc_html_e( 'Attempts', 'contact-forms-anti-spam' ); ?></th>
+                                                                <?php endif; ?>
+                                                                <th scope="col" class="maspik-matrix-usage-num"><?php echo $matrix_usage_is_pro ? esc_html__( 'Checks', 'contact-forms-anti-spam' ) : esc_html__( 'API calls', 'contact-forms-anti-spam' ); ?></th>
+                                                                <?php if ( ! $matrix_usage_is_pro ) : ?>
+                                                                <th scope="col" class="maspik-matrix-usage-num"><?php esc_html_e( 'Skipped', 'contact-forms-anti-spam' ); ?></th>
+                                                                <?php endif; ?>
+                                                                <th scope="col" class="maspik-matrix-usage-num"><?php esc_html_e( 'Spam', 'contact-forms-anti-spam' ); ?></th>
+                                                                <th scope="col" class="maspik-matrix-usage-num"><?php esc_html_e( 'Rate', 'contact-forms-anti-spam' ); ?></th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             <?php foreach ( $months_data as $ym => $data ) :
-                                                                $checks = isset( $data['checks'] ) ? (int) $data['checks'] : 0;
-                                                                $spam   = isset( $data['spam'] ) ? (int) $data['spam'] : 0;
-                                                                $rate   = $checks > 0 ? round( ( $spam / $checks ) * 100 ) : 0;
+                                                                $checks        = isset( $data['checks'] ) ? (int) $data['checks'] : 0;
+                                                                $spam          = isset( $data['spam'] ) ? (int) $data['spam'] : 0;
+                                                                $limit_skipped = isset( $data['limit_skipped'] ) ? (int) $data['limit_skipped'] : 0;
+                                                                $attempts = $checks + $limit_skipped;
+                                                                if ( $checks > 0 ) {
+                                                                    $rate_pct     = round( ( $spam / $checks ) * 100, 1 );
+                                                                    $rate_display = esc_html( number_format_i18n( $rate_pct, 1 ) ) . '%';
+                                                                } else {
+                                                                    $rate_display = '—';
+                                                                }
                                                                 // Format month label from YYYYMM
                                                                 $year  = substr( $ym, 0, 4 );
                                                                 $month = substr( $ym, 4, 2 );
                                                                 $month_label = date_i18n( 'F Y', strtotime( $year . '-' . $month . '-01' ) );
+
+                                                                $quota_pct = ( $matrix_free_cap > 0 ) ? min( 100, max( 0, ( $checks / $matrix_free_cap ) * 100 ) ) : 0;
+                                                                $quota_tone = 'success';
+                                                                if ( $quota_pct >= 85 ) {
+                                                                    $quota_tone = 'danger';
+                                                                } elseif ( $quota_pct >= 60 ) {
+                                                                    $quota_tone = 'warning';
+                                                                }
+
+                                                                if ( ! $matrix_usage_is_pro && $matrix_free_cap > 0 ) {
+                                                                    $api_calls_cell  = '<div class="maspik-matrix-usage-quota">';
+                                                                    $api_calls_cell .= '<span class="maspik-matrix-usage-quota__label">';
+                                                                    $api_calls_cell .= sprintf(
+                                                                        /* translators: 1: number of API calls this month, 2: monthly free cap */
+                                                                        esc_html__( '%1$s / %2$s', 'contact-forms-anti-spam' ),
+                                                                        esc_html( number_format_i18n( $checks ) ),
+                                                                        esc_html( number_format_i18n( $matrix_free_cap ) )
+                                                                    );
+                                                                    $api_calls_cell .= '</span>';
+                                                                    $api_calls_cell .= '<span class="maspik-matrix-usage-quota__track" role="presentation"><span class="maspik-matrix-usage-quota__fill tone-' . esc_attr( $quota_tone ) . '" style="width: ' . esc_attr( $quota_pct ) . '%;"></span></span>';
+                                                                    $api_calls_cell .= '</div>';
+                                                                } else {
+                                                                    $api_calls_cell = esc_html( number_format_i18n( $checks ) );
+                                                                }
                                                             ?>
                                                             <tr>
-                                                                <td><?php echo esc_html( $month_label ); ?></td>
-                                                                <td><?php echo esc_html( number_format_i18n( $checks ) ); ?></td>
-                                                                <td><?php echo esc_html( number_format_i18n( $spam ) ); ?></td>
-                                                                <td><?php echo esc_html( $rate ); ?>%</td>
+                                                                <th scope="row" class="maspik-matrix-usage-month"><?php echo esc_html( $month_label ); ?></th>
+                                                                <?php if ( ! $matrix_usage_is_pro ) : ?>
+                                                                <td class="maspik-matrix-usage-num"><?php echo esc_html( number_format_i18n( $attempts ) ); ?></td>
+                                                                <?php endif; ?>
+                                                                <td class="maspik-matrix-usage-num maspik-matrix-usage-cell-quota"><?php echo $api_calls_cell; ?></td>
+                                                                <?php if ( ! $matrix_usage_is_pro ) : ?>
+                                                                <td class="maspik-matrix-usage-num"><?php echo esc_html( number_format_i18n( $limit_skipped ) ); ?></td>
+                                                                <?php endif; ?>
+                                                                <td class="maspik-matrix-usage-num"><?php echo esc_html( number_format_i18n( $spam ) ); ?></td>
+                                                                <td class="maspik-matrix-usage-num maspik-matrix-usage-rate"><?php echo $rate_display; ?></td>
                                                             </tr>
                                                             <?php endforeach; ?>
                                                         </tbody>
@@ -3023,6 +3209,9 @@ if ($tc_effective && !$tc_local_on) {
                                     align-items: center;
                                     gap: 7px;
                                 }
+                                #maspik-feedback-form .button.maspik-feedback-btn .dashicons {
+                                    color: #fff;
+                                }
                                 .button.maspik-feedback-btn:hover {
                                     background: #e06f0f;
                                     border-color: #e06f0f;
@@ -3083,7 +3272,7 @@ if ($tc_effective && !$tc_local_on) {
                                     <button data-id="registration" type="button"><?php esc_html_e('Registration', 'contact-forms-anti-spam'); ?></button>
                                     <button data-id="comment" type="button"><?php esc_html_e('Comment', 'contact-forms-anti-spam'); ?></button>
                                 </div>
-                                    <h3 class="maspik-test-form-head maspik-header"><?php esc_html_e('Playground - Form example', 'contact-forms-anti-spam'); ?></h3>    
+                                    <h3 class="maspik-test-form-head maspik-header"><?php esc_html_e('Form playground', 'contact-forms-anti-spam'); ?></h3>    
                                     <p  class="maspik-test-form-sub"><?php esc_html_e('This form allows you to test your entries to see if they will be blocked.', 'contact-forms-anti-spam'); ?>
                                 <div class="input-row row-text">
                                     <label><?php esc_html_e('Name (Text field)', 'contact-forms-anti-spam'); ?></label> <span
@@ -3737,27 +3926,45 @@ if ($tc_effective && !$tc_local_on) {
 
     <?php if (!cfes_is_supporting("general")) { ?>
 
-        <!-- Pro Popup -->
-        <div id="popup-background"></div>
-        <div id="pro-popup" class="maspik-popup-wrap">
-            <div class="maspik-popup">
-                <div class="maspik-popup-header">
-                    <h3><?php esc_html_e('Upgrade to Premium Version', 'contact-forms-anti-spam'); ?></h3>
-                    <button class="close-popup">&times;</button>
+        <!-- Pro upgrade modal (uses #popup-background from forms-warp) -->
+        <div id="pro-popup" class="maspik-popup-wrap maspik-pro-upgrade-popup" role="dialog" aria-modal="true" aria-labelledby="maspik-pro-upgrade-popup-title">
+            <div class="maspik-pro-upgrade-popup__panel">
+                <button type="button" class="maspik-pro-upgrade-popup__close close-popup" aria-label="<?php esc_attr_e('Close', 'contact-forms-anti-spam'); ?>">
+                    <span class="dashicons dashicons-no-alt"></span>
+                </button>
+                <div class="maspik-pro-upgrade-popup__hero">
+                    <span class="maspik-pro-upgrade-popup__badge"><?php esc_html_e('Pro', 'contact-forms-anti-spam'); ?></span>
+                    <h3 id="maspik-pro-upgrade-popup-title" class="maspik-pro-upgrade-popup__title"><?php esc_html_e('Better protection for your website', 'contact-forms-anti-spam'); ?></h3>
+                    <p class="maspik-pro-upgrade-popup__lead"><?php esc_html_e('This feature is only available for Pro users.', 'contact-forms-anti-spam'); ?></p>
                 </div>
-                <div class="maspik-popup-content">
-                    <p><?php esc_html_e('This feature is only available for Pro users.', 'contact-forms-anti-spam'); ?></p>
-                    <p><b><?php esc_html_e('Check out what you get with Maspik PRO:', 'contact-forms-anti-spam'); ?></b></p>
-                    <ul>
-                        <li><span class="dashicons dashicons-star-filled"></span> <?php esc_html_e('Custom spam API for multiple sites', 'contact-forms-anti-spam'); ?></li>
-                        <li><span class="dashicons dashicons-star-filled"></span> <?php esc_html_e('Country-based filtering', 'contact-forms-anti-spam'); ?></li>
-                        <li><span class="dashicons dashicons-star-filled"></span> <?php esc_html_e('Language detection & blocking', 'contact-forms-anti-spam'); ?></li>
-                        <li><span class="dashicons dashicons-star-filled"></span> <?php esc_html_e('Premium support', 'contact-forms-anti-spam'); ?></li>
+                <div class="maspik-pro-upgrade-popup__body">
+                    <p class="maspik-pro-upgrade-popup__features-title"><?php esc_html_e('What you get with Maspik PRO', 'contact-forms-anti-spam'); ?></p>
+                    <ul class="maspik-pro-upgrade-popup__features">
+                        <li>
+                            <span class="maspik-pro-upgrade-popup__feature-icon dashicons dashicons-yes-alt" aria-hidden="true"></span>
+                            <span class="maspik-pro-upgrade-popup__feature-text"><?php esc_html_e('Custom spam API for multiple sites', 'contact-forms-anti-spam'); ?></span>
+                        </li>
+                        <li>
+                            <span class="maspik-pro-upgrade-popup__feature-icon dashicons dashicons-yes-alt" aria-hidden="true"></span>
+                            <span class="maspik-pro-upgrade-popup__feature-text"><?php esc_html_e('Maspik Matrix — Unlimited checks', 'contact-forms-anti-spam'); ?></span>
+                        </li>
+                        <li>
+                            <span class="maspik-pro-upgrade-popup__feature-icon dashicons dashicons-yes-alt" aria-hidden="true"></span>
+                            <span class="maspik-pro-upgrade-popup__feature-text"><?php esc_html_e('Country-based filtering', 'contact-forms-anti-spam'); ?></span>
+                        </li>
+                        <li>
+                            <span class="maspik-pro-upgrade-popup__feature-icon dashicons dashicons-yes-alt" aria-hidden="true"></span>
+                            <span class="maspik-pro-upgrade-popup__feature-text"><?php esc_html_e('Language detection & blocking', 'contact-forms-anti-spam'); ?></span>
+                        </li>
+                        <li>
+                            <span class="maspik-pro-upgrade-popup__feature-icon dashicons dashicons-yes-alt" aria-hidden="true"></span>
+                            <span class="maspik-pro-upgrade-popup__feature-text"><?php esc_html_e('Premium support', 'contact-forms-anti-spam'); ?></span>
+                        </li>
                     </ul>
-                    <p><b><?php esc_html_e('Start blocking spam like a Pro!', 'contact-forms-anti-spam'); ?></b></p>
-                    <div class="maspik-popup-buttons">
-                        <a href="https://wpmaspik.com/?ref=getpro" target="_blank" class="maspik-btn-self"><?php esc_html_e('Upgrade Now', 'contact-forms-anti-spam'); ?></a>
-                    </div>
+                </div>
+                <div class="maspik-pro-upgrade-popup__footer">
+                    <a href="https://wpmaspik.com/?ref=getpro" target="_blank" rel="noopener noreferrer" class="maspik-pro-upgrade-popup__cta"><?php esc_html_e('Upgrade Now', 'contact-forms-anti-spam'); ?></a>
+                    <p class="maspik-pro-upgrade-popup__tagline"><?php esc_html_e('Start blocking spam like a Pro!', 'contact-forms-anti-spam'); ?></p>
                 </div>
             </div>
         </div>
@@ -3819,25 +4026,25 @@ if ($tc_effective && !$tc_local_on) {
 
             // Generic handler: any element with .maspik-accordion-link and data-accordion-target
             const accordionLinks = document.querySelectorAll('.maspik-accordion-link[data-accordion-target]');
-            console.log('[Maspik] Found accordion links:', accordionLinks.length);
+            //console.log('[Maspik] Found accordion links:', accordionLinks.length);
             accordionLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     const targetId = link.getAttribute('data-accordion-target');
-                    console.log('[Maspik] Click on accordion link', {
-                        text: link.textContent ? link.textContent.trim() : '',
-                        targetId
-                    });
+                    //console.log('[Maspik] Click on accordion link', {
+                    //    text: link.textContent ? link.textContent.trim() : '',
+                    //    targetId
+                    //});
 
                     if (!targetId) {
-                        console.warn('[Maspik] accordion link without data-accordion-target', link);
+                        //console.warn('[Maspik] accordion link without data-accordion-target', link);
                         return;
                     }
 
                     // Target can be an accordion item wrapper, or the header itself
                     let accordionItem = document.getElementById(targetId) || document.querySelector(`.${targetId}`);
                     if (!accordionItem) {
-                        console.error('[Maspik] No accordion item found for target', targetId);
+                        //console.error('[Maspik] No accordion item found for target', targetId);
                         return;
                     }
 
@@ -3850,7 +4057,7 @@ if ($tc_effective && !$tc_local_on) {
                     const rect = accordionItem.getBoundingClientRect();
                     const offset = 80;
                     const y = rect.top + window.pageYOffset - offset;
-                    console.log('[Maspik] Scrolling to', { top: y });
+                    //console.log('[Maspik] Scrolling to', { top: y });
                     window.scrollTo({ top: y, behavior: 'smooth' });
 
                     // Find header/content and open accordion if needed
@@ -3863,17 +4070,13 @@ if ($tc_effective && !$tc_local_on) {
                         content = header.nextElementSibling;
                     }
 
-                    console.log('[Maspik] Accordion parts', {
-                        hasHeader: !!header,
-                        hasContent: !!content,
-                        headerClasses: header ? header.className : null
-                    });
+                   
 
                     if (header) {
-                        console.log('[Maspik] Toggling accordion via header.click()');
+                        //console.log('[Maspik] Toggling accordion via header.click()');
                         header.click();
                     } else {
-                        console.warn('[Maspik] No accordion header found to toggle');
+                        //console.warn('[Maspik] No accordion header found to toggle');
                     }
                 });
             });

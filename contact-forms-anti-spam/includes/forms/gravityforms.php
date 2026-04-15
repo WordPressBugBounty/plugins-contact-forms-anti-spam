@@ -238,13 +238,6 @@ function add_maspikhp_html_to_gform($button, $form) {
         </div>';
     }
 
-    if (maspik_get_settings('maspikYearCheck')) {
-        $addhtml .= '<div class="gfield gfield--type-text maspik-field">
-            <label for="Maspik-currentYear" class="ginput_container_text">' . esc_html( maspik_honeypot_aria_label() ) . '</label>
-            <input size="1" type="text" autocomplete="off" aria-hidden="true" tabindex="-1" aria-label="' . esc_attr( maspik_honeypot_aria_label() ) . '" name="Maspik-currentYear" id="Maspik-currentYear" class="ginput_text" placeholder="">
-        </div>';
-    }
-
     return $addhtml . $button;
 }
 

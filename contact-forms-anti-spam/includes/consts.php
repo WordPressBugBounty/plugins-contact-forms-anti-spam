@@ -66,7 +66,6 @@ $MASPIK_FIELD_DISPLAY_NAMES = [
     "ip_blacklist" => "IP",
     "maspikHoneypot" => "Honeypot",
     "maspikTimeCheck" => "Time Check",
-    "maspikYearCheck" => "Year Check",
     "emoji_check" => "Emoji Check",
     
          // AI spam check fields (Beta feature - will be Pro-only in future versions)
