@@ -2732,3 +2732,22 @@ msgid ""
 msgstr ""
 "הדיווח שלך יעזור לנו לשפר את אלגוריתמי זיהוי הספאם שלנו ולמנוע התראות "
 "שוואדומות בעתיד."
+
+#: license/vendor/ideologix/dlm-wp-simple-checker/public/views/page.php
+msgid "How do I renew my license?"
+msgstr "איך מחדשים את הרישיון?"
+
+#: license/vendor/ideologix/dlm-wp-simple-checker/public/views/page.php
+msgid ""
+"In most cases your subscription renews automatically. If a credit card "
+"charge fails or there is a billing issue, renewal may not complete and your "
+"license can appear as Expired. Log in to <a href=\"%1$s\" target=\"_blank\" "
+"rel=\"noopener noreferrer\">My Account</a> on the WP Maspik site—there you "
+"can renew your license, update your payment method, or complete a manual "
+"payment."
+msgstr ""
+"ברוב המקרים הרישיון מתחדש אוטומטית. לעיתים חיוב בכרטיס האשראי נכשל או שמתעוררת "
+"בעיית גבייה, ולכן החידוש לא מתבצע והמצב עלול להיות Expired. יש להיכנס לעמוד "
+"<a href=\"%1$s\" target=\"_blank\" rel=\"noopener noreferrer\">החשבון שלי</a> "
+"באתר WP Maspik; שם, תחת החשבון, ניתן לחדש את הרישיון, לעדכן אמצעי תשלום או לשלם "
+"באופן ידני."

@@ -104,6 +104,30 @@ function maspik_comments_checker(array $data) {
     if ( $content !== '' ) {
         $comment_ai_fields['comment_content'] = $content;
     }
+
+    // Comment submission integrity: signal Matrix via plugin_spam_likelihood floor (5) when key
+    // hidden markers are missing from $_POST. Legitimate WP comment forms always submit:
+    //   - comment_post_ID  (hidden field, ID of the post being commented on)
+    //   - comment_parent   (hidden field, 0 for top-level or parent comment ID for replies)
+    //   - comment          (the comment body)
+    // A forged/direct POST that bypassed the rendered form usually omits at least one. Each
+    // failure mode forwards its own sentinel as the referrer value so the Matrix API can
+    // distinguish between them (see maspik_matrix_referrer_for_payload):
+    //   - `no_comment_post_id`  comment_post_ID missing/empty
+    //   - `no_comment_parent`   comment_parent not set in POST at all
+    //   - `no_comment_body`     comment field missing/empty
+    // Gated by NeedPageurl: only signal when the page-URL spam check is enabled in settings.
+    $comment_need_pageurl = efas_get_spam_api( 'NeedPageurl', 'bool' );
+    if ( $comment_need_pageurl && function_exists( 'maspik_matrix_raise_plugin_spam_likelihood_floor' ) ) {
+        $c_referrer = '';
+        if ( ! isset( $_POST['comment_post_ID'] ) || $_POST['comment_post_ID'] === '' ) {
+            $c_referrer = 'no_comment_post_id';
+        }
+        if ( $c_referrer !== '' ) {
+            maspik_matrix_raise_plugin_spam_likelihood_floor( 5, $c_referrer );
+        }
+    }
+
     // Country IP + honeypot use full $_POST; Matrix/AI uses whitelisted comment fields only.
     $GeneralCheck = GeneralCheck( $ip, $spam, $reason, $_POST, $comment_type, $comment_ai_fields );
     $spam = $GeneralCheck['spam'] ?? false;
@@ -356,7 +380,20 @@ function maspik_register_form_honeypot_check_in_woocommerce_registration($errors
         if ( is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
             return $errors;
         }
-        
+
+        // SAFEGUARD: only run when the WC register form was actually submitted.
+        // The `woocommerce_registration_errors` filter is also fired by every call
+        // to wc_create_new_customer() (programmatic / plugin-driven account creation
+        // e.g. cart-page integrations, subscriptions, imports). In those contexts
+        // $_POST has no register form fields, so the spam-key/honeypot check would
+        // always fail and produce false positives in the spam log.
+        // `register` is the WC register form submit button name; `woocommerce-register-nonce`
+        // is the standard nonce field for that form. Either presence indicates a real submission.
+        $is_register_submit = isset( $_POST['register'] ) || isset( $_POST['woocommerce-register-nonce'] );
+        if ( ! $is_register_submit ) {
+            return $errors;
+        }
+
         // CRITICAL: Skip validation if this registration is happening during checkout
         // During checkout, $_POST contains billing fields (billing_first_name, billing_email, etc.)
         // If we detect billing fields, this is checkout account creation - skip registration validation

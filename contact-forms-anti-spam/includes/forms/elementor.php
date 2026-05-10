@@ -187,7 +187,8 @@ function maspik_validation_process_elementor( $record, $ajax_handler ) {
     // Page URL: no longer block locally when referrer is missing — Matrix API gets plugin_spam_likelihood 9 (see GeneralCheck).
     $NeedPageurl = efas_get_spam_api('NeedPageurl', 'bool');
     if ( ! isset( $_POST['referrer'] ) && $NeedPageurl && function_exists( 'maspik_matrix_raise_plugin_spam_likelihood_floor' ) ) {
-        maspik_matrix_raise_plugin_spam_likelihood_floor( 9 );
+        $referrer = 'no_referrer';
+        maspik_matrix_raise_plugin_spam_likelihood_floor( 9  , $referrer);
     }
 
     // General Check

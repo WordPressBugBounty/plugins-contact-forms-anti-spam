@@ -2679,43 +2679,260 @@ body.rtl .maspik-pro-upgrade-popup__close {
   display: none !important;
 }
 
-.maspik-matrix-usage-card {
-  margin-top: 12px;
-  max-width: 640px;
-  background: #fff;
-  border-radius: 10px;
-  padding: 14px 16px;
-  border: 1px solid #ececec;
+.maspik-matrix-usage-card.maspik-security-summary {
+  margin-top: 14px;
+  max-width: 400px;
+  padding: 14px 16px 13px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #fafbfc;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.maspik-matrix-usage-card.is-limit-reached {
-  border-color: #f5c2c7;
-  background: #fff7f7;
+.maspik-security-summary--pro {
+  background: linear-gradient(152deg, #f8fafc 0%, #f1f5f9 52%, #eef2ff 100%);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
 }
 
-.maspik-matrix-usage-head {
+.maspik-matrix-usage-card.maspik-security-summary.is-limit-reached {
+  border-color: #fecaca;
+  background: #fffafa;
+  box-shadow: 0 1px 2px rgba(185, 28, 28, 0.06);
+}
+
+.maspik-security-summary__title {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.maspik-security-summary__status {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #166534;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 7px;
 }
 
-.maspik-matrix-usage-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1d2327;
+.maspik-security-summary__status.is-paused {
+  color: #b42318;
 }
 
-.maspik-matrix-usage-badge {
+.maspik-security-summary__status.is-quota-warn {
+  color: #b45309;
+}
+
+.maspik-security-summary__status.is-quota-critical {
+  color: #b42318;
+}
+
+.maspik-security-summary--pro .maspik-security-summary__status {
+  color: #024921;
+}
+
+.maspik-security-summary__status-shield {
   display: inline-flex;
   align-items: center;
-  border-radius: 999px;
-  font-size: 11px;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  color: #16a34a;
+  filter: drop-shadow(0 0 5px rgba(22, 163, 74, 0.35));
+}
+
+.maspik-security-summary__status-shield .dashicons {
+  width: 15px;
+  height: 15px;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.maspik-security-summary__status-shield--warn {
+  color: #d97706;
+  filter: drop-shadow(0 0 5px rgba(217, 119, 6, 0.3));
+}
+
+.maspik-security-summary__status-shield--critical {
+  color: #dc2626;
+  filter: drop-shadow(0 0 5px rgba(220, 38, 38, 0.28));
+}
+
+.maspik-security-summary--pro .maspik-security-summary__status-shield {
+  color: #f58823;
+  filter: drop-shadow(0 0 6px rgba(79, 70, 229, 0.35));
+}
+
+.maspik-security-summary__status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  flex-shrink: 0;
+  box-shadow:
+    0 0 0 2px rgba(239, 68, 68, 0.2),
+    0 0 8px rgba(239, 68, 68, 0.45);
+}
+
+.maspik-security-summary__activity {
+  margin: 0 0 13px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.maspik-security-summary__quota-note {
+  margin: 0 0 6px;
+  font-size: 13px;
   font-weight: 600;
-  padding: 4px 10px;
-  color: #475351;
-  background: #f6f7f7;
+  color: #b42318;
+}
+
+.maspik-security-summary__reset.maspik-matrix-usage-reset {
+  margin: 0 0 10px;
+}
+
+.maspik-security-summary__unlimited-pill {
+  margin: 2px 0 6px;
+}
+
+.maspik-security-summary__unlimited-pill-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+  padding: 11px 18px 11px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #024921;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.92) 0%, rgba(238, 242, 255, 0.88) 40%, rgba(224, 231, 255, 0.75) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 0 0 1px rgba(255, 255, 255, 0.65) inset,
+    0 6px 20px -10px rgba(79, 70, 229, 0.35);
+}
+
+.maspik-security-summary__unlimited-pill-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(79, 70, 229, 0.12);
+  color: #f58823;
+}
+
+.maspik-security-summary__unlimited-pill-icon .dashicons {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.maspik-security-summary__unlimited-pill-text {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.maspik-security-summary__unlimited-infinity {
+  font-size: 15px;
+  font-weight: 500;
+  opacity: 0.88;
+  line-height: 1;
+}
+
+.maspik-matrix-usage-progress.maspik-security-summary__progress {
+  margin-top: 0;
+  height: 5px;
+  background: rgba(226, 232, 240, 0.65);
+  border-radius: 999px;
+}
+
+.maspik-matrix-usage-progress.maspik-security-summary__progress .maspik-matrix-usage-progress-fill {
+  transition:
+    width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.maspik-matrix-usage-progress.maspik-security-summary__progress .maspik-matrix-usage-progress-fill.tone-success {
+  background: linear-gradient(90deg, #86efac 0%, #4ade80 100%);
+  box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.12) inset;
+}
+
+.maspik-matrix-usage-progress.maspik-security-summary__progress .maspik-matrix-usage-progress-fill.tone-warning {
+  background: linear-gradient(90deg, #fcd34d 0%, #fbbf24 100%);
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.15) inset;
+}
+
+.maspik-matrix-usage-progress.maspik-security-summary__progress .maspik-matrix-usage-progress-fill.tone-danger {
+  background: linear-gradient(90deg, #fca5a5 0%, #f87171 100%);
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.18) inset;
+}
+
+.maspik-security-summary__progress-label {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.maspik-security-summary__footer {
+  margin: 13px 0 0;
+  padding-top: 11px;
+  border-top: 1px solid #e8ecf0;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: #94a3b8;
+}
+
+.maspik-security-summary--pro .maspik-security-summary__footer {
+  border-top-color: rgba(99, 102, 241, 0.12);
+  color: rgba(49, 46, 129, 0.48);
+}
+
+.maspik-matrix-usage-upgrade.maspik-security-summary__upgrade + .maspik-security-summary__footer {
+  margin-top: 10px;
+}
+
+.maspik-matrix-usage-upgrade.maspik-security-summary__upgrade {
+  margin-top: 10px;
+  padding-top: 0;
+  gap: 8px 12px;
+}
+
+.maspik-security-summary__upgrade-hint {
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+  color: #64748b !important;
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.maspik-security-summary__upgrade .maspik-btn-self.maspik-security-summary__upgrade-btn {
+  font-size: 12px;
+  padding: 6px 14px;
+  line-height: 1.4;
 }
 
 .maspik-matrix-usage-limit-title {
@@ -2723,6 +2940,12 @@ body.rtl .maspik-pro-upgrade-popup__close {
   font-size: 13px;
   color: #b42318;
   font-weight: 600;
+}
+
+.maspik-matrix-usage-reset {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #6b7280;
 }
 
 .maspik-matrix-usage-summary,
@@ -2751,7 +2974,7 @@ body.rtl .maspik-pro-upgrade-popup__close {
   display: block;
   height: 100%;
   border-radius: 999px;
-  transition: width 0.2s ease;
+  transition: width 0.25s ease;
 }
 
 .maspik-matrix-usage-progress-fill.tone-success {
@@ -2797,7 +3020,8 @@ body.rtl .maspik-pro-upgrade-popup__close {
   color: #1d2327;
 }
 
-.maspik-matrix-usage-card a.maspik-btn-self,.maspik-matrix-usage-card a.maspik-btn-self:hover {
+.maspik-matrix-usage-card a.maspik-btn-self,
+.maspik-matrix-usage-card a.maspik-btn-self:hover {
   color: #fff;
 }
 
@@ -4160,6 +4384,19 @@ tr.row-entries.not-a-spam button.entry-action-btn.not-spam-action {
 .maspik-ai-toggle-wrap {
   margin-bottom: 20px;
 }
+.maspik-ai-toggle-wrap {
+  background: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.maspik-ai-toggle-wrap:hover {
+  background: #fbfbfc;
+  border-color: #dcdfe4;
+}
 
 .maspik-ai-toggle-wrap .maspik-toggle {
   margin-right: 10px;
@@ -4723,4 +4960,77 @@ tr.row-entries.not-a-spam button.entry-action-btn.not-spam-action {
 }
 .rtl .wrap.maspik-mainpage {
   margin: 20px 0px 20px 20px;
+}
+
+/* Import / Export page */
+#exp-imp-settings .maspik-import-export-head {
+  max-width: 980px;
+}
+
+#exp-imp-settings .maspik-import-export-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+  max-width: 980px;
+}
+
+#exp-imp-settings .maspik-import-export-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  padding: 22px;
+}
+
+#exp-imp-settings .maspik-import-export-card h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+
+#exp-imp-settings .maspik-import-export-card-desc {
+  margin: 0 0 18px;
+  color: #475569;
+  line-height: 1.55;
+}
+
+#exp-imp-settings #export-settings-form,
+#exp-imp-settings #import-settings-form {
+  margin: 0;
+}
+
+#exp-imp-settings #export-settings-form .submit,
+#exp-imp-settings #import-settings-form .submit {
+  margin: 0;
+  padding: 0;
+}
+
+#exp-imp-settings .maspik-import-export-file {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+#exp-imp-settings .maspik-import-export-file input[type="file"] {
+  width: 100%;
+  max-width: 100%;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 10px;
+}
+
+#exp-imp-settings .maspik-import-export-help {
+  margin: 0 0 16px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+@media (max-width: 782px) {
+  #exp-imp-settings .maspik-import-export-card {
+    padding: 18px;
+  }
 }

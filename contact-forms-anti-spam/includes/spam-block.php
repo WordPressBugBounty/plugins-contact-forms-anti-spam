@@ -90,13 +90,16 @@ function maspik_honeypot_aria_label() {
  * Raise the minimum plugin_spam_likelihood (1–9) sent to Matrix for this HTTP request.
  * Integrations call this instead of local blocking when checks move to the API.
  *
- * @param int $min_score Floor 1–9; combined with other hints via max().
+ * @param int         $min_score Floor 1–9; combined with other hints via max().
+ * @param string|null $referrer  Optional. When NeedPageurl is enabled, this is preferred for `maspik_referrer`
+ *                               over $_POST['referrer'] and HTTP Referer (see maspik_ai_check_submission).
  */
-function maspik_matrix_raise_plugin_spam_likelihood_floor( int $min_score ): void {
+function maspik_matrix_raise_plugin_spam_likelihood_floor( int $min_score, $referrer = null ): void {
     $min_score = max( 1, min( 9, $min_score ) );
     $prev      = isset( $GLOBALS['maspik_matrix_plugin_spam_likelihood_floor'] ) ? (int) $GLOBALS['maspik_matrix_plugin_spam_likelihood_floor'] : 1;
     $prev      = max( 1, min( 9, $prev ) );
     $GLOBALS['maspik_matrix_plugin_spam_likelihood_floor'] = max( $prev, $min_score );
+    $GLOBALS['maspik_matrix_plugin_spam_likelihood_referrer'] = $referrer ? $referrer : null;
 }
 
 /**
