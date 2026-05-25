@@ -2,6 +2,12 @@
 
 The WordPress.org-facing changelog is in `README.txt` under **== Changelog ==**. This file mirrors the same release notes for the repository.
 
+## 2.9.0 - 25/05/2026 ##
+* Security – Comprehensive security hardening across the plugin.
+* New feature – Spam log now supports column filtering and sorting with server-side pagination, making it easy to find specific entries even with thousands of records.
+* New feature – Support for Divi Contact Forms! Enable Divi support from the bottom of the Settings page.
+* Announcement – Maspik Matrix is now Inputgate – a standalone, cloud-based spam-blocking product built natively into Maspik. Inputgate analyses every form submission in real time using cloud intelligence, adding a powerful extra layer of protection on top of Maspik's local rules.
+
 ## 2.8.1 - 10/05/2026 ##
 * Improvement - License activation form UI/UX improved.
 * Improvement - Import and export options now work properly for all settings.

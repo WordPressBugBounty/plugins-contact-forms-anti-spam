@@ -109,7 +109,8 @@ $MASPIK_PLUGIN_MAP = [
     'Wordpress Comments' => 'comments',
     'Custom PHP Forms' => 'custom',
     'MetForm' => 'metform',
-    'BitForm' => 'bitform'
+    'BitForm' => 'bitform',
+    'Divi' => 'divi',
 ];
 
 
@@ -210,6 +211,7 @@ $MASPIK_IMPORT_OPTIONS = [
     'maspik_support_everestforms',
     'maspik_support_buddypress_forms',
     'maspik_support_helloplus_forms',
+    'maspik_support_divi_forms',
 
     // WooCommerce orders spam settings
     'maspik_woo_orders_error_message',
@@ -260,6 +262,7 @@ $MASPIK_DEFAULT_SETTINGS = [
     'maspik_support_helloplus_forms' => 'yes',
     'maspik_support_metform_forms' => 'yes',
     'maspik_support_bitform_forms' => 'yes',
+    'maspik_support_divi_forms' => 'no',
     
     // AI spam check / Matrix: on by default for new installs; mode 2 = IP only (no form content to API — privacy-first)
     'maspik_ai_enabled' => '1',

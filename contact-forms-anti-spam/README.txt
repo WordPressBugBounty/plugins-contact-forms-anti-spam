@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 7.0
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.8.1
+Stable tag: 2.9.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -136,6 +136,7 @@ Maspik integrates seamlessly with a wide range of popular form plugins and WordP
 * Fluent Forms
 * Bricks Builder Forms
 * Breakdance Builder Forms
+* Divi Contact Form (Divi theme or Divi Builder plugin)
 * BuddyPress
 * Bitforms
 * Metform
@@ -310,6 +311,7 @@ It currently supports:
 * Fluent Forms
 * Bricks Builder Forms
 * Breakdance Builder Forms
+* Divi Contact Form (Divi theme)
 * BuddyPress
 * Bitforms
 * Metform
@@ -400,6 +402,12 @@ Then Maspik is an excellent choice for your WordPress spam protection.
 7. Spam filter and statistics dashboard
 
 == Changelog ==
+
+= 2.9.0 - 25/05/2026 =
+* Security – Comprehensive security hardening across the plugin.
+* New feature – Spam log now supports column filtering and sorting with server-side pagination, making it easy to find specific entries even with thousands of records.
+* New feature – Support for Divi Contact Forms! Enable Divi support from the bottom of the Settings page.
+* Announcement – Maspik Matrix is now InputGate – a standalone, cloud-based spam-blocking product built natively into Maspik. [Learn more about InputGate](https://inputgate.cloud/?readme-file). InputGate analyzes every form submission in real time using cloud intelligence, adding a powerful extra layer of protection on top of Maspik's local rules.
 
 = 2.8.1 - 10/05/2026 =
 * Improvement – License activation form UI/UX improved.

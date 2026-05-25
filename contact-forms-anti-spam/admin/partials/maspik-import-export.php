@@ -57,9 +57,10 @@ if ( ! defined( 'WPINC' ) ) {
             <form id="import-settings-form" method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="Maspik_import_settings">
                 <?php wp_nonce_field('Maspik_import_settings_nonce', 'Maspik_import_settings_nonce_field'); ?>
-                <label class="maspik-import-export-file">
-                    <span><?php echo esc_html__('Choose JSON file', 'contact-forms-anti-spam'); ?></span>
-                    <input type="file" name="maspik-settings" accept=".json,application/json" required>
+                <label class="maspik-import-export-file" id="maspik-file-label">
+                    <span id="maspik-file-label-text"><?php echo esc_html__('Choose JSON file', 'contact-forms-anti-spam'); ?></span>
+                    <input type="file" name="maspik-settings" id="maspik-settings-file" accept=".json,application/json" required>
+                    <span class="maspik-file-name" id="maspik-file-name" aria-live="polite"></span>
                 </label>
                 <p class="maspik-import-export-help"><?php echo esc_html__('Supported file type: .json', 'contact-forms-anti-spam'); ?></p>
                 <?php submit_button(__('Import Settings', 'contact-forms-anti-spam'),'export-import-btn'); ?>
@@ -71,11 +72,20 @@ if ( ! defined( 'WPINC' ) ) {
 
 <script>
 (function () {
+    // Show selected filename when a file is chosen.
+    var fileInput = document.getElementById('maspik-settings-file');
+    var fileNameEl = document.getElementById('maspik-file-name');
+    if (fileInput && fileNameEl) {
+        fileInput.addEventListener('change', function () {
+            fileNameEl.textContent = this.files && this.files[0] ? this.files[0].name : '';
+        });
+    }
+
+    // Replace deprecated-import alert with an inline WP-style notice.
     try {
         var params = new URLSearchParams(window.location.search);
-        if (params.get('maspik_import_deprecated') !== '1') {
-            return;
-        }
+        if (params.get('maspik_import_deprecated') !== '1') { return; }
+
         var msg = <?php
             echo wp_json_encode(
                 sprintf(
@@ -88,11 +98,25 @@ if ( ! defined( 'WPINC' ) ) {
                 )
             );
         ?>;
-        window.alert(msg);
+
+        var notice = document.createElement('div');
+        notice.className = 'notice notice-warning is-dismissible maspik-deprecated-notice';
+        notice.innerHTML = '<p>' + msg + '</p>' +
+            '<button type="button" class="notice-dismiss">' +
+            '<span class="screen-reader-text"><?php esc_attr_e( 'Dismiss this notice.', 'contact-forms-anti-spam' ); ?></span>' +
+            '</button>';
+
+        var head = document.querySelector('.maspik-import-export-head');
+        if (head) { head.parentNode.insertBefore(notice, head); }
+
+        notice.querySelector('.notice-dismiss').addEventListener('click', function () {
+            notice.remove();
+        });
+
+        // Clean URL so notice doesn't re-appear on refresh.
         params.delete('maspik_import_deprecated');
         var search = params.toString();
-        var newUrl = window.location.pathname + (search ? '?' + search : '') + window.location.hash;
-        window.history.replaceState(null, '', newUrl);
+        window.history.replaceState(null, '', window.location.pathname + (search ? '?' + search : '') + window.location.hash);
     } catch (e) {}
 })();
 </script>

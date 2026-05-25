@@ -198,6 +198,13 @@ class Maspik {
         }
       }
 
+	  // Divi Contact Form module (theme or Divi Builder plugin)
+      if ( maspik_get_settings( 'maspik_support_divi_forms' ) != 'no' ) {
+        if ( function_exists( 'maspik_is_divi_active' ) && maspik_is_divi_active() ) {
+          require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/divi.php';
+        }
+      }
+
 	   // Custom Forms
 		if( maspik_get_settings( "maspik_support_custom_forms" ) != "no" ){ 
 			require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/custom.php';

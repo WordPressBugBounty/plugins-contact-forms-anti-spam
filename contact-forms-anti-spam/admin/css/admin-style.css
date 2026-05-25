@@ -1,3 +1,14 @@
+/* ── Design tokens ──────────────────────────────────────────────────────── */
+:root {
+  --maspik-orange:       #F48722;
+  --maspik-orange-dark:  #e06f0f;
+  --maspik-orange-light: #fff8f2;
+  --maspik-red:          #dc3545;
+  --maspik-red-dark:     #c82333;
+  --maspik-radius:       8px;
+  --maspik-radius-lg:    16px;
+}
+
 tr.hide {
   display: none;
 }
@@ -2681,17 +2692,19 @@ body.rtl .maspik-pro-upgrade-popup__close {
 
 .maspik-matrix-usage-card.maspik-security-summary {
   margin-top: 14px;
-  max-width: 400px;
-  padding: 14px 16px 13px;
-  border-radius: 12px;
+  max-width: 420px;
+  padding: 16px 18px 14px;
+  border-radius: 14px;
   border: 1px solid #e2e8f0;
-  background: #fafbfc;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  background: linear-gradient(165deg, #ffffff 0%, #f8fafc 55%, #f1f5f9 100%);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
 .maspik-security-summary--pro {
-  background: linear-gradient(152deg, #f8fafc 0%, #f1f5f9 52%, #eef2ff 100%);
-  border-color: rgba(99, 102, 241, 0.35);
+  background: linear-gradient(152deg, #fdf8f6 0%, #faf0eb 52%, #fceee8 100%);
+  border-color: rgba(196, 83, 43, 0.35);
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.04),
     0 0 0 1px rgba(255, 255, 255, 0.6) inset;
@@ -2769,8 +2782,8 @@ body.rtl .maspik-pro-upgrade-popup__close {
 }
 
 .maspik-security-summary--pro .maspik-security-summary__status-shield {
-  color: #f58823;
-  filter: drop-shadow(0 0 6px rgba(79, 70, 229, 0.35));
+  color: #c4532b;
+  filter: drop-shadow(0 0 6px rgba(196, 83, 43, 0.35));
 }
 
 .maspik-security-summary__status-dot {
@@ -2789,6 +2802,46 @@ body.rtl .maspik-pro-upgrade-popup__close {
   font-size: 13px;
   line-height: 1.45;
   color: #64748b;
+}
+
+.maspik-security-summary__metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  margin: 0 0 14px;
+}
+
+.maspik-security-summary__metric {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e8ecf4;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.maspik-security-summary__metric-value {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.maspik-security-summary__metric-label {
+  display: block;
+  margin-top: 3px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.maspik-security-summary__network-brand {
+  margin: 0 0 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #c4532b;
 }
 
 .maspik-security-summary__quota-note {
@@ -2817,12 +2870,12 @@ body.rtl .maspik-pro-upgrade-popup__close {
   font-weight: 600;
   letter-spacing: 0.02em;
   color: #024921;
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.92) 0%, rgba(238, 242, 255, 0.88) 40%, rgba(224, 231, 255, 0.75) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.22);
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.92) 0%, rgba(252, 238, 232, 0.88) 40%, rgba(250, 223, 212, 0.75) 100%);
+  border: 1px solid rgba(196, 83, 43, 0.22);
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.04),
     0 0 0 1px rgba(255, 255, 255, 0.65) inset,
-    0 6px 20px -10px rgba(79, 70, 229, 0.35);
+    0 6px 20px -10px rgba(196, 83, 43, 0.35);
 }
 
 .maspik-security-summary__unlimited-pill-icon {
@@ -2833,8 +2886,8 @@ body.rtl .maspik-pro-upgrade-popup__close {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: rgba(79, 70, 229, 0.12);
-  color: #f58823;
+  background: rgba(196, 83, 43, 0.12);
+  color: #c4532b;
 }
 
 .maspik-security-summary__unlimited-pill-icon .dashicons {
@@ -2907,8 +2960,8 @@ body.rtl .maspik-pro-upgrade-popup__close {
 }
 
 .maspik-security-summary--pro .maspik-security-summary__footer {
-  border-top-color: rgba(99, 102, 241, 0.12);
-  color: rgba(49, 46, 129, 0.48);
+  border-top-color: rgba(196, 83, 43, 0.12);
+  color: rgba(154, 61, 33, 0.55);
 }
 
 .maspik-matrix-usage-upgrade.maspik-security-summary__upgrade + .maspik-security-summary__footer {
@@ -3489,6 +3542,13 @@ body.rtl .maspik-pro-upgrade-popup__close {
   gap: 12px;
   margin: 24px 0;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Override global form.downloadform margin so it doesn't inflate the flex row */
+.spam-log-wrap .spam-log-button-wrapper form,
+.spam-log-wrap .spam-log-button-wrapper .downloadform {
+  margin: 0;
 }
 
 .spam-log-wrap .maspik-btn {
@@ -4408,6 +4468,219 @@ tr.row-entries.not-a-spam button.entry-action-btn.not-spam-action {
   font-size: 14px;
 }
 
+.maspik-ai-toggle-wrap.maspik-inputgate-toggle-wrap {
+  position: relative;
+  background: linear-gradient(152deg, #ffffff 0%, #fdf8f6 48%, #faf0eb 100%);
+  border-color: rgba(196, 83, 43, 0.22);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 10px 28px rgba(196, 83, 43, 0.06);
+}
+
+.maspik-inputgate-network-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-inline-start: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  vertical-align: middle;
+}
+
+.maspik-inputgate-network-badge--connected {
+  color: #166534;
+  background: rgba(22, 163, 74, 0.08);
+  border-color: rgba(22, 163, 74, 0.18);
+}
+
+.maspik-inputgate-network-badge--off {
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.08);
+  border-color: rgba(100, 116, 139, 0.16);
+}
+
+.maspik-inputgate-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18);
+}
+
+.maspik-inputgate-live-dot--off {
+  background: #94a3b8;
+  box-shadow: none;
+}
+
+.maspik-inputgate-live-dot--pulse {
+  animation: maspik-inputgate-live-pulse 2.4s ease-in-out infinite;
+}
+
+.maspik-inputgate-live-dot--warn {
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+@keyframes maspik-inputgate-live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.08);
+    opacity: 0.88;
+  }
+}
+
+.maspik-inputgate-live-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 12px;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #166534;
+}
+
+.maspik-inputgate-live-status--paused {
+  color: #b45309;
+}
+
+/* InputGate cloud protection panel (main options) */
+.maspik-inputgate-panel {
+  flex: 1;
+  min-width: 0;
+}
+
+.maspik-inputgate-panel__body {
+  margin-top: 2px;
+}
+
+.maspik-inputgate-panel__desc {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #334155;
+  max-width: 52em;
+}
+
+.maspik-inputgate-panel__desc--secondary {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.maspik-inputgate-panel__options-link {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.maspik-inputgate-panel__connection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #94a3b8;
+}
+
+.maspik-inputgate-panel__connection-text {
+  color: #94a3b8;
+}
+
+.maspik-inputgate-panel__connection-text::after {
+  content: "·";
+  margin-inline-start: 10px;
+  color: #cbd5e1;
+}
+
+.maspik-inputgate-panel__site-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #64748b !important;
+  text-decoration: none;
+}
+
+.maspik-inputgate-panel__site-link:hover,
+.maspik-inputgate-panel__site-link:focus {
+  color: #c4532b !important;
+  text-decoration: underline;
+}
+
+.maspik-inputgate-panel__site-link .dashicons {
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.maspik-inputgate-panel__privacy {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+
+.maspik-inputgate-icon {
+  flex-shrink: 0;
+}
+
+.maspik-inputgate-level-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(196, 83, 43, 0.22);
+  background: linear-gradient(135deg, rgba(253, 246, 243, 0.95) 0%, rgba(252, 238, 232, 0.85) 100%);
+  box-shadow: 0 1px 2px rgba(196, 83, 43, 0.08);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: #a84323;
+  white-space: nowrap;
+}
+
+.maspik-inputgate-level-badge.maspik-matrix-mode-badge--catch-50 {
+  border-color: rgba(100, 116, 139, 0.25);
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #475569;
+}
+
+.maspik-inputgate-level-badge.maspik-matrix-mode-badge--catch-65 {
+  border-color: rgba(196, 83, 43, 0.2);
+  background: linear-gradient(135deg, #fdf6f3 0%, #fceee8 100%);
+  color: #b84a2a;
+}
+
+.maspik-inputgate-level-badge.maspik-matrix-mode-badge--catch-90 {
+  border-color: rgba(196, 83, 43, 0.28);
+  background: linear-gradient(135deg, #fceee8 0%, #fadfd4 100%);
+  color: #9a3d21;
+}
+
 .maspik-matrix-main-heading {
   display: flex;
   flex-wrap: wrap;
@@ -5034,3 +5307,628 @@ tr.row-entries.not-a-spam button.entry-action-btn.not-spam-action {
     padding: 18px;
   }
 }
+
+/* ============================================================
+   Spam Log — False Positive modal (moved from inline styles)
+   ============================================================ */
+
+.fp-modal-content  { max-width: 500px; }
+.fp-modal-inner    { padding: 30px; text-align: center; }
+.fp-modal-header   { margin-bottom: 20px; }
+
+.fp-icon {
+  font-size: 48px; width: 48px; height: 48px;
+  color: #2271b1; margin-bottom: 10px; display: block;
+}
+
+.fp-modal-title { margin: 0; font-size: 22px; font-weight: 600; color: #1d2327; }
+.fp-modal-body  { margin-bottom: 25px; text-align: left; }
+.fp-main-message { font-size: 15px; line-height: 1.6; color: #1d2327; margin: 0 0 12px; }
+.fp-sub-message  { font-size: 13px; line-height: 1.5; color: #646970; margin: 0; }
+
+.fp-modal-feedback { text-align: center; padding: 20px 0; }
+.fp-modal-feedback .fp-feedback-icon {
+  font-size: 48px; width: 48px; height: 48px;
+  color: #00a32a; display: block; margin: 0 auto 12px;
+}
+.fp-modal-feedback p { margin: 0; font-size: 1.05em; color: #1d2327; }
+
+.fp-modal-actions { display: flex; flex-direction: column; gap: 10px; }
+
+.fp-button {
+  padding: 12px 20px; font-size: 14px; font-weight: 500;
+  border: none; border-radius: 4px; cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; text-decoration: none;
+}
+.fp-button .dashicons { font-size: 18px; width: 18px; height: 18px; }
+
+.fp-button-primary             { background-color: #2271b1; color: #fff; }
+.fp-button-primary:hover       { background-color: #135e96; color: #fff; }
+.fp-button-secondary           { background-color: #f0f0f1; color: #2c3338; }
+.fp-button-secondary:hover     { background-color: #dcdcde; color: #2c3338; }
+.fp-button-link                { background: transparent; color: #646970; padding: 8px; font-weight: 400; }
+.fp-button-link:hover          { color: #2271b1; background: transparent; }
+
+.log-warp tbody { max-width: 100%; }
+
+/* ============================================================
+   Spam Log — filter bar, sort headers, pagination
+   ============================================================ */
+
+/* ── Controls card ─────────────────────────────────────────── */
+.spam-log-wrap .maspik-log-controls {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px 24px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f1;
+}
+
+.spam-log-wrap .maspik-log-controls-top {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ── Filter groups (label + input stacked) ─────────────────── */
+.spam-log-wrap .maspik-log-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  flex: 1;
+}
+
+.spam-log-wrap .maspik-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Reset fieldset defaults for the date-range group */
+fieldset.maspik-filter-group {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+fieldset.maspik-filter-group legend.maspik-filter-label {
+  float: left; /* legend participates in normal flow when floated */
+  width: 100%;
+  padding: 0;
+  margin-bottom: 4px;
+}
+
+.spam-log-wrap .maspik-filter-group--date .maspik-date-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.spam-log-wrap .maspik-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #8c8f94;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.spam-log-wrap .maspik-filter-label .dashicons {
+  font-size: 13px;
+  width: 13px;
+  height: 13px;
+  color: #b0b3b8;
+}
+
+/* ── Filter inputs ─────────────────────────────────────────── */
+.spam-log-wrap .maspik-filter-input {
+  height: 36px;
+  padding: 0 11px;
+  border: 1.5px solid #dde0e3;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #2c3338;
+  background: #fafbfc;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) inset;
+  min-width: 0;
+}
+
+.spam-log-wrap .maspik-filter-input:focus {
+  outline: none;
+  border-color: #F48722;
+  box-shadow: 0 0 0 3px rgba(244, 135, 34, 0.12);
+  background: #fff;
+}
+
+.spam-log-wrap .maspik-filter-input.has-value {
+  border-color: #F48722;
+  background: #fffaf5;
+}
+
+.spam-log-wrap #maspik-filter-type  { width: 140px; }
+.spam-log-wrap #maspik-filter-ip    { width: 130px; }
+.spam-log-wrap #maspik-filter-country { width: 110px; }
+.spam-log-wrap #maspik-filter-source  { width: 120px; }
+.spam-log-wrap .maspik-date-input   { width: 148px; }
+
+.spam-log-wrap select.maspik-filter-input {
+  padding-right: 28px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238c8f94' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+
+.spam-log-wrap .maspik-date-sep {
+  color: #adb5bd;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* ── Clear button ──────────────────────────────────────────── */
+.spam-log-wrap .maspik-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 14px;
+  height: 36px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1.5px solid #dde0e3;
+  background: #f6f7f7;
+  color: #646970;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.spam-log-wrap .maspik-clear-btn:hover {
+  border-color: #F48722;
+  color: #F48722;
+  background: #fff8f2;
+}
+
+.spam-log-wrap .maspik-clear-btn .dashicons {
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+}
+
+/* ── Toolbar row ───────────────────────────────────────────── */
+.spam-log-wrap .maspik-log-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f1;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.spam-log-wrap .maspik-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spam-log-wrap .maspik-per-page-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #646970;
+  cursor: default;
+}
+
+.spam-log-wrap .maspik-per-page-label .dashicons {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  color: #adb5bd;
+}
+
+.spam-log-wrap .maspik-per-page-select {
+  height: 32px;
+  padding: 0 28px 0 10px;
+  border: 1.5px solid #dde0e3;
+  border-radius: 8px;
+  font-size: 13px;
+  background: #fafbfc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238c8f94' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 9px center;
+  appearance: none;
+  -webkit-appearance: none;
+  color: #2c3338;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.spam-log-wrap .maspik-per-page-select:focus {
+  outline: none;
+  border-color: #F48722;
+}
+
+/* ── Loading spinner ───────────────────────────────────────── */
+.spam-log-wrap .maspik-log-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.spam-log-wrap .maspik-spinner {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f0f0f1;
+  border-top-color: #F48722;
+  border-radius: 50%;
+  animation: maspik-spin 0.65s linear infinite;
+}
+
+@keyframes maspik-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Dim table while loading */
+#maspik-log-table-wrap {
+  transition: opacity 0.2s ease;
+}
+
+/* ── Sortable column headers ───────────────────────────────── */
+.spam-log-wrap .maspik-log-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 24px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.spam-log-wrap .maspik-log-table th.sortable:hover {
+  background: #f0f4f8;
+  color: #F48722;
+}
+
+.spam-log-wrap .maspik-log-table th.sort-active {
+  color: #F48722;
+  background: #fff8f2;
+}
+
+.spam-log-wrap .maspik-log-table th .sort-indicator {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+}
+
+.spam-log-wrap .maspik-log-table th.sortable:hover .sort-indicator {
+  opacity: 0.8;
+}
+
+.spam-log-wrap .maspik-log-table th.sort-active .sort-indicator {
+  opacity: 1;
+  color: #F48722;
+}
+
+/* ── Empty cell ────────────────────────────────────────────── */
+.spam-log-wrap .maspik-log-table .maspik-log-empty {
+  text-align: center;
+  color: #8c8f94;
+  padding: 48px 16px;
+  font-size: 14px;
+}
+
+/* ── Pagination bar ────────────────────────────────────────── */
+.spam-log-wrap .maspik-log-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 2px;
+  margin-top: 4px;
+}
+
+.spam-log-wrap .maspik-pagination-info {
+  font-size: 13px;
+  color: #8c8f94;
+}
+
+.spam-log-wrap .maspik-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.spam-log-wrap .maspik-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1.5px solid #dde0e3;
+  background: #fff;
+  color: #2c3338;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-weight: 500;
+}
+
+.spam-log-wrap .maspik-page-btn:not(:disabled):hover {
+  border-color: #F48722;
+  color: #F48722;
+  background: #fff8f2;
+}
+
+.spam-log-wrap .maspik-page-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.spam-log-wrap .maspik-page-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #2c3338;
+  margin: 0 4px;
+}
+
+.spam-log-wrap .maspik-page-input {
+  width: 52px;
+  height: 34px;
+  text-align: center;
+  border: 1.5px solid #dde0e3;
+  border-radius: 8px;
+  font-size: 13px;
+  padding: 0 4px;
+  color: #2c3338;
+  -moz-appearance: textfield;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.spam-log-wrap .maspik-page-input::-webkit-inner-spin-button,
+.spam-log-wrap .maspik-page-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.spam-log-wrap .maspik-page-input:focus {
+  outline: none;
+  border-color: #F48722;
+  box-shadow: 0 0 0 3px rgba(244, 135, 34, 0.12);
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .spam-log-wrap #maspik-filter-ip      { width: 110px; }
+  .spam-log-wrap #maspik-filter-country { width: 95px;  }
+  .spam-log-wrap #maspik-filter-source  { width: 105px; }
+  .spam-log-wrap .maspik-date-input     { width: 130px; }
+}
+
+@media (max-width: 782px) {
+  .spam-log-wrap .maspik-log-controls-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .spam-log-wrap .maspik-log-filters {
+    flex-direction: column;
+  }
+  .spam-log-wrap .maspik-filter-group {
+    width: 100%;
+  }
+  .spam-log-wrap .maspik-filter-input,
+  .spam-log-wrap #maspik-filter-type,
+  .spam-log-wrap #maspik-filter-ip,
+  .spam-log-wrap #maspik-filter-country,
+  .spam-log-wrap #maspik-filter-source {
+    width: 100%;
+  }
+  .spam-log-wrap .maspik-date-input {
+    flex: 1;
+  }
+  .spam-log-wrap .maspik-clear-btn {
+    align-self: flex-start;
+  }
+  .spam-log-wrap .maspik-log-pagination {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ============================================================
+   Toast notifications (shared across all admin pages)
+   ============================================================ */
+
+.maspik-toast-wrap {
+  position: fixed;
+  top: 48px;
+  right: 20px;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.maspik-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: var(--maspik-radius);
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  max-width: 360px;
+  line-height: 1.4;
+}
+
+.maspik-toast--visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.maspik-toast--success { background: #1e7e34; }
+.maspik-toast--error   { background: var(--maspik-red); }
+.maspik-toast--warning { background: var(--maspik-orange); }
+.maspik-toast--info    { background: #2271b1; }
+
+.maspik-toast .dashicons {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Unified confirm modal (replaces native confirm() dialogs)
+   ============================================================ */
+
+#maspik-confirm-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999998;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+
+#maspik-confirm-modal.is-open {
+  display: flex;
+}
+
+.maspik-confirm-box {
+  background: #fff;
+  border-radius: var(--maspik-radius-lg);
+  padding: 32px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+  text-align: center;
+  animation: maspik-modal-in 0.2s ease;
+}
+
+@keyframes maspik-modal-in {
+  from { transform: scale(0.94); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.maspik-confirm-box .maspik-confirm-icon {
+  font-size: 44px;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 16px;
+  display: block;
+}
+
+.maspik-confirm-box .maspik-confirm-icon--warn { color: var(--maspik-orange); }
+.maspik-confirm-box .maspik-confirm-icon--danger { color: var(--maspik-red); }
+
+.maspik-confirm-box p {
+  margin: 0 0 24px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #2c3338;
+}
+
+.maspik-confirm-box .maspik-confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.maspik-confirm-btn {
+  padding: 10px 22px;
+  border-radius: var(--maspik-radius);
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.maspik-confirm-btn--ok {
+  background: var(--maspik-orange);
+  color: #fff;
+}
+.maspik-confirm-btn--ok:hover   { background: var(--maspik-orange-dark); }
+
+.maspik-confirm-btn--ok-danger {
+  background: var(--maspik-red);
+  color: #fff;
+}
+.maspik-confirm-btn--ok-danger:hover { background: var(--maspik-red-dark); }
+
+.maspik-confirm-btn--cancel {
+  background: #f0f0f1;
+  color: #2c3338;
+}
+.maspik-confirm-btn--cancel:hover { background: #dcdcde; }
+
+/* ── AI secret inline feedback ───────────────────────────────── */
+.maspik-secret-feedback {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-left: 10px;
+}
+.maspik-secret-feedback--success { color: #1e7e34; }
+.maspik-secret-feedback--error   { color: var(--maspik-red, #dc3545); }
+
+/* ── Import: selected filename display ───────────────────────── */
+.maspik-import-export-file .maspik-file-name {
+  font-weight: 400;
+  color: #646970;
+  font-size: 12px;
+  display: block;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+}
+
+/* ── Deprecated import notice ─────────────────────────────────── */
+.maspik-deprecated-notice {
+  margin: 12px 0;
+}
+
+/* ── Modal close button accessible ───────────────────────────── */
+.modal .close-button,
+.maspik-modal .maspik-modal-close {
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* ── Reset Log confirmation modal inside spam log ─────────────── */
+#reset-log-confirm-modal .maspik-confirm-icon { color: var(--maspik-red); }

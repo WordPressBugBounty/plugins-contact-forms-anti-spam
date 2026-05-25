@@ -160,7 +160,7 @@ function GeneralCheck($ip, &$spam, &$reason, $post = "", $form = false, $content
 
     // Check country blacklist only if is pro user
     if( cfes_is_supporting("country_location") && !empty($country_blacklist) ){ 
-        $response = wp_remote_get("https://free.freeipapi.com/api/json/" . $ip);
+        $response = wp_remote_get( 'https://free.freeipapi.com/api/json/' . rawurlencode( $ip ) );
         if ( !is_wp_error($response) && wp_remote_retrieve_response_code($response) == 200 ) {
             $body = wp_remote_retrieve_body($response);
             $data = json_decode($body, true);
