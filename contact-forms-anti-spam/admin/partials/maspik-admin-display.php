@@ -1097,26 +1097,23 @@ if ($tc_effective && !$tc_local_on) {
                                             </h4>
                                             <div class="maspik-inputgate-panel__body">
                                                 <p class="maspik-inputgate-panel__desc">
-                                                    <?php esc_html_e( 'Advanced cloud-based spam and abuse detection powered by the InputGate security network.', 'contact-forms-anti-spam' ); ?>
-                                                </p>
-                                                <p class="maspik-inputgate-panel__desc maspik-inputgate-panel__desc--secondary">
-                                                    <?php esc_html_e( 'Analyzes IP reputation, request patterns, automation signals, AI scoring, and attack behavior in real time.', 'contact-forms-anti-spam' ); ?>
+                                                    <?php
+                                                    echo sprintf(
+                                                        /* translators: %1$s: opening InputGate link tag, %2$s: closing link tag */
+                                                        esc_html__( 'Cloud spam protection built into MASPIK by %1$sInputGate%2$s — scores every submission in real time using IP reputation, patterns, and AI.', 'contact-forms-anti-spam' ),
+                                                        '<a href="https://inputgate.cloud/?utm_source=plugin-dashboard&utm_medium=inputgate-panel-link" target="_blank" rel="noopener noreferrer">',
+                                                        '</a>'
+                                                    );
+                                                    ?>
                                                     <a href="#maspik-matrix-section" class="maspik-accordion-link maspik-inputgate-panel__options-link" data-accordion-target="maspik-matrix-section">
                                                         <?php esc_html_e( 'Protection settings', 'contact-forms-anti-spam' ); ?>
                                                     </a>
                                                 </p>
-                                                <p class="maspik-inputgate-panel__connection">
-                                                    <span class="maspik-inputgate-panel__connection-text"><?php esc_html_e( 'Connected through MASPIK', 'contact-forms-anti-spam' ); ?></span>
-                                                    <a href="https://inputgate.cloud/?utm_source=plugin-dashboard&utm_medium=inputgate-panel-link" class="maspik-inputgate-panel__site-link" target="_blank" rel="noopener noreferrer">
-                                                        <?php esc_html_e( 'Explore InputGate', 'contact-forms-anti-spam' ); ?>
-                                                        <span class="dashicons dashicons-external" aria-hidden="true"></span>
-                                                    </a>
-                                                </p>
                                             <p class="maspik-matrix-privacy-note maspik-inputgate-panel__privacy">
-                                            <?php esc_html_e( 'Limited request data may be sent to InputGate for analysis depending on protection level.', 'contact-forms-anti-spam' ); 
+                                            <?php esc_html_e( 'Limited request data may be sent to InputGate for analysis depending on protection level.', 'contact-forms-anti-spam' );
                                             echo ' ';
                                             echo sprintf(
-                                                esc_html__( 'See our privacy policy %shere%s.', 'contact-forms-anti-spam' ),
+                                                esc_html__( '%sPrivacy policy%s.', 'contact-forms-anti-spam' ),
                                                 '<a href="https://wpmaspik.com/maspik-matrix-privacy-data-processing/?utm_source=plugin-dashboard&utm_medium=inputgate-privacy-note" target="_blank">',
                                                 '</a>'
                                             ); ?>
@@ -1172,22 +1169,8 @@ if ($tc_effective && !$tc_local_on) {
                                                 $card_classes .= ' maspik-security-summary--quota-critical';
                                             }
                                             ?>
-                                            <?php if ( $ai_effective || $ai_local_on ) : ?>
-                                                <?php if ( ! $is_limit_reached ) : ?>
-                                                    <p class="maspik-inputgate-live-status" role="status">
-                                                        <span class="maspik-inputgate-live-dot maspik-inputgate-live-dot--pulse" aria-hidden="true"></span>
-                                                        <?php esc_html_e( 'Real-time protection active', 'contact-forms-anti-spam' ); ?>
-                                                    </p>
-                                                <?php else : ?>
-                                                    <p class="maspik-inputgate-live-status maspik-inputgate-live-status--paused" role="status">
-                                                        <span class="maspik-inputgate-live-dot maspik-inputgate-live-dot--warn" aria-hidden="true"></span>
-                                                        <?php esc_html_e( 'Cloud network quota reached', 'contact-forms-anti-spam' ); ?>
-                                                    </p>
-                                                <?php endif; ?>
-                                            <?php endif; ?>
                                             <div class="maspik-inputgate-panel__network-status" data-inputgate-region="network-status">
                                             <div class="<?php echo esc_attr( $card_classes ); ?>">
-                                                <div class="maspik-security-summary__title"><?php esc_html_e( 'Network Status', 'contact-forms-anti-spam' ); ?></div>
 
                                                 <p class="maspik-security-summary__status <?php echo $is_limit_reached ? 'is-paused' : ''; ?> <?php echo $is_quota_warn_band ? 'is-quota-warn' : ''; ?> <?php echo $is_quota_critical_band ? 'is-quota-critical' : ''; ?>">
                                                     <?php if ( $is_limit_reached ) : ?>
@@ -1274,9 +1257,6 @@ if ($tc_effective && !$tc_local_on) {
                                                     </div>
                                                 <?php endif; ?>
 
-                                                <p class="maspik-security-summary__network-brand">
-                                                    <?php esc_html_e( 'Protected by the InputGate network', 'contact-forms-anti-spam' ); ?>
-                                                </p>
 
                                                 <p class="maspik-security-summary__footer">
                                                     <?php

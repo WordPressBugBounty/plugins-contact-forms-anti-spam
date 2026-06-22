@@ -323,8 +323,8 @@ function maspik_divi_check_single_field( array $row, $val, array $datatocheck ) 
 			// Divi sometimes uses field_type input with phone/tel in the field id.
 			if ( false !== strpos( $fid_lower, 'phone' ) || false !== strpos( $fid_lower, 'tel' ) || false !== strpos( $oid_lower, 'phone' ) ) {
 				$checkTelForSpam = checkTelForSpam( $val );
-				$valid           = isset( $checkTelForSpam['valid'] ) ? $checkTelForSpam['valid'] : 'yes';
-				if ( 'yes' !== $valid ) {
+				$valid           = isset( $checkTelForSpam['valid'] ) ? $checkTelForSpam['valid'] : true;
+				if ( ! $valid ) {
 					$reason   = isset( $checkTelForSpam['reason'] ) ? $checkTelForSpam['reason'] : '';
 					$spam_lbl = isset( $checkTelForSpam['label'] ) ? $checkTelForSpam['label'] : '';
 					$spam_val = isset( $checkTelForSpam['option_value'] ) ? $checkTelForSpam['option_value'] : '';
@@ -352,8 +352,8 @@ function maspik_divi_check_single_field( array $row, $val, array $datatocheck ) 
 		case 'tel':
 		case 'phone':
 			$checkTelForSpam = checkTelForSpam( $val );
-			$valid           = isset( $checkTelForSpam['valid'] ) ? $checkTelForSpam['valid'] : 'yes';
-			if ( 'yes' !== $valid ) {
+			$valid           = isset( $checkTelForSpam['valid'] ) ? $checkTelForSpam['valid'] : true;
+			if ( ! $valid ) {
 				$reason   = isset( $checkTelForSpam['reason'] ) ? $checkTelForSpam['reason'] : '';
 				$spam_lbl = isset( $checkTelForSpam['label'] ) ? $checkTelForSpam['label'] : '';
 				$spam_val = isset( $checkTelForSpam['option_value'] ) ? $checkTelForSpam['option_value'] : '';

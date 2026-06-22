@@ -5,7 +5,7 @@ Tags: spam, blacklist, anti spam, Honeypot, antispam
 Tested up to: 7.0
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 2.9.0
+Stable tag: 2.9.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -402,6 +402,9 @@ Then Maspik is an excellent choice for your WordPress spam protection.
 7. Spam filter and statistics dashboard
 
 == Changelog ==
+
+= 2.9.1 - 22/06/2026 =
+* Bug fix – Divi Contact Forms: phone fields were wrongly detected as spam in some cases.
 
 = 2.9.0 - 25/05/2026 =
 * Security – Comprehensive security hardening across the plugin.
