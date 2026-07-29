@@ -2400,6 +2400,11 @@ if ($tc_effective && !$tc_local_on) {
 
                                                 <script>
                                                  jQuery(document).ready(function($) {
+                                                     // Escape untrusted text before inserting into HTML strings.
+                                                     function escapeHtml(str) {
+                                                         return $('<div>').text(String(str)).html();
+                                                     }
+
                                                      // Toggle AI logs table
                                                      $('.maspik-ai-logs-table-button').on('click', function() {
                                                          var $container = $('.maspik-ai-logs-table-container');
@@ -2437,7 +2442,7 @@ if ($tc_effective && !$tc_local_on) {
                                                          
                                                          for (var key in fields) {
                                                              if (fields.hasOwnProperty(key)) {
-                                                                 fieldsHtml += '<tr><td><strong>' + key + '</strong></td><td>' + fields[key] + '</td></tr>';
+                                                                 fieldsHtml += '<tr><td><strong>' + escapeHtml(key) + '</strong></td><td>' + escapeHtml(fields[key]) + '</td></tr>';
                                                              }
                                                          }
                                                          

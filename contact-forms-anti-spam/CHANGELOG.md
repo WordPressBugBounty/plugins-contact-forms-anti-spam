@@ -2,6 +2,10 @@
 
 The WordPress.org-facing changelog is in `README.txt` under **== Changelog ==**. This file mirrors the same release notes for the repository.
 
+## 2.9.2 - 29/07/2026 ##
+* Security - Improved security for the InputGate logs. Thanks to Patchstack.
+* New - Added support for Elementor forms when using the PRO Elements plugin.
+
 ## 2.9.1 - 22/06/2026 ##
 * Bug fix - Divi Contact Forms: phone fields were wrongly logged and blocked as spam (e.g. "Empty formats" or "Wildcard pattern match") even when the phone number passed validation. Valid phone submissions now go through correctly.
 

@@ -107,8 +107,14 @@ class Maspik {
       	require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/playground.php';
       
       if( maspik_get_settings( "maspik_support_Elementor_forms" ) != "no"  ){
-	// if elementor pro active
-        if ( maspik_is_plugin_active( 'elementor-pro/elementor-pro.php' ) ) {
+	// Capability check: load the integration when either Elementor Forms module exists —
+	//   - \ElementorPro\Modules\Forms\Module      → classic forms (fires `elementor_pro/forms/validation`, used by elementor.php)
+	//   - \ElementorPro\Modules\AtomicForm\Module → atomic forms  (fires `elementor_pro/atomic_forms/spam_check`, used by elementor-atomic-forms.php)
+	// This matches Elementor Pro and any namespace-preserving fork (e.g. the GPL "PRO Elements" plugin), is more
+	// precise than checking for the plugin itself, and stays correct if a future Elementor ships only one of the two
+	// modules. The Elementor Pro autoloader (registered on plugins_loaded) resolves these on demand, so it is
+	// reliable here on `init`. Each integration file self-guards at runtime, so loading both together is safe.
+        if ( class_exists( '\ElementorPro\Modules\Forms\Module' ) || class_exists( '\ElementorPro\Modules\AtomicForm\Module' ) ) {
           require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/elementor.php';
           require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/forms/elementor-atomic-forms.php';
         }
