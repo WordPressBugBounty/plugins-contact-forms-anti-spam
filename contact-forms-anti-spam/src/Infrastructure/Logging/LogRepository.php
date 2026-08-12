@@ -1,0 +1,383 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Maspik\Infrastructure\Logging;
+
+use Maspik\Domain\Model\Submission;
+use Maspik\Domain\Model\Violation;
+use Maspik\Infrastructure\Geo\FreeIpApiResolver;
+use Maspik\Infrastructure\Settings\Settings;
+
+/**
+ * The only class that touches wp_maspik_spam_logs. Schema unchanged from v2.
+ *
+ * The log record is optimized for the Logs "inbox": enough to answer
+ * "was this a real visitor blocked by mistake?" in seconds. Submitted fields
+ * and the page URL live in a JSON envelope in spam_detail; country is resolved
+ * (cached) into the existing spam_country column.
+ */
+final class LogRepository
+{
+    /** Highest log id the Logs screen has shown (shared, not per user). */
+    private const LAST_SEEN_OPTION = 'maspik_logs_last_seen_id';
+
+    /** Short cache for the menu badge — the menu is built on every request. */
+    private const UNSEEN_TRANSIENT = 'maspik_logs_unseen';
+
+    /** @var Settings */
+    private $settings;
+
+    /** @var FreeIpApiResolver */
+    private $geo;
+
+    public function __construct(Settings $settings, FreeIpApiResolver $geo)
+    {
+        $this->settings = $settings;
+        $this->geo = $geo;
+    }
+
+    /** Back-compat entry point: a blocked submission with no captured trace. */
+    public function recordBlocked(Submission $submission, Violation $violation): void
+    {
+        $this->record($submission, $violation, 'blocked', []);
+    }
+
+    /**
+     * Store one submission — blocked or passed. The outcome lives in the
+     * existing (previously unused) spam_tag column, and the per-layer trace in
+     * the spam_detail JSON envelope, so no table migration is needed and legacy
+     * rows (spam_tag '') keep reading as blocked.
+     *
+     * Only blocked rows count toward the lifetime/monthly totals and trigger a
+     * geo lookup; passed rows (debug mode) skip both to keep the legit-submit
+     * path light.
+     *
+     * @param array<int, array{layer: string, status: string, reason: string}> $trace
+     */
+    public function record(Submission $submission, ?Violation $violation, string $outcome, array $trace = []): void
+    {
+        $blocked = $outcome === 'blocked';
+
+        global $wpdb;
+
+        $fields = [];
+        foreach ($submission->fields as $field) {
+            $fields[$field->name] = $field->value;
+        }
+
+        $detail = wp_json_encode([
+            'fields' => $fields,
+            'url' => $submission->referrer,
+            'trace' => $trace,
+        ]);
+
+        $agent = isset($_SERVER['HTTP_USER_AGENT'])
+            ? mb_substr(sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])), 0, 191)
+            : '';
+
+        // Geo is an external call — worth it to enrich a block, skipped on the
+        // high-volume passed path.
+        $country = '';
+        if ($blocked) {
+            $geo = $this->geo->lookup($submission->ip);
+            $country = $geo !== null ? $geo['countryCode'] : '';
+        }
+
+        $wpdb->insert($wpdb->prefix . 'maspik_spam_logs', [
+            'spam_type' => $violation !== null ? $violation->checkId : '',
+            'spam_value' => $violation !== null ? mb_substr($violation->matchedValue, 0, 191) : '',
+            'spam_detail' => $detail ? $detail : '',
+            'spam_ip' => $submission->ip,
+            'spam_country' => $country,
+            'spam_agent' => $agent,
+            'spam_date' => current_time('mysql'),
+            'spam_source' => $submission->sourceLabel,
+            'spamsrc_label' => $violation !== null ? mb_substr($violation->matchedRule, 0, 191) : '',
+            'spamsrc_val' => $violation !== null ? mb_substr($violation->reason, 0, 191) : '',
+            'spam_tag' => $blocked ? 'blocked' : 'clean',
+        ]);
+
+        if ($blocked) {
+            $this->bumpCounter();
+            // New spam arrived — let the menu badge pick it up immediately
+            // instead of waiting out the cache window.
+            delete_transient(self::UNSEEN_TRANSIENT);
+        }
+        $this->enforceLimit();
+    }
+
+    /** @return array<string, mixed>|null */
+    public function find(int $id): ?array
+    {
+        global $wpdb;
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}maspik_spam_logs WHERE id = %d",
+            $id
+        ), ARRAY_A);
+
+        return is_array($row) ? $row : null;
+    }
+
+    public function delete(int $id): bool
+    {
+        global $wpdb;
+
+        return (bool) $wpdb->delete($wpdb->prefix . 'maspik_spam_logs', ['id' => $id]);
+    }
+
+    /**
+     * Re-label a blocked entry as legitimate, keeping the row.
+     *
+     * A false positive is the one log entry the site owner most needs to read:
+     * it holds the name, email and message of a real person the site turned
+     * away, and answering them is only possible while those details still
+     * exist. So pardoning an entry changes its outcome instead of deleting it —
+     * it leaves the blocked view and stops counting as a block, but the
+     * submission itself is still there. Deleting stays a separate, explicit
+     * action.
+     */
+    public function markNotSpam(int $id): bool
+    {
+        global $wpdb;
+
+        return (bool) $wpdb->update(
+            $wpdb->prefix . 'maspik_spam_logs',
+            ['spam_tag' => 'clean'],
+            ['id' => $id]
+        );
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    /**
+     * @param string $outcome 'all' | 'blocked' | 'clean'
+     * @return array<int, array<string, mixed>>
+     */
+    public function recent(int $limit = 50, int $offset = 0, string $outcome = 'all'): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'maspik_spam_logs';
+
+        // Legacy rows have spam_tag '' → treated as blocked.
+        if ($outcome === 'clean') {
+            $sql = $wpdb->prepare("SELECT * FROM $table WHERE spam_tag = 'clean' ORDER BY id DESC LIMIT %d OFFSET %d", $limit, $offset);
+        } elseif ($outcome === 'blocked') {
+            $sql = $wpdb->prepare("SELECT * FROM $table WHERE spam_tag <> 'clean' ORDER BY id DESC LIMIT %d OFFSET %d", $limit, $offset);
+        } else {
+            $sql = $wpdb->prepare("SELECT * FROM $table ORDER BY id DESC LIMIT %d OFFSET %d", $limit, $offset);
+        }
+
+        $rows = $wpdb->get_results($sql, ARRAY_A);
+
+        return is_array($rows) ? $rows : [];
+    }
+
+    public function totalBlocked(): int
+    {
+        return (int) get_option('maspik_spam_count', 0);
+    }
+
+    /**
+     * Per-check counts with last-hit time (spam_type == Violation::checkId).
+     *
+     * @return array<int, array{type: string, count: int, last: string}>
+     */
+    public function countsByType(): array
+    {
+        global $wpdb;
+
+        $rows = $wpdb->get_results(
+            "SELECT spam_type AS type, COUNT(*) AS count, MAX(spam_date) AS last
+             FROM {$wpdb->prefix}maspik_spam_logs
+             WHERE spam_tag <> 'clean'
+             GROUP BY spam_type ORDER BY count DESC",
+            ARRAY_A
+        );
+
+        return is_array($rows) ? $rows : [];
+    }
+
+    /**
+     * @return array<int, array{source: string, count: int}>
+     */
+    public function countsBySource(): array
+    {
+        global $wpdb;
+
+        $rows = $wpdb->get_results(
+            "SELECT spam_source AS source, COUNT(*) AS count
+             FROM {$wpdb->prefix}maspik_spam_logs
+             WHERE spam_tag <> 'clean'
+             GROUP BY spam_source ORDER BY count DESC",
+            ARRAY_A
+        );
+
+        return is_array($rows) ? $rows : [];
+    }
+
+    /**
+     * Daily counts for the last N days. spam_date is a varchar holding
+     * current_time('mysql') — SUBSTR(…,1,10) yields the Y-m-d day (v2 schema,
+     * unchanged; a real datetime column is the logged schema-v2 backlog item).
+     *
+     * @return array<int, array{day: string, count: int}>
+     */
+    public function countsByDay(int $days = 30): array
+    {
+        global $wpdb;
+
+        $since = gmdate('Y-m-d', time() - $days * DAY_IN_SECONDS);
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT SUBSTR(spam_date, 1, 10) AS day, COUNT(*) AS count
+             FROM {$wpdb->prefix}maspik_spam_logs
+             WHERE spam_tag <> 'clean' AND SUBSTR(spam_date, 1, 10) >= %s
+             GROUP BY day ORDER BY day ASC",
+            $since
+        ), ARRAY_A);
+
+        return is_array($rows) ? $rows : [];
+    }
+
+    /**
+     * @return array<string, mixed>|null newest log row, or null when empty
+     */
+    public function lastBlocked(): ?array
+    {
+        global $wpdb;
+
+        $row = $wpdb->get_row(
+            "SELECT * FROM {$wpdb->prefix}maspik_spam_logs ORDER BY id DESC LIMIT 1",
+            ARRAY_A
+        );
+
+        return is_array($row) ? $row : null;
+    }
+
+    /** Bump the lifetime block counter without storing a row (logging off). */
+    public function incrementBlockedCounter(): void
+    {
+        $this->bumpCounter();
+    }
+
+    /**
+     * How many blocked submissions arrived since the Logs screen was last
+     * opened — the number shown on the admin menu badge.
+     *
+     * Tracked by row id rather than date: ids are monotonic, so this is immune
+     * to timezone handling and clock skew (spam_date is a local-time varchar).
+     * The result is cached briefly because the admin menu is rebuilt on every
+     * single wp-admin request.
+     */
+    public function unseenCount(): int
+    {
+        $cached = get_transient(self::UNSEEN_TRANSIENT);
+        if ($cached !== false) {
+            return (int) $cached;
+        }
+
+        global $wpdb;
+        $count = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}maspik_spam_logs
+             WHERE id > %d AND spam_tag <> 'clean'",
+            $this->lastSeenId()
+        ));
+
+        set_transient(self::UNSEEN_TRANSIENT, $count, MINUTE_IN_SECONDS);
+
+        return $count;
+    }
+
+    /**
+     * Mark everything currently logged as seen. Site-wide by design: one
+     * shared marker, not per-user — whoever opens the Logs screen clears it
+     * for everyone.
+     */
+    public function markSeen(): void
+    {
+        global $wpdb;
+
+        $maxId = (int) $wpdb->get_var("SELECT MAX(id) FROM {$wpdb->prefix}maspik_spam_logs");
+        update_option(self::LAST_SEEN_OPTION, $maxId, false);
+        delete_transient(self::UNSEEN_TRANSIENT);
+    }
+
+    /**
+     * Treat everything already stored as seen. Called on install/upgrade so a
+     * site updating with thousands of historical rows doesn't suddenly show a
+     * huge badge for spam the owner has already dealt with.
+     */
+    public function baselineSeen(): void
+    {
+        if (get_option(self::LAST_SEEN_OPTION, null) === null) {
+            $this->markSeen();
+        }
+    }
+
+    private function lastSeenId(): int
+    {
+        return (int) get_option(self::LAST_SEEN_OPTION, 0);
+    }
+
+    private function bumpCounter(): void
+    {
+        update_option('maspik_spam_count', $this->totalBlocked() + 1, false);
+    }
+
+    /**
+     * Keep the table under the configured row limit. When trimming, the oldest
+     * *passed* rows go first so the more valuable blocked-spam history is
+     * preserved for as long as possible.
+     */
+    private function enforceLimit(): void
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'maspik_spam_logs';
+
+        $limit = $this->settings->intOrNull('spam_log_limit');
+        $limit = $limit !== null ? $limit : 1000;
+        if ($limit <= 0) {
+            return;
+        }
+
+        $count = (int) $wpdb->get_var("SELECT COUNT(*) FROM $table");
+        $over = $count - $limit;
+        if ($over <= 0) {
+            return;
+        }
+
+        $deleted = (int) $wpdb->query($wpdb->prepare(
+            "DELETE FROM $table WHERE spam_tag = 'clean' ORDER BY id ASC LIMIT %d",
+            $over
+        ));
+        if ($over - $deleted > 0) {
+            $wpdb->query($wpdb->prepare(
+                "DELETE FROM $table ORDER BY id ASC LIMIT %d",
+                $over - $deleted
+            ));
+        }
+    }
+
+    /**
+     * Delete rows older than the configured age (spam_log_max_age_days; 0/unset
+     * = off). Run from a daily cron — never on the submission path. spam_date is
+     * a site-local 'Y-m-d H:i:s' string, so the cutoff is computed in site time.
+     */
+    public function pruneByAge(): void
+    {
+        global $wpdb;
+
+        $days = $this->settings->intOrNull('spam_log_max_age_days');
+        if ($days === null || $days <= 0) {
+            return;
+        }
+
+        $cutoff = gmdate('Y-m-d H:i:s', current_time('timestamp') - $days * DAY_IN_SECONDS);
+        $wpdb->query($wpdb->prepare(
+            "DELETE FROM {$wpdb->prefix}maspik_spam_logs WHERE spam_date < %s",
+            $cutoff
+        ));
+    }
+}
