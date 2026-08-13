@@ -15,12 +15,25 @@ namespace Maspik\Infrastructure\Settings;
  */
 final class DashboardRules
 {
-    /** ACF field names on wpmaspik.com → local Schema keys (renamed in v3). */
+    /**
+     * ACF field names on wpmaspik.com → local Schema keys (renamed in v3).
+     *
+     * The on/off switches matter as much as the rule lists and were being lost:
+     * anything whose name is not a Schema key is dropped by normalize(), and the
+     * Dashboard sends `maspikhoneypot` in lower case and calls the verification
+     * key `advancekeycheck`. Neither matched, so a site that switched Honeypot
+     * Trap on in the Dashboard silently got no honeypot — the protection was
+     * requested centrally and never applied. The names come from v2's own
+     * $MASPIK_SYNC_BOOL_API_TO_LOCAL table, which is what the Dashboard is
+     * still written against.
+     */
     private const KEY_MAP = [
         'text_field' => 'text_blacklist',
         'textarea_field' => 'text_blacklist',
         'email_field' => 'emails_blacklist',
         'url_field' => 'url_blacklist',
+        'maspikhoneypot' => 'maspikHoneypot',
+        'advancekeycheck' => 'verification_key',
     ];
 
     /**

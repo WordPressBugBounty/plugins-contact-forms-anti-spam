@@ -50,6 +50,14 @@ final class LogsController
             ],
         ]);
 
+        register_rest_route('maspik/v1', '/logs/export', [
+            'methods' => 'GET',
+            'callback' => [$this, 'export'],
+            'permission_callback' => $can,
+            'args' => [
+                'outcome' => ['type' => 'string', 'default' => 'all', 'enum' => ['all', 'blocked', 'clean']],
+            ],
+        ]);
         register_rest_route('maspik/v1', '/logs/(?P<id>\d+)', [
             'methods' => 'DELETE',
             'callback' => [$this, 'delete'],
@@ -226,6 +234,123 @@ final class LogsController
         $this->logs->markNotSpam($id);
 
         return new WP_REST_Response(['whitelisted' => $whitelisted, 'kept' => true]);
+    }
+
+    /** Rows per query while building the file, so memory stays flat. */
+    private const EXPORT_BATCH = 500;
+
+    /** Hard ceiling, in case a site has raised its retention limit a long way. */
+    private const EXPORT_MAX_ROWS = 50000;
+
+    /**
+     * The spam log as CSV.
+     *
+     * Returns { filename, content } like the settings export, so the admin reuses
+     * the same download path. Rows are read in batches through the repository,
+     * which means v2's serialized rows are normalised on the way out and export
+     * with their fields intact, exactly as they now display.
+     */
+    public function export(WP_REST_Request $request): WP_REST_Response
+    {
+        $outcome = in_array($request['outcome'], ['blocked', 'clean'], true) ? (string) $request['outcome'] : 'all';
+
+        $handle = fopen('php://temp', 'r+');
+        if ($handle === false) {
+            return new WP_REST_Response(['ok' => false, 'reason' => 'no_buffer'], 500);
+        }
+
+        // The empty escape argument matters. PHP's default is a backslash, which
+        // is not RFC-4180 and makes any value containing \" break out of its
+        // quotes — splitting that row into extra columns in Excel and in every
+        // standard parser. Spam bodies are full of backslashes, so this is the
+        // difference between a clean file and a silently mangled one.
+        self::putRow($handle, [
+            __('Date', 'contact-forms-anti-spam'),
+            __('Outcome', 'contact-forms-anti-spam'),
+            __('Form', 'contact-forms-anti-spam'),
+            __('Page URL', 'contact-forms-anti-spam'),
+            __('Blocked by', 'contact-forms-anti-spam'),
+            __('Rule', 'contact-forms-anti-spam'),
+            __('Reason', 'contact-forms-anti-spam'),
+            __('Matched value', 'contact-forms-anti-spam'),
+            __('IP', 'contact-forms-anti-spam'),
+            __('Country', 'contact-forms-anti-spam'),
+            __('User agent', 'contact-forms-anti-spam'),
+            __('Submitted fields', 'contact-forms-anti-spam'),
+        ]);
+
+        $written = 0;
+        for ($offset = 0; $offset < self::EXPORT_MAX_ROWS; $offset += self::EXPORT_BATCH) {
+            $rows = $this->logs->recent(self::EXPORT_BATCH, $offset, $outcome);
+            if ($rows === []) {
+                break;
+            }
+            foreach ($rows as $row) {
+                self::putRow($handle, self::exportRow($row));
+                $written++;
+            }
+        }
+
+        rewind($handle);
+        $csv = (string) stream_get_contents($handle);
+        fclose($handle);
+
+        return new WP_REST_Response([
+            'filename' => 'maspik-spam-log-' . gmdate('Y-m-d') . '.csv',
+            // Excel reads a CSV as the system's legacy encoding unless the file
+            // announces UTF-8, which turns every Hebrew, Russian or Chinese
+            // submission into mojibake. The BOM is what makes it open correctly.
+            'content' => "\xEF\xBB\xBF" . $csv,
+            'rows' => $written,
+        ]);
+    }
+
+    /**
+     * @param resource $handle
+     * @param array<int, string> $row
+     */
+    private static function putRow($handle, array $row): void
+    {
+        fputcsv($handle, $row, ',', '"', '');
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return array<int, string>
+     */
+    private static function exportRow(array $row): array
+    {
+        // v2 packed the page URL into spam_source as "Label|||URL".
+        $source = explode('|||', (string) ($row['spam_source'] ?? ''));
+        $detail = json_decode((string) ($row['spam_detail'] ?? ''), true);
+        $fields = is_array($detail) && isset($detail['fields']) && is_array($detail['fields']) ? $detail['fields'] : [];
+        $url = is_array($detail) && ! empty($detail['url']) ? (string) $detail['url'] : (string) ($source[1] ?? '');
+
+        $pairs = [];
+        foreach ($fields as $name => $value) {
+            $pairs[] = $name . ': ' . (is_scalar($value) ? (string) $value : '');
+        }
+
+        return [
+            (string) ($row['spam_date'] ?? ''),
+            ($row['spam_tag'] ?? '') === 'clean' ? 'passed' : 'blocked',
+            (string) ($source[0] ?? ''),
+            $url,
+            (string) ($row['spam_type'] ?? ''),
+            self::plain((string) ($row['spamsrc_label'] ?? '')),
+            self::plain((string) ($row['spamsrc_val'] ?? '')),
+            (string) ($row['spam_value'] ?? ''),
+            (string) ($row['spam_ip'] ?? ''),
+            (string) ($row['spam_country'] ?? ''),
+            (string) ($row['spam_agent'] ?? ''),
+            implode("\n", $pairs),
+        ];
+    }
+
+    /** Reasons carry *!…!* highlight markers for the admin; strip them for a file. */
+    private static function plain(string $text): string
+    {
+        return (string) preg_replace('/\*!(.*?)!\*/', '$1', $text);
     }
 
     /** Find a valid email among the stored submission fields. */

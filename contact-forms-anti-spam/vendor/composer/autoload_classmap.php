@@ -97,6 +97,7 @@ return array(
     'Maspik\\Integrations\\IntegrationsProvider' => $baseDir . '/src/Integrations/IntegrationsProvider.php',
     'Maspik\\Integrations\\Registry' => $baseDir . '/src/Integrations/Registry.php',
     'Maspik\\Integrations\\Support\\FieldMapper' => $baseDir . '/src/Integrations/Support/FieldMapper.php',
+    'Maspik\\Integrations\\Support\\RawPayload' => $baseDir . '/src/Integrations/Support/RawPayload.php',
     'Maspik\\Kernel\\Activation' => $baseDir . '/src/Kernel/Activation.php',
     'Maspik\\Kernel\\Container' => $baseDir . '/src/Kernel/Container.php',
     'Maspik\\Kernel\\Plugin' => $baseDir . '/src/Kernel/Plugin.php',

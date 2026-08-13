@@ -8,6 +8,7 @@ use Maspik\Domain\Check\VerificationKeyCheck;
 use Maspik\Domain\Check\HoneypotCheck;
 use Maspik\Domain\Model\Field;
 use Maspik\Domain\Model\Submission;
+use Maspik\Integrations\Support\RawPayload;
 use Maspik\Infrastructure\ClientIp;
 use Maspik\Integrations\Support\FieldMapper;
 
@@ -88,13 +89,18 @@ abstract class AbstractFormIntegration implements FormIntegration
         $referrer = isset($_SERVER['HTTP_REFERER'])
             ? esc_url_raw(wp_unslash($_SERVER['HTTP_REFERER'])) : null;
 
+        // Captured here rather than per adapter: every plugin shapes its data
+        // differently, but they all arrive in the same request.
+        $raw = RawPayload::capture(isset($_POST) ? (array) wp_unslash($_POST) : []);
+
         return new Submission(
             $fields,
             $this->id(),
             $this->label(),
             $this->clientIp->get(),
             $hidden,
-            $referrer
+            $referrer,
+            $raw
         );
     }
 }

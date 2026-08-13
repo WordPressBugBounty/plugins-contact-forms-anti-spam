@@ -98,6 +98,7 @@ final class SettingsController
         return new WP_REST_Response([
             'settings' => $values,
             'synced' => $this->syncedFromDashboard(),
+            'forced' => $this->forcedByDashboard(),
             // The text a visitor sees when nothing is configured. Sent so the
             // admin can show it as a placeholder instead of duplicating the
             // string in JS, where it would drift from the PHP the moment either
@@ -129,6 +130,39 @@ final class SettingsController
         }
 
         return $synced;
+    }
+
+    /**
+     * Layers the Dashboard has switched on, which the engine therefore runs
+     * regardless of the local toggle (Settings::boolEffective ORs the two).
+     *
+     * Reported so the admin can stop contradicting itself: until now a layer
+     * enabled centrally still rendered as "off" here, which told the owner they
+     * were unprotected while the check was in fact running. Only a Dashboard
+     * "on" is listed — a Dashboard "off" forces nothing, because the local
+     * toggle can still enable the layer on its own.
+     *
+     * @return array<string, bool>
+     */
+    private function forcedByDashboard(): array
+    {
+        $dashboard = get_option('spamapi');
+        if (! is_array($dashboard)) {
+            return [];
+        }
+
+        $forced = [];
+        foreach (Schema::options() as $key => $definition) {
+            if ($definition['type'] !== Schema::TYPE_BOOL || ! isset($dashboard[$key])) {
+                continue;
+            }
+            $value = $dashboard[$key];
+            if ($value === true || $value === 1 || $value === '1' || $value === 'yes') {
+                $forced[$key] = true;
+            }
+        }
+
+        return $forced;
     }
 
     public function update(WP_REST_Request $request): WP_REST_Response

@@ -11,6 +11,7 @@ use Maspik\Domain\Model\FieldType;
 use Maspik\Domain\Model\Submission;
 use Maspik\Integrations\AbstractFormIntegration;
 use Maspik\Integrations\Support\FieldMapper;
+use Maspik\Integrations\Support\RawPayload;
 
 /**
  * Public API for hand-built forms — the one integration with no plugin behind
@@ -220,7 +221,10 @@ final class CustomForm extends AbstractFormIntegration
                 $formName,
                 $this->clientIp->get(),
                 $hidden,
-                isset($_SERVER['HTTP_REFERER']) ? esc_url_raw(wp_unslash($_SERVER['HTTP_REFERER'])) : null
+                isset($_SERVER['HTTP_REFERER']) ? esc_url_raw(wp_unslash($_SERVER['HTTP_REFERER'])) : null,
+                // Everything the caller passed, including types the engine will
+                // not scan, so the log shows the whole submission.
+                RawPayload::fromList($raw)
             );
 
             $verdict = $gate->evaluate($submission);

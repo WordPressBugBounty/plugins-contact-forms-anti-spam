@@ -11,6 +11,7 @@ use Maspik\Infrastructure\ClientIp;
 use Maspik\Infrastructure\Settings\Settings;
 use Maspik\Integrations\AbstractFormIntegration;
 use Maspik\Integrations\Support\FieldMapper;
+use Maspik\Integrations\Support\RawPayload;
 use Maspik\Premium\ProGate;
 
 /**
@@ -238,7 +239,8 @@ final class WooCommerceCheckout extends AbstractFormIntegration
             'WooCommerce Checkout',
             $ip !== '' ? $ip : $this->clientIp->get(),
             [],
-            isset($_SERVER['HTTP_REFERER']) ? esc_url_raw(wp_unslash($_SERVER['HTTP_REFERER'])) : null
+            isset($_SERVER['HTTP_REFERER']) ? esc_url_raw(wp_unslash($_SERVER['HTTP_REFERER'])) : null,
+            RawPayload::fromList($raw)
         );
     }
 

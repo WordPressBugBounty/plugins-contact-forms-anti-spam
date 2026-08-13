@@ -5,7 +5,7 @@ Tags: spam, anti spam, antispam, contact forms, honeypot
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 3.0.0
+Stable tag: 3.0.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -276,6 +276,11 @@ Yes. Settings, logs, your license and your Dashboard connection all carry over a
 
 == Changelog ==
 
+= 3.0.1 =
+* Export the spam log to CSV from the Logs screen, with every submitted field.
+* Fixed: dropdowns, dates, numbers and checkboxes are now recorded in the log — in Gravity Forms and every other form plugin.
+* Fixed: Honeypot Trap and Advance key check switched on in the MASPIK Dashboard are now applied to the site.
+
 = 3.0.0 =
 * Complete rewrite: modern modular architecture (PSR-4, dependency injection) with identical spam-detection behavior, covered by unit and integration tests.
 * New admin experience: Dashboard, Protection, Logs, Analytics, Playground, Advanced and Pro screens.
@@ -292,6 +297,9 @@ Yes. Settings, logs, your license and your Dashboard connection all carry over a
 * Requires PHP 7.4+.
 
 == Upgrade Notice ==
+
+= 3.0.1 =
+Recommended for everyone on 3.0.0. Restores the missing fields in your spam log, adds CSV export, and applies layers switched on in the MASPIK Dashboard.
 
 = 3.0.0 =
 A complete rewrite with the same proven detection engine. Your settings, logs, license and Dashboard connection carry over automatically.

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Maspik\Infrastructure\Logging;
 
+use Maspik\Domain\Model\Field;
 use Maspik\Domain\Model\Submission;
 use Maspik\Domain\Model\Violation;
 use Maspik\Infrastructure\Geo\FreeIpApiResolver;
@@ -61,9 +62,31 @@ final class LogRepository
 
         global $wpdb;
 
-        $fields = [];
+        // Everything that was submitted, not just what the engine scanned. The
+        // owner reading this row has to decide whether a real customer was
+        // turned away, and a form's select, date and checkbox answers are often
+        // the part that makes that obvious. Scanned fields are layered on top so
+        // they are always present even when the raw capture came back empty.
+        $fields = $submission->raw;
         foreach ($submission->fields as $field) {
-            $fields[$field->name] = $field->value;
+            $value = $field->value;
+
+            // The adapter understood the form, so its field name is the readable
+            // one. Where the raw capture holds the same value under a transport
+            // path (Ninja Forms posts everything inside a `formData` blob, so it
+            // surfaces as formData[fields][5][value]), drop the duplicate and
+            // keep the name a human can act on.
+            if (trim($value) !== '') {
+                foreach ($fields as $key => $existing) {
+                    if ($key !== $field->name && $existing === $value) {
+                        unset($fields[$key]);
+                    }
+                }
+            }
+
+            if (! isset($fields[$field->name]) || trim((string) $fields[$field->name]) === '') {
+                $fields[$field->name] = $value;
+            }
         }
 
         $detail = wp_json_encode([
@@ -117,7 +140,74 @@ final class LogRepository
             $id
         ), ARRAY_A);
 
-        return is_array($row) ? $row : null;
+        return is_array($row) ? self::normaliseRow($row) : null;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private static function normaliseRow(array $row): array
+    {
+        $row['spam_detail'] = self::normaliseDetail((string) ($row['spam_detail'] ?? ''));
+
+        return $row;
+    }
+
+    /**
+     * Present every log row's detail as the 3.0 JSON envelope, whatever wrote it.
+     *
+     * v2 stored `serialize($_POST)`; 3.0 stores JSON. Everything downstream —
+     * the log list, the detail drawer, the dashboard, and the whitelist action —
+     * calls json_decode/JSON.parse, which simply fails on a serialized string and
+     * yields no fields at all. The submission was never lost; it just stopped
+     * being readable, and the log became useless for the one job it has: letting
+     * an owner decide whether a block was a false positive.
+     *
+     * Converting on read rather than migrating the table keeps this reversible
+     * and costs nothing for the 3.0 rows, which are returned untouched.
+     */
+    private static function normaliseDetail(string $raw): string
+    {
+        $raw = trim($raw);
+        if ($raw === '') {
+            return '';
+        }
+
+        // Already a 3.0 envelope (or any JSON) - leave it exactly as stored.
+        if ($raw[0] === '{' || $raw[0] === '[') {
+            return $raw;
+        }
+
+        // Log rows are attacker-influenced data, so this must never be allowed to
+        // instantiate objects: unserializing a crafted payload into a class with
+        // a destructor is the classic PHP object-injection route to RCE.
+        $data = @unserialize($raw, ['allowed_classes' => false]);
+        if (! is_array($data)) {
+            return '';
+        }
+
+        $fields = [];
+        foreach ($data as $key => $value) {
+            $name = (string) $key;
+            if ($name === '') {
+                continue;
+            }
+            // v2 logged the raw POST, so values arrive nested (WPForms) as well
+            // as flat. Field::flatten is the same reducer the engine uses.
+            $fields[$name] = is_scalar($value) ? (string) $value : Field::flatten($value);
+        }
+
+        $json = wp_json_encode([
+            'fields' => $fields,
+            // v2 kept the page URL in spam_source ("Label|||URL"), not here; the
+            // admin already reads it from there for these rows.
+            'url' => null,
+            // v2 predates per-layer tracing, so there is nothing to show.
+            'trace' => [],
+        ]);
+
+        return is_string($json) ? $json : '';
     }
 
     public function delete(int $id): bool
@@ -172,7 +262,7 @@ final class LogRepository
 
         $rows = $wpdb->get_results($sql, ARRAY_A);
 
-        return is_array($rows) ? $rows : [];
+        return is_array($rows) ? array_map([self::class, 'normaliseRow'], $rows) : [];
     }
 
     public function totalBlocked(): int

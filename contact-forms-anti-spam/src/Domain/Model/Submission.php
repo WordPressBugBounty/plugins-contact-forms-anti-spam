@@ -29,8 +29,26 @@ final class Submission
     public $referrer;
 
     /**
+     * Everything the form actually submitted, flattened to name => value.
+     *
+     * Deliberately separate from $fields. $fields is what the engine scans, and
+     * it is filtered by type on purpose - a submit button or an acceptance
+     * checkbox is not text worth scanning. But the log has a different job: it
+     * has to let a site owner look at a blocked submission and decide whether it
+     * was a real customer. Judging that from the text fields alone is guesswork
+     * when the form also asked which service, which branch, and on what date.
+     *
+     * Every form plugin exposes its data differently, so this is captured from
+     * the request as a whole rather than per plugin.
+     *
+     * @var array<string, string>
+     */
+    public $raw;
+
+    /**
      * @param Field[]               $fields
      * @param array<string, string> $hidden
+     * @param array<string, string> $raw
      */
     public function __construct(
         array $fields,
@@ -38,7 +56,8 @@ final class Submission
         string $sourceLabel,
         string $ip,
         array $hidden = [],
-        ?string $referrer = null
+        ?string $referrer = null,
+        array $raw = []
     ) {
         $this->fields = $fields;
         $this->source = $source;
@@ -46,6 +65,7 @@ final class Submission
         $this->ip = $ip;
         $this->hidden = $hidden;
         $this->referrer = $referrer;
+        $this->raw = $raw;
     }
 
     public function hiddenField(string $name): ?string

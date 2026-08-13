@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitc65136679cdfe95611fbcc5b226c44de
+class ComposerStaticInit594c32c4bf60fca9838c81ebfecef92a
 {
     public static $prefixLengthsPsr4 = array (
         'M' => 
@@ -112,6 +112,7 @@ class ComposerStaticInitc65136679cdfe95611fbcc5b226c44de
         'Maspik\\Integrations\\IntegrationsProvider' => __DIR__ . '/../..' . '/src/Integrations/IntegrationsProvider.php',
         'Maspik\\Integrations\\Registry' => __DIR__ . '/../..' . '/src/Integrations/Registry.php',
         'Maspik\\Integrations\\Support\\FieldMapper' => __DIR__ . '/../..' . '/src/Integrations/Support/FieldMapper.php',
+        'Maspik\\Integrations\\Support\\RawPayload' => __DIR__ . '/../..' . '/src/Integrations/Support/RawPayload.php',
         'Maspik\\Kernel\\Activation' => __DIR__ . '/../..' . '/src/Kernel/Activation.php',
         'Maspik\\Kernel\\Container' => __DIR__ . '/../..' . '/src/Kernel/Container.php',
         'Maspik\\Kernel\\Plugin' => __DIR__ . '/../..' . '/src/Kernel/Plugin.php',
@@ -124,9 +125,9 @@ class ComposerStaticInitc65136679cdfe95611fbcc5b226c44de
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInitc65136679cdfe95611fbcc5b226c44de::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInitc65136679cdfe95611fbcc5b226c44de::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInitc65136679cdfe95611fbcc5b226c44de::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit594c32c4bf60fca9838c81ebfecef92a::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit594c32c4bf60fca9838c81ebfecef92a::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit594c32c4bf60fca9838c81ebfecef92a::$classMap;
 
         }, null, ClassLoader::class);
     }

@@ -3,7 +3,7 @@
  * Plugin Name:       Maspik – Multi-Layer Spam Protection
  * Plugin URI:        https://wpmaspik.com
  * Description:       Multi-layer spam protection for forms, comments and WooCommerce. No CAPTCHA, no puzzles — accurate blocking that works out of the box.
- * Version:           3.0.0
+ * Version:           3.0.1
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            yonifre
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'MASPIK_VERSION', '3.0.0' );
+define( 'MASPIK_VERSION', '3.0.1' );
 define( 'MASPIK_FILE', __FILE__ );
 define( 'MASPIK_DIR', __DIR__ );
 define( 'MASPIK_URL', plugin_dir_url( __FILE__ ) );
