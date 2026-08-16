@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Maspik\Kernel;
 
 use Maspik\Admin\FullModeNudge;
+use Maspik\Domain\Check\LanguageCheck;
 use Maspik\Infrastructure\Geo\FreeIpApiResolver;
 use Maspik\Infrastructure\Logging\LogRepository;
 use Maspik\Infrastructure\Settings\DashboardRules;
@@ -28,6 +29,7 @@ final class Upgrade
     private const DEPTH_REPAIRED = 'maspik_matrix_depth_repaired';
     private const SHARE_REPAIRED = 'maspik_share_data_repaired';
     private const CUSTOM_FORM_REPAIRED = 'maspik_custom_form_optin_repaired';
+    private const LANGUAGE_LISTS_REPAIRED = 'maspik_language_lists_repaired';
 
     public static function maybeRun(): void
     {
@@ -43,6 +45,7 @@ final class Upgrade
         self::repairInputGateDepth();
         self::repairShareDataOptIn();
         self::repairCustomFormOptIn();
+        self::repairLanguageLists();
 
         $stored = (string) get_option(self::VERSION_OPTION, '');
         if ($stored === MASPIK_VERSION) {
@@ -215,6 +218,43 @@ final class Upgrade
     public static function customFormWasOn(string $stored): bool
     {
         return strtolower(trim($stored)) !== 'no';
+    }
+
+    /**
+     * Split a v2-era required/forbidden language value back into one script
+     * per line, so the stored value matches what 3.0 writes and reads.
+     *
+     * LanguageCheck::normalizedList() already recovers the correct patterns at
+     * request time regardless of the stored format — a v2 site is fully
+     * protected again the moment this build is active, with no dependency on
+     * this repair having run. This repair exists for the value itself: left
+     * as one line, the Language screen in Protection shows it as a single
+     * unrecognized chip (the raw "\p{Hebrew} [A-Za-z]") instead of two
+     * recognized ones, which reads as broken even though nothing is. Rewriting
+     * it once, to what the 3.0 UI would have saved directly, fixes that
+     * without the admin needing to touch anything.
+     *
+     * Not gated on cameFromV2(): the operation is a no-op for any value
+     * normalizedList() would return unchanged (every fresh 3.0 install, and
+     * every site that already saved this setting through the 3.0 UI), so
+     * there is nothing v2-specific to guard against here.
+     */
+    private static function repairLanguageLists(): void
+    {
+        if (get_option(self::LANGUAGE_LISTS_REPAIRED)) {
+            return;
+        }
+
+        $settings = new Settings();
+        foreach (['lang_needed', 'lang_forbidden'] as $key) {
+            $stored = $settings->list($key);
+            $recovered = LanguageCheck::normalizedList($stored);
+            if ($recovered !== $stored) {
+                $settings->save($key, implode("\n", $recovered));
+            }
+        }
+
+        update_option(self::LANGUAGE_LISTS_REPAIRED, '1');
     }
 
     private static function run(string $fromVersion): void
