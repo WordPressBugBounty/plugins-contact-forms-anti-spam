@@ -115,8 +115,46 @@ class Settings
     public function intOrNull(string $key): ?int
     {
         $value = $this->raw($key);
+        if (is_numeric($value)) {
+            return (int) $value;
+        }
 
-        return is_numeric($value) ? (int) $value : null;
+        // v2 read these the same way: the local value wins, and the Dashboard
+        // fills in when the site has not set one of its own
+        // (spam-block.php: maspik_get_settings(X) ?: efas_get_spam_api(X)).
+        // Without this a character or link limit configured centrally was
+        // simply never applied.
+        $dashboard = $this->dashboardValue($key);
+        if (is_array($dashboard)) {
+            $dashboard = $dashboard[0] ?? null;
+        }
+
+        return is_numeric($dashboard) ? (int) $dashboard : null;
+    }
+
+    /**
+     * True when the Dashboard supplies a usable value for any of these keys.
+     *
+     * v2 used this to let a centrally-pushed rule switch its own check on, so a
+     * site did not also have to flip the matching local toggle
+     * (maspik_is_contain_api). Without it, a limit set in the Dashboard sat
+     * inert on every site whose local toggle happened to be off.
+     *
+     * @param string[] $keys
+     */
+    public function dashboardProvides(array $keys): bool
+    {
+        foreach ($keys as $key) {
+            $value = $this->dashboardValue($key);
+            if (is_array($value)) {
+                $value = $value[0] ?? null;
+            }
+            if ($value !== null && $value !== '' && $value !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -223,17 +261,64 @@ class Settings
         // Fall back to a custom message configured under the pre-rename check
         // id, so an existing site's message keeps working across the rename.
         if ($checkId === 'verification_key') {
-            return trim($this->raw('custom_error_message_maspikTimeCheck'));
+            $legacy = trim($this->raw('custom_error_message_maspikTimeCheck'));
+            if ($legacy !== '') {
+                return $legacy;
+            }
+        }
+
+        // Then the Dashboard's own per-check message. v2 ranked these exactly
+        // this way (cfas_get_error_text): the site's own wording wins, and the
+        // centrally-managed one applies when the site has not set its own.
+        foreach (self::dashboardMessageKeys($checkId) as $key) {
+            $fromDashboard = $this->dashboardValue($key);
+            if (is_array($fromDashboard)) {
+                $fromDashboard = $fromDashboard[0] ?? null;
+            }
+            if (is_string($fromDashboard) && trim($fromDashboard) !== '') {
+                return trim($fromDashboard);
+            }
         }
 
         return '';
     }
 
+    /**
+     * Dashboard option names that can carry a message for one check.
+     *
+     * The renamed check is listed under both ids, because the Dashboard is
+     * still authored against v2's field names for existing accounts.
+     *
+     * @return string[]
+     */
+    private static function dashboardMessageKeys(string $checkId): array
+    {
+        $keys = ['custom_error_message_' . $checkId];
+        if ($checkId === 'verification_key') {
+            $keys[] = 'custom_error_message_maspikTimeCheck';
+        }
+
+        return $keys;
+    }
+
     public function defaultErrorMessage(): string
     {
         $message = trim($this->raw('error_message'));
+        if ($message !== '') {
+            return $message;
+        }
 
-        return $message !== '' ? $message : self::builtinErrorMessage();
+        // The Dashboard's site-wide message, before the plugin's built-in text
+        // (v2: $text_general ?: $textAPI_general ?: $default_text).
+        $fromDashboard = $this->dashboardValue('error_message');
+        if (is_array($fromDashboard)) {
+            $fromDashboard = $fromDashboard[0] ?? null;
+        }
+        if (is_string($fromDashboard) && trim($fromDashboard) !== '') {
+            return trim($fromDashboard);
+        }
+
+        return self::builtinErrorMessage();
     }
 
     /**

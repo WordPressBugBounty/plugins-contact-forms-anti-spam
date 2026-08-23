@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Maspik\Infrastructure\Settings;
 
+use Maspik\Domain\Check\LanguageCheck;
+
 /**
  * Normalises the shared-rules payload (from wpmaspik.com, or an existing v2
  * `spamapi` option) into the shape the engine reads: local Schema keys, with
@@ -34,6 +36,17 @@ final class DashboardRules
         'url_field' => 'url_blacklist',
         'maspikhoneypot' => 'maspikHoneypot',
         'advancekeycheck' => 'verification_key',
+        // v2 also accepted the un-renamed key straight from the Dashboard.
+        'maspikTimeCheck' => 'verification_key',
+        // The Dashboard's phone-format list is v2's `phone_format`, merged into
+        // the same list the local `tel_formats` field feeds (v2: spam-block.php
+        // merged efas_get_spam_api('phone_format') into $tel_formats).
+        'phone_format' => 'tel_formats',
+        // The Dashboard's "Block IP address" field. v2 shipped this field but
+        // never consumed it (spam-block.php carried a literal "Todo: api to
+        // $ip_blacklist"), so IPs entered centrally were silently ignored on
+        // every site. Mapped here so the list is actually enforced.
+        'ip' => 'ip_blacklist',
     ];
 
     /**
@@ -45,6 +58,20 @@ final class DashboardRules
         $out = [];
         foreach ($raw as $field => $value) {
             $key = self::KEY_MAP[$field] ?? $field;
+
+            // Per-check error messages are keyed by check id, so they cannot be
+            // enumerated in the Schema — but v2 read them from the Dashboard
+            // (cfas_get_error_text: efas_get_spam_api("custom_error_message_$field")),
+            // and dropping them here is why a message set centrally never
+            // reached the visitor. They are plain text, so they pass straight
+            // through with no list handling.
+            if (strpos($key, 'custom_error_message_') === 0) {
+                if (is_scalar($value) && trim((string) $value) !== '') {
+                    $out[$key] = (string) $value;
+                }
+                continue;
+            }
+
             $definition = Schema::options()[$key] ?? null;
             if ($definition === null) {
                 continue;
@@ -81,9 +108,19 @@ final class DashboardRules
             $parts = explode("\n", str_replace("\r", '', (string) $value));
         }
 
+        // Language rules are regex fragments, and real Dashboards hold entries
+        // like `'\p{Thai}` where a stray apostrophe survived however the value
+        // was entered. Cleaned here as well as in the engine so the stored
+        // value and the Language screen show the script the Dashboard meant,
+        // rather than a rule that reads as configured but matches nothing.
+        $isLanguage = $key === 'lang_needed' || $key === 'lang_forbidden';
+
         $items = [];
         foreach ((array) $parts as $part) {
             $part = trim((string) $part);
+            if ($isLanguage) {
+                $part = LanguageCheck::stripStrayQuotes($part);
+            }
             if ($part !== '' && ! in_array($part, $items, true)) {
                 $items[] = $part;
             }

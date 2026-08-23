@@ -82,7 +82,16 @@ final class License
     public function suggestedDashboardIds(): array
     {
         $raw = get_option(self::SUGGESTED_DASHBOARD_OPTION, '');
-        if (! is_string($raw) || $raw === '') {
+        // Accept any scalar, not just a string. A single all-digits id can come
+        // back as an int depending on how the value was written and whether the
+        // options cache round-tripped it through the database, and rejecting
+        // that left the account's only Dashboard missing from the picker with
+        // nothing on screen to explain why.
+        if (! is_scalar($raw)) {
+            return [];
+        }
+        $raw = trim((string) $raw);
+        if ($raw === '') {
             return [];
         }
 
@@ -305,6 +314,16 @@ final class License
             // disable/refund lapses Pro.
             $eval = $this->evaluateLicense($response['data']);
             update_option(self::EXPIRES_OPTION, $eval['expires_at'], false);
+
+            // Capture the linked Dashboard IDs here too, not only on activation.
+            // A site that activated before this field was read — or that carried
+            // its license over from version 2, which never calls activate() at
+            // all — would otherwise never learn which Dashboards its account
+            // owns, and the connect screen would offer nothing however many the
+            // customer actually has. The recheck already receives the same
+            // license payload twice a day, so this costs nothing and needs no
+            // re-entry of the key.
+            $this->storeSuggestedDashboardIds($response['data']);
 
             if (! $eval['valid']) {
                 update_option(self::ACTIVE_OPTION, 'no', false);

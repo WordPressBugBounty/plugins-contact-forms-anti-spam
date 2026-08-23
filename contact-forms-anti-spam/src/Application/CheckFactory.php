@@ -126,7 +126,7 @@ final class CheckFactory
             }
         }
 
-        $config->ipBlocklist = $s->list('ip_blacklist');
+        $config->ipBlocklist = $s->list('ip_blacklist', true);
 
         // External IP reputation (AbuseIPDB then Proxycheck). Each runs only
         // with an API key and a threshold above the v2 safety floor of 10.
@@ -156,21 +156,29 @@ final class CheckFactory
         $config->email = $s->list('emails_blacklist', true);
         $config->url = $s->list('url_blacklist', true);
 
-        if ($s->bool('text_limit_toggle')) {
+        // Each limit runs when the site switched it on, OR when the Dashboard
+        // supplies a value for it. v2 gated these the same way
+        // (maspik_is_contain_api): a limit pushed centrally was meant to apply
+        // without every site also having to flip its own toggle, which is the
+        // whole point of managing rules from one place.
+        if ($s->bool('text_limit_toggle')
+            || $s->dashboardProvides(['MinCharactersInTextField', 'MaxCharactersInTextField'])) {
             $config->charLimits[] = [
                 'type' => FieldType::TEXT,
                 'min' => $s->intOrNull('MinCharactersInTextField'),
                 'max' => $s->intOrNull('MaxCharactersInTextField'),
             ];
         }
-        if ($s->bool('textarea_limit_toggle')) {
+        if ($s->bool('textarea_limit_toggle')
+            || $s->dashboardProvides(['MinCharactersInTextAreaField', 'MaxCharactersInTextAreaField'])) {
             $config->charLimits[] = [
                 'type' => FieldType::TEXTAREA,
                 'min' => $s->intOrNull('MinCharactersInTextAreaField'),
                 'max' => $s->intOrNull('MaxCharactersInTextAreaField'),
             ];
         }
-        if ($s->bool('tel_limit_toggle')) {
+        if ($s->bool('tel_limit_toggle')
+            || $s->dashboardProvides(['MinCharactersInPhoneField', 'MaxCharactersInPhoneField'])) {
             $config->charLimits[] = [
                 'type' => FieldType::TEL,
                 'min' => $s->intOrNull('MinCharactersInPhoneField'),
@@ -178,7 +186,8 @@ final class CheckFactory
             ];
         }
 
-        if ($s->bool('textarea_link_limit_toggle') && $s->intOrNull('contain_links') !== null) {
+        if (($s->bool('textarea_link_limit_toggle') || $s->dashboardProvides(['contain_links']))
+            && $s->intOrNull('contain_links') !== null) {
             $config->linkLimit = (int) $s->intOrNull('contain_links');
         }
 

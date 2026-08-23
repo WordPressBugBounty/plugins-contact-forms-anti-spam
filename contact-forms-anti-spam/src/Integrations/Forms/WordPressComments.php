@@ -60,6 +60,21 @@ final class WordPressComments extends AbstractFormIntegration
                 return $commentdata;
             }
 
+            // Someone who can moderate comments is not a spammer, and the
+            // request they are making did not come from a rendered page.
+            //
+            // preprocess_comment fires for every comment WordPress creates,
+            // including a reply typed on the Comments screen and anything a
+            // plugin or WP-CLI inserts. None of those carry the guard fields:
+            // the script that writes the verification key is enqueued on
+            // wp_enqueue_scripts, which never runs in wp-admin. The submission
+            // therefore arrived with an empty key and was blocked — the site
+            // owner answering their own visitor, told their reply looked like
+            // spam, with no way to see why.
+            if (self::isTrustedModerator()) {
+                return $commentdata;
+            }
+
             $fields = self::fieldsFrom($commentdata);
             $verdict = $gate->evaluate($this->submission($fields));
             if ($verdict->isSpam) {
@@ -72,6 +87,20 @@ final class WordPressComments extends AbstractFormIntegration
 
             return $commentdata;
         }, 10, 1);
+    }
+
+    /**
+     * A logged-in user allowed to moderate comments on this site.
+     *
+     * Deliberately `moderate_comments` rather than "is logged in": a subscriber
+     * commenting on the front end is an ordinary visitor whose comment should
+     * still be checked, and on a multi-author site an editor replying from the
+     * dashboard should not be. The capability is exactly the permission
+     * WordPress itself uses to decide who may approve a comment.
+     */
+    private static function isTrustedModerator(): bool
+    {
+        return function_exists('current_user_can') && is_user_logged_in() && current_user_can('moderate_comments');
     }
 
     /**

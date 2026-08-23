@@ -35,6 +35,9 @@ final class FullModeNudge
      */
     public const LEGACY_DISMISSED_OPTION = 'maspik_matrix_full_mode_nudge_hidden_v4';
 
+    /** Documentation for the layer this notice offers to switch on. */
+    private const LEARN_MORE_URL = 'https://wpmaspik.com/documentation/ai-spam-check/';
+
     private const ACTION = 'maspik_matrix_nudge';
     private const NONCE = 'maspik_matrix_nudge';
 
@@ -94,27 +97,30 @@ final class FullModeNudge
 
         $activate = wp_nonce_url(add_query_arg(self::ACTION, 'full'), self::NONCE);
         $dismiss = wp_nonce_url(add_query_arg(self::ACTION, 'dismiss'), self::NONCE);
-        $settingsUrl = admin_url('admin.php?page=maspik-protection');
         ?>
         <div class="notice notice-info">
             <p>
-                <?php // Brand prefix kept outside the translated string: this notice renders on
-                      // every admin screen, so it has to say whose notice it is, and the name
-                      // itself is never translated. ?>
-                <strong>MASPIK - <?php esc_html_e('Your InputGate is currently using IP-only protection', 'contact-forms-anti-spam'); ?></strong>
+                <strong><?php esc_html_e('Improve your spam protection for free', 'contact-forms-anti-spam'); ?></strong>
             </p>
             <p>
-                <?php esc_html_e('Your InputGate is checking the sender’s IP only. Full Protection goes further, analyzing submitted content, user behavior, and multiple additional spam signals to catch significantly more spam.', 'contact-forms-anti-spam'); ?>
+                <?php esc_html_e('Maspik is currently protecting your forms mainly by checking the sender’s IP address.', 'contact-forms-anti-spam'); ?>
+            </p>
+            <p>
+                <?php esc_html_e('We recommend enabling Full Protection. It’s completely free and adds additional layers of spam protection by analyzing submitted content, user behavior, and other spam signals to detect more spam.', 'contact-forms-anti-spam'); ?>
             </p>
             <p>
                 <a href="<?php echo esc_url($activate); ?>" class="button button-primary">
                     <?php esc_html_e('Enable Full Protection', 'contact-forms-anti-spam'); ?>
                 </a>
-                <a href="<?php echo esc_url($settingsUrl); ?>" class="button">
-                    <?php esc_html_e('See settings', 'contact-forms-anti-spam'); ?>
+                <?php // Opens the feature's documentation, so "what am I turning on?"
+                      // is answerable without leaving the decision. External, so it
+                      // gets the same new-tab + noopener treatment as every other
+                      // outbound link in the admin. ?>
+                <a href="<?php echo esc_url(self::LEARN_MORE_URL); ?>" class="button" target="_blank" rel="noopener noreferrer">
+                    <?php esc_html_e('Learn More', 'contact-forms-anti-spam'); ?>
                 </a>
                 <a href="<?php echo esc_url($dismiss); ?>" style="margin-inline-start:0.75em;color:#646970;">
-                    <?php esc_html_e('No thanks', 'contact-forms-anti-spam'); ?>
+                    <?php esc_html_e('Not Now', 'contact-forms-anti-spam'); ?>
                 </a>
             </p>
         </div>

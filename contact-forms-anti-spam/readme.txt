@@ -5,7 +5,7 @@ Tags: spam, anti spam, antispam, contact forms, honeypot
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 3.0.2
+Stable tag: 3.0.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -276,6 +276,22 @@ Yes. Settings, logs, your license and your Dashboard connection all carry over a
 
 == Changelog ==
 
+= 3.0.3 =
+
+**Bug Fixes**
+
+* Fixed several issues with Dashboard synchronization, protection rules, and form validation.
+* Fixed comment management issues in the WordPress dashboard.
+* Fixed Dashboard settings not being properly applied.
+* Improved synchronization for existing sites.
+
+**Improvements**
+
+* Improved protection status indicators in the Dashboard.
+* Improved Dashboard connection and ID management.
+* Spam log now shows the rule that caught the spam.
+* Updated Full Protection messaging with a link to the documentation.
+
 = 3.0.2 =
 * Fixed: an issue when 2 patterns exist in the Language protection layer.
 
@@ -300,6 +316,9 @@ Yes. Settings, logs, your license and your Dashboard connection all carry over a
 * Requires PHP 7.4+.
 
 == Upgrade Notice ==
+
+= 3.0.3 =
+Recommended for everyone. Fixes Dashboard synchronization and settings not being applied, and makes protection status clearer.
 
 = 3.0.2 =
 Recommended if you use the Language layer (Pro).

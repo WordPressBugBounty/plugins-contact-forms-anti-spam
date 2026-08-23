@@ -99,6 +99,10 @@ final class SettingsController
             'settings' => $values,
             'synced' => $this->syncedFromDashboard(),
             'forced' => $this->forcedByDashboard(),
+            // The values themselves, so a field can show what the Dashboard is
+            // actually applying instead of rendering blank next to a rule the
+            // engine is enforcing.
+            'dashboard_values' => $this->dashboardValues(),
             // The text a visitor sees when nothing is configured. Sent so the
             // admin can show it as a placeholder instead of duplicating the
             // string in JS, where it would drift from the PHP the moment either
@@ -133,8 +137,7 @@ final class SettingsController
     }
 
     /**
-     * Layers the Dashboard has switched on, which the engine therefore runs
-     * regardless of the local toggle (Settings::boolEffective ORs the two).
+     * Every setting the Dashboard currently supplies a value for.
      *
      * Reported so the admin can stop contradicting itself: until now a layer
      * enabled centrally still rendered as "off" here, which told the owner they
@@ -152,17 +155,77 @@ final class SettingsController
         }
 
         $forced = [];
-        foreach (Schema::options() as $key => $definition) {
-            if ($definition['type'] !== Schema::TYPE_BOOL || ! isset($dashboard[$key])) {
+        foreach ($dashboard as $key => $value) {
+            $key = (string) $key;
+            $definition = Schema::options()[$key] ?? null;
+            $isMessage = strpos($key, 'custom_error_message_') === 0;
+
+            // Booleans are only "forced" when the Dashboard says ON — a
+            // Dashboard "off" forces nothing, because the local toggle can
+            // still enable the layer on its own (Settings::boolEffective ORs
+            // the two).
+            if ($definition !== null && $definition['type'] === Schema::TYPE_BOOL) {
+                if ($value === true || $value === 1 || $value === '1' || $value === 'yes') {
+                    $forced[$key] = true;
+                }
                 continue;
             }
-            $value = $dashboard[$key];
-            if ($value === true || $value === 1 || $value === '1' || $value === 'yes') {
+
+            // Everything else the Dashboard actually supplies a value for:
+            // limits, thresholds, API keys, rule lists and per-check messages.
+            // The admin needs all of them, not just the on/off switches, or a
+            // field shows blank while a centrally-set value is what the engine
+            // is really applying.
+            if ($definition === null && ! $isMessage) {
+                continue;
+            }
+            if (is_array($value) ? $value !== [] : (is_scalar($value) && trim((string) $value) !== '')) {
                 $forced[$key] = true;
             }
         }
 
         return $forced;
+    }
+
+    /**
+     * The Dashboard's own value for every setting it supplies, as display text.
+     *
+     * forcedByDashboard() answers "is this managed centrally"; this answers
+     * "with what". Without it the admin can flag a field as Dashboard-managed
+     * but still show an empty box, which is exactly the "I can't tell which
+     * configuration is in control" complaint.
+     *
+     * @return array<string, string>
+     */
+    private function dashboardValues(): array
+    {
+        $dashboard = get_option('spamapi');
+        if (! is_array($dashboard)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($dashboard as $key => $value) {
+            $key = (string) $key;
+            if (is_array($value)) {
+                $flat = array_filter(array_map('strval', $value), static function (string $v): bool {
+                    return trim($v) !== '';
+                });
+                if ($flat !== []) {
+                    $out[$key] = implode("\n", $flat);
+                }
+                continue;
+            }
+            if (is_bool($value)) {
+                $out[$key] = $value ? '1' : '0';
+                continue;
+            }
+            if (is_scalar($value) && trim((string) $value) !== '') {
+                $out[$key] = (string) $value;
+            }
+        }
+
+        return $out;
     }
 
     public function update(WP_REST_Request $request): WP_REST_Response

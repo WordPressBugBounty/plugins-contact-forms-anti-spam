@@ -77,7 +77,7 @@ final class Schema
             'maspik_ai_enabled' => ['type' => self::TYPE_BOOL, 'default' => '1', 'dashboard' => true],
             'maspik_ai_context' => ['type' => self::TYPE_TEXT, 'default' => ''],
             'maspik_matrix_api_mode' => ['type' => self::TYPE_SELECT, 'default' => '2'],
-            // "No thanks" on the full-protection invitation. Stored here rather
+            // "Not Now" on the full-protection invitation. Stored here rather
             // than in wp_options so the admin app can dismiss it through the
             // settings endpoint it already uses, instead of needing a route of
             // its own. See Admin\FullModeNudge.

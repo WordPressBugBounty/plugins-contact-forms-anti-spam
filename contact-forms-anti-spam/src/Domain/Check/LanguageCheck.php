@@ -60,6 +60,7 @@ final class LanguageCheck implements FieldCheck
         $out = [];
         foreach ($entries as $entry) {
             foreach (self::candidatesOf($entry) as $candidate) {
+                $candidate = self::stripStrayQuotes($candidate);
                 if (self::isValidPattern($candidate) && ! in_array($candidate, $out, true)) {
                     $out[] = $candidate;
                 }
@@ -87,6 +88,26 @@ final class LanguageCheck implements FieldCheck
         }
 
         return preg_match('/\s/', $entry) === 1 ? preg_split('/\s+/', $entry) : [$entry];
+    }
+
+    /**
+     * Removes quote characters that wrap a script pattern by accident.
+     *
+     * Real Dashboards hold entries like `'\p{Thai}` and `'[А-Яа-яЁё]`, where a
+     * stray leading apostrophe survived however the value was entered or
+     * exported. Those still *compile* — the pattern simply demands a literal
+     * apostrophe before the script character — so validation alone cannot catch
+     * them. They just never match, and the rule quietly does nothing: a
+     * "required language" nobody can satisfy, or a "forbidden language" that
+     * never fires.
+     *
+     * Only wrapping quotes go. Every script pattern this feature offers is a
+     * `\p{…}` escape or a character class, and none of them legitimately begins
+     * or ends with a quote, so nothing real is lost.
+     */
+    public static function stripStrayQuotes(string $pattern): string
+    {
+        return trim(trim($pattern), "'\"");
     }
 
     /** A pattern is usable if it is non-empty, has no whitespace, and compiles under /u. */
