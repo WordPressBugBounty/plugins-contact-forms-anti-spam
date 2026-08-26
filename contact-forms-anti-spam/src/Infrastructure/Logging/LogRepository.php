@@ -218,6 +218,42 @@ final class LogRepository
     }
 
     /**
+     * Empty the log, honouring the outcome the screen is showing.
+     *
+     * Scoped rather than a blanket TRUNCATE because "blocked" and "passed" are
+     * different material: clearing a reviewed pile of spam must not also throw
+     * away the passed submissions someone kept for debugging, and the reverse
+     * is just as true. The caller passes the same outcome the list and the CSV
+     * export already use, so what disappears is exactly what was on screen.
+     *
+     * The lifetime counter behind totalBlocked() is deliberately left alone.
+     * It counts blocks that happened, not rows retained — pruneByAge() and the
+     * row cap already delete rows without touching it, and zeroing a lifetime
+     * statistic as a side effect of tidying a list would be a surprise.
+     *
+     * @param string $outcome 'all' | 'blocked' | 'clean'
+     * @return int rows removed
+     */
+    public function deleteAll(string $outcome = 'all'): int
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'maspik_spam_logs';
+
+        // Legacy rows have spam_tag '' and count as blocked, exactly as in
+        // recent(). No caller value reaches the SQL: the outcome only selects
+        // which of these three fixed statements runs.
+        if ($outcome === 'clean') {
+            $deleted = $wpdb->query("DELETE FROM $table WHERE spam_tag = 'clean'");
+        } elseif ($outcome === 'blocked') {
+            $deleted = $wpdb->query("DELETE FROM $table WHERE spam_tag <> 'clean'");
+        } else {
+            $deleted = $wpdb->query("DELETE FROM $table");
+        }
+
+        return $deleted === false ? 0 : (int) $deleted;
+    }
+
+    /**
      * Re-label a blocked entry as legitimate, keeping the row.
      *
      * A false positive is the one log entry the site owner most needs to read:
@@ -263,6 +299,32 @@ final class LogRepository
         $rows = $wpdb->get_results($sql, ARRAY_A);
 
         return is_array($rows) ? array_map([self::class, 'normaliseRow'], $rows) : [];
+    }
+
+    /**
+     * How many rows the log actually holds for an outcome.
+     *
+     * Distinct from totalBlocked(), which is a lifetime counter of blocks that
+     * happened. This counts rows still stored, so the screen can say how many
+     * there are to page through rather than reporting the size of the first
+     * page as though it were the whole log.
+     *
+     * @param string $outcome 'all' | 'blocked' | 'clean'
+     */
+    public function countStored(string $outcome = 'all'): int
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'maspik_spam_logs';
+
+        // Legacy rows have spam_tag '' and count as blocked, as in recent().
+        if ($outcome === 'clean') {
+            return (int) $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE spam_tag = 'clean'");
+        }
+        if ($outcome === 'blocked') {
+            return (int) $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE spam_tag <> 'clean'");
+        }
+
+        return (int) $wpdb->get_var("SELECT COUNT(*) FROM $table");
     }
 
     public function totalBlocked(): int

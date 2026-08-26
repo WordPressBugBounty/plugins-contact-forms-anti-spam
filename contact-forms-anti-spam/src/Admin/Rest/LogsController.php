@@ -40,13 +40,23 @@ final class LogsController
         };
 
         register_rest_route('maspik/v1', '/logs', [
-            'methods' => 'GET',
-            'callback' => [$this, 'index'],
-            'permission_callback' => $can,
-            'args' => [
-                'page' => ['type' => 'integer', 'default' => 1, 'minimum' => 1],
-                'per_page' => ['type' => 'integer', 'default' => 50, 'minimum' => 1, 'maximum' => 200],
-                'outcome' => ['type' => 'string', 'default' => 'all', 'enum' => ['all', 'blocked', 'clean']],
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'index'],
+                'permission_callback' => $can,
+                'args' => [
+                    'page' => ['type' => 'integer', 'default' => 1, 'minimum' => 1],
+                    'per_page' => ['type' => 'integer', 'default' => 50, 'minimum' => 1, 'maximum' => 200],
+                    'outcome' => ['type' => 'string', 'default' => 'all', 'enum' => ['all', 'blocked', 'clean']],
+                ],
+            ],
+            [
+                'methods' => 'DELETE',
+                'callback' => [$this, 'deleteAll'],
+                'permission_callback' => $can,
+                'args' => [
+                    'outcome' => ['type' => 'string', 'default' => 'all', 'enum' => ['all', 'blocked', 'clean']],
+                ],
             ],
         ]);
 
@@ -129,9 +139,20 @@ final class LogsController
         $page = (int) $request['page'];
         $outcome = in_array($request['outcome'], ['blocked', 'clean'], true) ? (string) $request['outcome'] : 'all';
 
+        $entries = $this->logs->recent($perPage, ($page - 1) * $perPage, $outcome);
+        $total = $this->logs->countStored($outcome);
+
         return new WP_REST_Response([
             'total_blocked' => $this->logs->totalBlocked(),
-            'entries' => $this->logs->recent($perPage, ($page - 1) * $perPage, $outcome),
+            'entries' => $entries,
+            // How many rows exist for this outcome, and whether asking for the
+            // next page would return anything. Without these the screen could
+            // only report what it had already loaded — a site with 53 entries
+            // showed "50 logged" and no way to reach the other three.
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+            'has_more' => $page * $perPage < $total,
             // Fallback ordering for legacy rows that predate the stored trace.
             'pipeline_order' => $this->checkFactory->pipelineOrder(),
         ]);
@@ -181,6 +202,21 @@ final class LogsController
         $deleted = $this->logs->delete((int) $request['id']);
 
         return new WP_REST_Response(['deleted' => $deleted]);
+    }
+
+    /**
+     * Empty the log for one outcome. Reviewing a large log ends in clearing it,
+     * and deleting hundreds of rows one at a time is not a workflow.
+     *
+     * Scoped to the same outcome the list and the CSV export use, so the button
+     * removes what the screen is showing and never more. The row count comes
+     * back so the confirmation can say what actually happened.
+     */
+    public function deleteAll(WP_REST_Request $request): WP_REST_Response
+    {
+        $outcome = in_array($request['outcome'], ['blocked', 'clean'], true) ? (string) $request['outcome'] : 'all';
+
+        return new WP_REST_Response(['deleted' => $this->logs->deleteAll($outcome), 'outcome' => $outcome]);
     }
 
     /**

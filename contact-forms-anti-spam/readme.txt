@@ -5,7 +5,7 @@ Tags: spam, anti spam, antispam, contact forms, honeypot
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 3.0.3
+Stable tag: 3.0.4
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -276,12 +276,22 @@ Yes. Settings, logs, your license and your Dashboard connection all carry over a
 
 == Changelog ==
 
+= 3.0.4 =
+
+* Improved compatibility with Fluent Forms, including AJAX submissions.
+* Improved compatibility with Ninja Forms, Contact Form 7, and Elementor Atomic.
+* Improved the spam log with clearer blocking reasons, submitted values, and matched rules.
+* Added Expand all and Delete all to the log, and Copy all and Clear all to every rule list.
+* Improved RTL support and fixed several log display issues.
+* Improved log loading and filtering performance.
+
 = 3.0.3 =
 
 **Bug Fixes**
 
 * Fixed several issues with Dashboard synchronization, protection rules, and form validation.
 * Fixed comment management issues in the WordPress dashboard.
+* Fixed the hidden anti-spam field stretching the page on right-to-left sites, which caused sideways scrolling and layout jumps on mobile.
 * Fixed Dashboard settings not being properly applied.
 * Improved synchronization for existing sites.
 
@@ -316,6 +326,9 @@ Yes. Settings, logs, your license and your Dashboard connection all carry over a
 * Requires PHP 7.4+.
 
 == Upgrade Notice ==
+
+= 3.0.4 =
+Recommended for everyone, especially Fluent Forms sites.
 
 = 3.0.3 =
 Recommended for everyone. Fixes Dashboard synchronization and settings not being applied, and makes protection status clearer.

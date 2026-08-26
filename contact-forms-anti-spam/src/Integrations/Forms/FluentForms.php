@@ -92,6 +92,22 @@ final class FluentForms extends AbstractFormIntegration
      */
     private static function fieldDefinitions($form, $fields): array
     {
+        // What Fluent actually passes: FormFieldsParser::getInputs(), a flat map
+        // keyed by input name whose values carry `element` at the top level.
+        // walk() reads names from $field['attributes']['name'], which this shape
+        // does not have, so it found nothing and returned an empty list — no
+        // fields to scan meant no content check could ever fire, and every
+        // blacklisted word sailed through Fluent Forms.
+        //
+        // Checked before the tree shapes because it is the live one; the others
+        // remain for callers that hand over the form definition instead.
+        if (is_array($fields) && $fields !== [] && ! isset($fields['fields'])) {
+            $flat = self::fromInputMap($fields);
+            if ($flat !== []) {
+                return $flat;
+            }
+        }
+
         $tree = [];
         if (is_array($fields) && isset($fields['fields'])) {
             $tree = $fields['fields'];
@@ -112,6 +128,37 @@ final class FluentForms extends AbstractFormIntegration
      * @param mixed $node
      * @param array<int, array{name: string, element: string}> $out
      */
+    /**
+     * Read Fluent's flat input map: { "email": { element: "input_email", … } }.
+     *
+     * A composite field appears both as itself and as its parts — `names`
+     * alongside `names[first_name]` — so only the parent is taken: $formData
+     * holds the composite as an array, and the bracketed keys are absent from
+     * it, while FieldMapper flattens the array for scanning anyway.
+     *
+     * @param array<string, mixed> $fields
+     * @return array<int, array{name: string, element: string}>
+     */
+    private static function fromInputMap(array $fields): array
+    {
+        $out = [];
+        foreach ($fields as $name => $definition) {
+            $name = (string) $name;
+            if ($name === '' || ! is_array($definition) || strpos($name, '[') !== false) {
+                continue;
+            }
+            $element = isset($definition['element']) ? (string) $definition['element'] : '';
+            if ($element === '' && isset($definition['raw']['element'])) {
+                $element = (string) $definition['raw']['element'];
+            }
+            if ($element !== '') {
+                $out[] = ['name' => $name, 'element' => $element];
+            }
+        }
+
+        return $out;
+    }
+
     private static function walk($node, array &$out): void
     {
         if (! is_array($node)) {

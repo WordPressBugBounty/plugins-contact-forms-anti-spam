@@ -57,7 +57,7 @@ final class AdminProvider implements ServiceProvider
             $c->get(LogRepository::class),
             $c->get(ProGate::class)
         ));
-        $c->set(RuleTesterController::class, static fn () => new RuleTesterController());
+        $c->set(RuleTesterController::class, static fn () => new RuleTesterController($c->get(Settings::class)));
         $c->set(DashboardController::class, static fn (Container $c) => new DashboardController(
             $c->get(Settings::class),
             $c->get(ProGate::class)

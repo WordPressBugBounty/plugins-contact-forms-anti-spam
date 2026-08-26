@@ -205,6 +205,35 @@ class Settings
         return array_values($items);
     }
 
+    /**
+     * Only the Dashboard's own entries for a rule list, without the local ones.
+     *
+     * list($key, true) answers "what does the engine enforce" by merging both
+     * sources, which is right at submission time. This answers the narrower
+     * question the rule editors need: which rules apply that the admin is *not*
+     * currently editing. The tester there works on an unsaved draft, so it
+     * cannot use the merged list — it has to combine the draft in hand with
+     * these.
+     *
+     * @return string[]
+     */
+    public function dashboardList(string $key): array
+    {
+        $value = $this->dashboardValue($key);
+        if (! is_array($value)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($value as $item) {
+            if (is_scalar($item) && trim((string) $item) !== '') {
+                $out[] = (string) $item;
+            }
+        }
+
+        return $out;
+    }
+
     /** @return array{0: string, 1: string[]} mode ('allow'|'block') + list */
     public function countryRules(): array
     {

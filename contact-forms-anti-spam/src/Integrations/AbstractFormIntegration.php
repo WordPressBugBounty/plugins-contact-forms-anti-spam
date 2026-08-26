@@ -63,13 +63,16 @@ abstract class AbstractFormIntegration implements FormIntegration
      */
     protected function submission(array $fields): Submission
     {
-        $post = $_POST;
+        $post = isset($_POST) ? (array) wp_unslash($_POST) : [];
 
+        // Searched for rather than read from a fixed key. Our script adds both
+        // fields to the form, but not every plugin posts a form as fields:
+        // Fluent Forms serialises the whole thing into $_POST['data'], so the
+        // key was missing from where we looked and every genuine submission
+        // was rejected for not having one.
         $hidden = [
-            HoneypotCheck::FIELD_NAME => isset($post[HoneypotCheck::FIELD_NAME])
-                ? (string) wp_unslash($post[HoneypotCheck::FIELD_NAME]) : '',
-            VerificationKeyCheck::FIELD_NAME => isset($post[VerificationKeyCheck::FIELD_NAME])
-                ? (string) wp_unslash($post[VerificationKeyCheck::FIELD_NAME]) : '',
+            HoneypotCheck::FIELD_NAME => RawPayload::findField($post, HoneypotCheck::FIELD_NAME),
+            VerificationKeyCheck::FIELD_NAME => RawPayload::findField($post, VerificationKeyCheck::FIELD_NAME),
         ];
 
         return $this->submissionWithHidden($fields, $hidden);
@@ -91,7 +94,17 @@ abstract class AbstractFormIntegration implements FormIntegration
 
         // Captured here rather than per adapter: every plugin shapes its data
         // differently, but they all arrive in the same request.
-        $raw = RawPayload::capture(isset($_POST) ? (array) wp_unslash($_POST) : []);
+        //
+        // The verification key is handed in so the capture can redact it. The
+        // adapter has already picked it out of whatever shape its plugin used,
+        // which is the whole point: RawPayload drops the key when it arrives
+        // under its own name, but Elementor Atomic carries it inside its field
+        // envelope as form_fields[6][value], where nothing about the key's name
+        // gives it away. It was being stored in the log, and being the longest
+        // value on the row it was shown to the admin as the visitor's message.
+        $secret = isset($hidden[VerificationKeyCheck::FIELD_NAME])
+            ? (string) $hidden[VerificationKeyCheck::FIELD_NAME] : '';
+        $raw = RawPayload::capture(isset($_POST) ? (array) wp_unslash($_POST) : [], $secret);
 
         return new Submission(
             $fields,
