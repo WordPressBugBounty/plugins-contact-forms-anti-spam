@@ -35,3 +35,128 @@ msgstr "הפעלת ההגנה המלאה"
 
 msgid "See settings"
 msgstr "הצגת ההגדרות"
+
+msgid "Maspik – Spam protection"
+msgstr "Maspik – הגנה מספאם"
+
+msgid "blocked in the last 30 days"
+msgstr "נחסמו ב-30 הימים האחרונים"
+
+msgid "blocked in total"
+msgstr "נחסמו בסך הכול"
+
+msgid "%s today"
+msgstr "%s היום"
+
+msgid "Caught most by"
+msgstr "נתפסו בעיקר על ידי"
+
+msgid "Most targeted form"
+msgstr "הטופס הכי מותקף"
+
+msgid "Last blocked"
+msgstr "החסימה האחרונה"
+
+msgid "%s ago"
+msgstr "לפני %s"
+
+msgid "Nothing blocked in the last 30 days. Your forms are quiet."
+msgstr "שום דבר לא נחסם ב-30 הימים האחרונים. הטפסים שלכם שקטים."
+
+msgid "No protection layer is switched on yet."
+msgstr "עדיין לא הופעלה אף שכבת הגנה."
+
+msgid "Logging is off, so there is nothing to break down here. Blocking itself is unaffected."
+msgstr "הרישום כבוי, ולכן אין כאן מה לפרט. החסימה עצמה לא מושפעת."
+
+msgid "Turn on logging"
+msgstr "הפעלת רישום"
+
+msgid "Open the log"
+msgstr "פתיחת היומן"
+
+msgid "Set up protection"
+msgstr "הגדרת הגנה"
+
+msgid "View log"
+msgstr "צפייה ביומן"
+
+msgid "Blocked submissions per day over the last 30 days"
+msgstr "שליחות שנחסמו ליום ב-30 הימים האחרונים"
+
+msgid "Unknown"
+msgstr "לא ידוע"
+
+msgid "Honeypot"
+msgstr "מלכודת דבש"
+
+msgid "Verification Key"
+msgstr "מפתח אימות"
+
+msgid "InputGate"
+msgstr "‏InputGate"
+
+msgid "Text rules"
+msgstr "כללי טקסט"
+
+msgid "Email rules"
+msgstr "כללי אימייל"
+
+msgid "URL rules"
+msgstr "כללי כתובות"
+
+msgid "Country rules"
+msgstr "כללי מדינה"
+
+msgid "IP blocklist"
+msgstr "רשימת חסימת IP"
+
+msgid "IP reputation"
+msgstr "מוניטין IP"
+
+msgid "Phone format"
+msgstr "פורמט טלפון"
+
+msgid "Link limit"
+msgstr "מגבלת קישורים"
+
+msgid "Language required"
+msgstr "שפה נדרשת"
+
+msgid "Language forbidden"
+msgstr "שפה אסורה"
+
+msgid "Length limit"
+msgstr "מגבלת אורך"
+
+msgid "Protection"
+msgstr "הגנה"
+
+msgid "Emoji"
+msgstr "אימוג'י"
+
+msgid "%s protection layer active"
+msgid_plural "%s protection layers active"
+msgstr[0] "שכבת הגנה אחת פעילה"
+msgstr[1] "%s שכבות הגנה פעילות"
+
+msgid "For your information: Maspik is checking the sender’s IP address only, not the content of the submission. Full Protection analyses the content too and catches more spam — it is free."
+msgstr "לידיעתכם: Maspik בודק רק את כתובת ה-IP של השולח, לא את תוכן השליחה. ההגנה המלאה מנתחת גם את התוכן ותופסת יותר ספאם, והיא חינמית."
+
+msgid "InputGate is switched off. It is our cloud layer, and the one that catches the spam your own rules have not seen before. We recommend turning it on."
+msgstr "‏InputGate כבוי. זו שכבת הענן שלנו, וזו שתופסת את הספאם שהכללים שלכם עוד לא מכירים. אנחנו ממליצים להפעיל אותה."
+
+msgid "Turn on InputGate"
+msgstr "הפעלת InputGate"
+
+msgid "Learn more"
+msgstr "מידע נוסף"
+
+msgid "Blocked by layer"
+msgstr "חסימות לפי שכבה"
+
+msgid "Most caught values"
+msgstr "הערכים שנתפסו הכי הרבה"
+
+msgid "%s a day"
+msgstr "%s ביום"

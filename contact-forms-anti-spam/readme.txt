@@ -1,15 +1,15 @@
-=== Maspik – Multi-Layer Spam Protection ===
+=== Spam Protection | Maspik ===
 Contributors: maspik, yonifre
 Donate link: https://paypal.me/yonifre
 Tags: spam, anti spam, antispam, contact forms, honeypot
 Requires at least: 6.2
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 3.0.4
+Stable tag: 3.1.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Multi-layer spam protection for forms, comments and WooCommerce. No CAPTCHA, no puzzles — accurate blocking that works out of the box.
+Blocks spam the moment you activate it. No CAPTCHA, no setup, no API key. Multi-Layer. Just install and forget.
 
 == Description ==
 
@@ -95,7 +95,13 @@ Maspik protects WordPress core forms together with many popular form builders:
 * Hello Plus
 * MetForm
 * Bit Form
+* SureForms
+* WS Form
 * BuddyPress Registration
+* MemberPress
+* AffiliateWP
+* Easy Digital Downloads
+* FunnelKit
 * WordPress Comments
 * WordPress Registration
 * Custom PHP forms (simple developer API)
@@ -217,7 +223,7 @@ Need the reason? `maspik_check_spam()` returns the message to show the visitor, 
 
 The original version 2 filter (`maspik_validate_custom_form_fields`) continues to work unchanged, so existing integrations keep running after the upgrade.
 
-Full example: https://wpmaspik.com/documentation/custom-php-form/
+Full example: https://wpmaspik.com/documentation/custom-form/
 
 = Documentation =
 
@@ -276,6 +282,28 @@ Yes. Settings, logs, your license and your Dashboard connection all carry over a
 
 == Changelog ==
 
+= 3.1.0 =
+
+New integrations
+
+* Added support for SureForms, MemberPress, AffiliateWP, Easy Digital Downloads, FunnelKit, and WS Form.
+
+New features
+
+* Added spam correction reporting to help improve detection accuracy.
+* Added support for WordPress's Personal Data Export and Erasure tools.
+* Added behavior-based signals to improve spam detection.
+* Added a new Dashboard widget with protection insights and activity statistics.
+* Added a one-click option to enable full InputGate protection when limited or disabled.
+
+Security
+
+* Protected CSV exports against formula injection.
+
+Improved
+
+* Fixed a bypass that allowed direct scripted submissions through Divi contact forms.
+
 = 3.0.4 =
 
 * Improved compatibility with Fluent Forms, including AJAX submissions.
@@ -326,6 +354,9 @@ Yes. Settings, logs, your license and your Dashboard connection all carry over a
 * Requires PHP 7.4+.
 
 == Upgrade Notice ==
+
+= 3.1.0 =
+New integrations, privacy tools, behaviour signals, and a Dashboard widget.
 
 = 3.0.4 =
 Recommended for everyone, especially Fluent Forms sites.

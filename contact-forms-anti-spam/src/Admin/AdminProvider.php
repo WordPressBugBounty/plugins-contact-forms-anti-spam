@@ -8,7 +8,9 @@ use Maspik\Admin\Rest\DashboardController;
 use Maspik\Admin\Rest\IntegrationsController;
 use Maspik\Admin\Rest\LicenseController;
 use Maspik\Admin\Rest\LogsController;
+use Maspik\Infrastructure\Feedback\FalsePositiveReporter;
 use Maspik\Admin\Rest\PlaygroundController;
+use Maspik\Admin\DashboardWidget;
 use Maspik\Admin\Rest\RuleTesterController;
 use Maspik\Admin\Rest\SettingsController;
 use Maspik\Admin\Rest\StatsController;
@@ -18,12 +20,18 @@ use Maspik\Application\Playground;
 use Maspik\Kernel\Upgrade;
 use Maspik\Infrastructure\ClientIp;
 use Maspik\Infrastructure\Logging\LogRepository;
+use Maspik\Infrastructure\Privacy\PersonalData;
 use Maspik\Infrastructure\Settings\Settings;
 use Maspik\Integrations\Registry;
 use Maspik\Kernel\Container;
 use Maspik\Kernel\ServiceProvider;
 use Maspik\Premium\License;
 use Maspik\Premium\ProGate;
+
+if (! defined('ABSPATH')) {
+    exit;
+}
+
 
 final class AdminProvider implements ServiceProvider
 {
@@ -47,7 +55,8 @@ final class AdminProvider implements ServiceProvider
         $c->set(LogsController::class, static fn (Container $c) => new LogsController(
             $c->get(LogRepository::class),
             $c->get(Settings::class),
-            $c->get(CheckFactory::class)
+            $c->get(CheckFactory::class),
+            new FalsePositiveReporter()
         ));
         $c->set(PlaygroundController::class, static fn (Container $c) => new PlaygroundController(
             $c->get(Playground::class),
@@ -58,6 +67,11 @@ final class AdminProvider implements ServiceProvider
             $c->get(ProGate::class)
         ));
         $c->set(RuleTesterController::class, static fn () => new RuleTesterController($c->get(Settings::class)));
+        $c->set(DashboardWidget::class, static fn (Container $c) => new DashboardWidget(
+            $c->get(LogRepository::class),
+            $c->get(Settings::class),
+            $c->get(CheckFactory::class)
+        ));
         $c->set(DashboardController::class, static fn (Container $c) => new DashboardController(
             $c->get(Settings::class),
             $c->get(ProGate::class)
@@ -65,6 +79,9 @@ final class AdminProvider implements ServiceProvider
         $c->set(IntegrationsController::class, static fn (Container $c) => new IntegrationsController(
             $c->get(Registry::class),
             $c->get(Settings::class)
+        ));
+        $c->set(PersonalData::class, static fn (Container $c) => new PersonalData(
+            $c->get(LogRepository::class)
         ));
         $c->set(License::class, static fn () => new License());
         $c->set(LicenseController::class, static fn (Container $c) => new LicenseController(
@@ -79,11 +96,21 @@ final class AdminProvider implements ServiceProvider
             $c->get(Menu::class)->register();
         });
 
+        // Only fires on index.php, so nothing here is built on other screens.
+        add_action('wp_dashboard_setup', static function () use ($c): void {
+            $c->get(DashboardWidget::class)->register();
+        });
+
         // Keep other plugins' promo/upsell notices off MASPIK's own pages.
         NoticeFilter::boot();
 
         // Ask IP-only sites, once, whether they want the stronger full check.
         (new FullModeNudge($c->get(Settings::class)))->register();
+
+        // Puts the spam log inside Tools → Export/Erase Personal Data. Hooked on
+        // every admin request rather than the tool screen alone, because the
+        // export and erasure themselves run in batches over admin-ajax.
+        $c->get(PersonalData::class)->register();
 
         add_action(DashboardController::CRON_HOOK, static function () use ($c): void {
             $c->get(DashboardController::class)->sync();
