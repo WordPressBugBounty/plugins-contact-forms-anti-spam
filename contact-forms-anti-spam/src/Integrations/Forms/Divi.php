@@ -210,13 +210,7 @@ final class Divi extends AbstractFormIntegration
 
     private function isContactRequest(): bool
     {
-        foreach (array_keys($_POST) as $key) {
-            if (strpos((string) $key, 'et_pb_contactform_submit_') === 0) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->formIds() !== [];
     }
 
     /**
@@ -228,7 +222,23 @@ final class Divi extends AbstractFormIntegration
     {
         $ids = [];
         foreach (array_keys($_POST) as $key) {
-            if (preg_match('/^et_pb_contactform_submit_(.+)$/', (string) $key, $m) && $m[1] !== '') {
+            $key = (string) $key;
+
+            // The submit button. A browser sends it because a button was
+            // clicked; a script has no reason to include it at all.
+            if (preg_match('/^et_pb_contactform_submit_(.+)$/', $key, $m) && $m[1] !== '') {
+                $ids[] = $m[1];
+                continue;
+            }
+
+            // The nonce, which is how Divi itself decides a submission
+            // happened — ContactFormHandler sets $_submitted from exactly this
+            // key and never looks at the button. Keying off the button alone
+            // meant a scripted post was mailed by Divi and skipped by us: no
+            // form id, so nothing to scan and nothing logged. The nonce is
+            // still verified below, so this widens what we look at without
+            // widening what we accept.
+            if (preg_match('/^_wpnonce-et-pb-contact-form-submitted-(.+)$/', $key, $m) && $m[1] !== '') {
                 $ids[] = $m[1];
             }
         }
