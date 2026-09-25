@@ -5,7 +5,7 @@ Tags: spam, anti spam, antispam, contact forms, honeypot
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 3.1.1
+Stable tag: 3.1.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -282,6 +282,12 @@ Yes. Settings, logs, your license and your Dashboard connection all carry over a
 
 == Changelog ==
 
+= 3.1.2 =
+Fixed
+
+* Fixed Divi 5 contact forms not being scanned due to differences in field naming.
+* Prevented Maspik file issues from causing critical errors or affecting other plugins. Affected components are now disabled with an admin notice explaining how to resolve the issue.
+
 = 3.1.1 =
 
 Fixed
@@ -367,6 +373,9 @@ Improved
 * Requires PHP 7.4+.
 
 == Upgrade Notice ==
+
+= 3.1.2 =
+Recommended for everyone, and required for sites using Divi.
 
 = 3.1.1 =
 Recommended for everyone, and required for WooCommerce sites using an external payment gateway.
